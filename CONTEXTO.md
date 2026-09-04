@@ -4,6 +4,23 @@
 > "lee CONTEXTO.md" (o "lee QuesoWeb\CONTEXTO.md") y Claude tenga todo el
 > panorama sin tener que volver a explicar nada.
 
+**Última actualización: 2026-09-04.**
+
+## 📍 Dónde quedamos (retomar desde aquí)
+
+Toda la app está **construida y funcionando localmente** (build de
+producción probado, sin errores de tipos ni lint). Lo único que falta es
+**desplegarla**, y ahí no se ha avanzado nada todavía — el usuario dijo que
+seguía con esto "después". El siguiente paso al retomar es literalmente el
+**paso 1** de la lista de pendientes más abajo: crear el proyecto de
+Supabase. Nadie ha creado todavía ninguna cuenta/proyecto de Supabase ni el
+bot de Telegram para este proyecto.
+
+No hay código pendiente de escribir salvo que el usuario pida una función
+nueva — lo que sigue es 100% configuración y despliegue (Supabase, Telegram,
+variables de entorno, GitHub, Vercel), con los pasos exactos en la sección
+"Estado actual" de este archivo y en `README.md`.
+
 ## Qué es esto
 
 Web para que los clientes de un negocio de queso (Colombia, dueño: Jorge)
