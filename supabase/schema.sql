@@ -19,6 +19,8 @@ create table if not exists orders (
   client_name text not null,
   quantity numeric(10, 2) not null check (quantity > 0),
   unit text not null check (unit in ('kg', 'lb')),
+  cheese_type text not null check (cheese_type in ('duro', 'semi', 'blando')),
+  salt_level text not null check (salt_level in ('alto', 'intermedio', 'bajo')),
   price_per_kg_snapshot numeric(12, 2) not null,
   total numeric(12, 2) not null,
   status text not null default 'pendiente' check (status in ('pendiente', 'completado')),

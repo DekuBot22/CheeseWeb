@@ -1,7 +1,12 @@
 "use client";
 
 import { useState } from "react";
-import { formatCOP, formatDate } from "@/lib/constants";
+import {
+  formatCOP,
+  formatDate,
+  CHEESE_TYPE_LABELS,
+  SALT_LEVEL_LABELS,
+} from "@/lib/constants";
 import type { Order } from "@/lib/types";
 
 export default function OrdersTable({ initialOrders }: { initialOrders: Order[] }) {
@@ -48,6 +53,9 @@ export default function OrdersTable({ initialOrders }: { initialOrders: Order[] 
               <p className="font-semibold text-zinc-900">{order.client_name}</p>
               <p className="text-sm text-zinc-500">
                 {order.quantity} {order.unit} · {formatCOP(order.total)}
+              </p>
+              <p className="text-sm text-zinc-500">
+                {CHEESE_TYPE_LABELS[order.cheese_type]} · {SALT_LEVEL_LABELS[order.salt_level]}
               </p>
               <p className="text-xs text-zinc-400">{formatDate(order.created_at)}</p>
             </div>

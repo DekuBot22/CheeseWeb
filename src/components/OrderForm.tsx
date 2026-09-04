@@ -1,10 +1,20 @@
 "use client";
 
 import { useMemo, useState } from "react";
-import { toKg, formatCOP, formatDate } from "@/lib/constants";
+import {
+  toKg,
+  formatCOP,
+  formatDate,
+  CHEESE_TYPE_LABELS,
+  SALT_LEVEL_LABELS,
+} from "@/lib/constants";
+import type { CheeseType, SaltLevel } from "@/lib/types";
 
 type Unit = "kg" | "lb";
 type Status = "idle" | "loading" | "success" | "error";
+
+const CHEESE_TYPES: CheeseType[] = ["duro", "semi", "blando"];
+const SALT_LEVELS: SaltLevel[] = ["alto", "intermedio", "bajo"];
 
 export default function OrderForm({
   pricePerKg,
@@ -15,6 +25,8 @@ export default function OrderForm({
 }) {
   const [clientName, setClientName] = useState("");
   const [unit, setUnit] = useState<Unit>("kg");
+  const [cheeseType, setCheeseType] = useState<CheeseType>("semi");
+  const [saltLevel, setSaltLevel] = useState<SaltLevel>("intermedio");
   const [quantity, setQuantity] = useState("");
   const [status, setStatus] = useState<Status>("idle");
   const [errorMsg, setErrorMsg] = useState("");
@@ -33,7 +45,13 @@ export default function OrderForm({
       const res = await fetch("/api/orders", {
         method: "POST",
         headers: { "Content-Type": "application/json" },
-        body: JSON.stringify({ client_name: clientName, quantity: qtyNumber, unit }),
+        body: JSON.stringify({
+          client_name: clientName,
+          quantity: qtyNumber,
+          unit,
+          cheese_type: cheeseType,
+          salt_level: saltLevel,
+        }),
       });
       const data = await res.json();
       if (!res.ok) {
@@ -114,6 +132,46 @@ export default function OrderForm({
               }`}
             >
               {u === "kg" ? "Kilogramos" : "Libras"}
+            </button>
+          ))}
+        </div>
+      </div>
+
+      <div className="mb-4">
+        <span className="mb-1 block text-sm font-medium text-zinc-700">Tipo de queso</span>
+        <div className="grid grid-cols-3 gap-2">
+          {CHEESE_TYPES.map((type) => (
+            <button
+              key={type}
+              type="button"
+              onClick={() => setCheeseType(type)}
+              className={`rounded-lg border px-2 py-2 text-sm font-semibold transition-colors ${
+                cheeseType === type
+                  ? "border-amber-600 bg-amber-600 text-white"
+                  : "border-zinc-300 bg-white text-zinc-700 hover:border-amber-400"
+              }`}
+            >
+              {CHEESE_TYPE_LABELS[type]}
+            </button>
+          ))}
+        </div>
+      </div>
+
+      <div className="mb-4">
+        <span className="mb-1 block text-sm font-medium text-zinc-700">Nivel de sal</span>
+        <div className="grid grid-cols-3 gap-2">
+          {SALT_LEVELS.map((level) => (
+            <button
+              key={level}
+              type="button"
+              onClick={() => setSaltLevel(level)}
+              className={`rounded-lg border px-2 py-2 text-xs font-semibold transition-colors sm:text-sm ${
+                saltLevel === level
+                  ? "border-amber-600 bg-amber-600 text-white"
+                  : "border-zinc-300 bg-white text-zinc-700 hover:border-amber-400"
+              }`}
+            >
+              {SALT_LEVEL_LABELS[level]}
             </button>
           ))}
         </div>

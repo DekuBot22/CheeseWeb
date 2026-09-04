@@ -1,4 +1,6 @@
 export type Unit = "kg" | "lb";
+export type CheeseType = "duro" | "semi" | "blando";
+export type SaltLevel = "alto" | "intermedio" | "bajo";
 export type OrderStatus = "pendiente" | "completado";
 
 export interface Settings {
@@ -12,6 +14,8 @@ export interface Order {
   client_name: string;
   quantity: number;
   unit: Unit;
+  cheese_type: CheeseType;
+  salt_level: SaltLevel;
   price_per_kg_snapshot: number;
   total: number;
   status: OrderStatus;
