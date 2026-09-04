@@ -6,22 +6,31 @@ import { formatCOP, formatDate, KG_PER_LB } from "@/lib/constants";
 
 export default function PriceEditor({
   initialPrice,
+  initialCost,
   updatedAt,
 }: {
   initialPrice: number | null;
+  initialCost: number | null;
   updatedAt: string | null;
 }) {
   const router = useRouter();
   const [price, setPrice] = useState(initialPrice ? String(initialPrice) : "");
+  const [cost, setCost] = useState(initialCost ? String(initialCost) : "");
   const [status, setStatus] = useState<"idle" | "loading" | "error">("idle");
   const [error, setError] = useState("");
   const [lastUpdated, setLastUpdated] = useState(updatedAt);
 
   async function handleSubmit(e: React.FormEvent) {
     e.preventDefault();
-    const value = Number(price);
-    if (!Number.isFinite(value) || value <= 0) {
-      setError("Ingresa un precio válido");
+    const priceValue = Number(price);
+    const costValue = cost ? Number(cost) : 0;
+    if (!Number.isFinite(priceValue) || priceValue <= 0) {
+      setError("Ingresa un precio de venta válido");
+      setStatus("error");
+      return;
+    }
+    if (!Number.isFinite(costValue) || costValue < 0) {
+      setError("Ingresa un costo válido");
       setStatus("error");
       return;
     }
@@ -31,7 +40,7 @@ export default function PriceEditor({
       const res = await fetch("/api/admin/settings", {
         method: "POST",
         headers: { "Content-Type": "application/json" },
-        body: JSON.stringify({ price_per_kg: value }),
+        body: JSON.stringify({ price_per_kg: priceValue, cost_per_kg: costValue }),
       });
       const data = await res.json();
       if (!res.ok) {
@@ -59,7 +68,11 @@ export default function PriceEditor({
       <p className="mb-4 text-xs text-zinc-500">
         {lastUpdated ? `Última actualización: ${formatDate(lastUpdated)}` : "Aún no configurado"}
       </p>
-      <div className="flex gap-2">
+
+      <label className="mb-3 block">
+        <span className="mb-1 block text-xs font-medium text-zinc-600">
+          Precio de venta por kg (lo que paga el cliente)
+        </span>
         <input
           type="number"
           step="0.01"
@@ -67,16 +80,33 @@ export default function PriceEditor({
           value={price}
           onChange={(e) => setPrice(e.target.value)}
           placeholder="Ej. 25000"
-          className="flex-1 rounded-lg border border-zinc-300 px-3 py-2 outline-none focus:border-amber-500 focus:ring-2 focus:ring-amber-200"
+          className="w-full rounded-lg border border-zinc-300 px-3 py-2 outline-none focus:border-amber-500 focus:ring-2 focus:ring-amber-200"
         />
-        <button
-          type="submit"
-          disabled={status === "loading"}
-          className="rounded-lg bg-amber-600 px-4 py-2 text-sm font-semibold text-white hover:bg-amber-700 disabled:opacity-60"
-        >
-          {status === "loading" ? "Guardando..." : "Guardar"}
-        </button>
-      </div>
+      </label>
+
+      <label className="mb-3 block">
+        <span className="mb-1 block text-xs font-medium text-zinc-600">
+          Costo por kg (lo que a ti te cuesta, opcional — para calcular ganancias)
+        </span>
+        <input
+          type="number"
+          step="0.01"
+          min="0"
+          value={cost}
+          onChange={(e) => setCost(e.target.value)}
+          placeholder="Ej. 15000"
+          className="w-full rounded-lg border border-zinc-300 px-3 py-2 outline-none focus:border-amber-500 focus:ring-2 focus:ring-amber-200"
+        />
+      </label>
+
+      <button
+        type="submit"
+        disabled={status === "loading"}
+        className="w-full rounded-lg bg-amber-600 px-4 py-2 text-sm font-semibold text-white hover:bg-amber-700 disabled:opacity-60"
+      >
+        {status === "loading" ? "Guardando..." : "Guardar"}
+      </button>
+
       {price && Number.isFinite(priceNumber) && priceNumber > 0 && (
         <p className="mt-2 text-xs text-zinc-500">
           Equivale a {formatCOP(priceNumber * KG_PER_LB)} por libra

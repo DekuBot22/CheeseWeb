@@ -4,14 +4,19 @@ import { supabaseAdmin } from "@/lib/supabase";
 export async function POST(request: NextRequest) {
   const body = await request.json().catch(() => null);
   const price = Number(body?.price_per_kg);
+  const cost = body?.cost_per_kg === undefined ? 0 : Number(body.cost_per_kg);
 
   if (!Number.isFinite(price) || price <= 0) {
     return NextResponse.json({ error: "Precio inválido" }, { status: 400 });
   }
 
+  if (!Number.isFinite(cost) || cost < 0) {
+    return NextResponse.json({ error: "Costo inválido" }, { status: 400 });
+  }
+
   const { data, error } = await supabaseAdmin
     .from("settings")
-    .update({ price_per_kg: price, updated_at: new Date().toISOString() })
+    .update({ price_per_kg: price, cost_per_kg: cost, updated_at: new Date().toISOString() })
     .eq("id", 1)
     .select()
     .single();

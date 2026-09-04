@@ -1,4 +1,4 @@
-import type { CheeseType, SaltLevel } from "./types";
+import type { CheeseType, SaltLevel, PaymentStatus } from "./types";
 
 export const KG_PER_LB = 0.45359237;
 
@@ -12,6 +12,12 @@ export const SALT_LEVEL_LABELS: Record<SaltLevel, string> = {
   alto: "Alto en sal",
   intermedio: "Sal intermedia",
   bajo: "Bajo en sal",
+};
+
+export const PAYMENT_STATUS_LABELS: Record<PaymentStatus, string> = {
+  debe: "Debe",
+  parcial: "Pago parcial",
+  pagado: "Pagado",
 };
 
 export function toKg(quantity: number, unit: "kg" | "lb"): number {

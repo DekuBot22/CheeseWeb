@@ -5,9 +5,15 @@ te llegue el aviso al instante por Telegram. Tú controlas el precio desde un
 panel de administrador antes de compartir el enlace.
 
 - **`/`** — página pública donde el cliente escribe su nombre, elige kg o lb,
-  pone la cantidad y ve el total calculado con el precio del día.
-- **`/admin`** — panel privado (con contraseña) donde cambias el precio por
-  kg y ves/gestionas los pedidos.
+  el tipo de queso (duro/semi/blando) y el nivel de sal, pone la cantidad y ve
+  el total calculado con el precio del día.
+- **`/admin`** — panel privado (con contraseña) con tres secciones:
+  - **Pedidos**: cambias el precio (y costo) por kg, ves cada pedido, lo
+    marcas como completado y registras abonos/pagos.
+  - **Clientes**: se crean solos con cada pedido; ahí ves su historial,
+    cuánto debe o si tiene saldo a favor, y editas teléfono/notas.
+  - **Ganancias**: ingresos, cobrado, costo y ganancia estimada por hoy,
+    últimos 7/30 días o todo.
 
 Tecnologías: Next.js 16 + TypeScript + Tailwind CSS (gratis en Vercel) y
 Supabase (base de datos Postgres gratis) + notificaciones por Telegram.
@@ -18,9 +24,10 @@ Supabase (base de datos Postgres gratis) + notificaciones por Telegram.
    proyecto nuevo (elige una contraseña de base de datos y guárdala).
 2. Dentro del proyecto, ve a **SQL Editor > New query**, pega todo el
    contenido del archivo [`supabase/schema.sql`](./supabase/schema.sql) y
-   dale **Run**. Esto crea las tablas `settings` (precio) y `orders`
-   (pedidos), con un precio inicial de ejemplo ($20.000/kg) que luego
-   cambias desde el panel.
+   dale **Run**. Esto crea las tablas `settings` (precio/costo), `clients`
+   (clientes y su saldo), `orders` (pedidos/ventas) y `payments` (abonos),
+   con un precio inicial de ejemplo ($20.000/kg) que luego cambias desde el
+   panel.
 3. Ve a **Project Settings > API** y copia:
    - **Project URL** → será `SUPABASE_URL`
    - **service_role key** (no la `anon` key) → será `SUPABASE_SERVICE_ROLE_KEY`
@@ -82,11 +89,16 @@ contraseña `ADMIN_PASSWORD`).
 ## Uso diario
 
 1. Antes de compartir el link (por WhatsApp, redes, etc.), entra a
-   `/admin`, actualiza el precio por kg y guarda. La fecha de actualización
-   se registra sola.
+   `/admin`, actualiza el precio (y opcionalmente el costo, para ver
+   ganancias) por kg y guarda. La fecha de actualización se registra sola.
 2. Comparte el link de la página principal con tus clientes.
 3. Cada pedido te llega al instante por Telegram y queda guardado en
    `/admin`, donde puedes marcarlo como "completado" cuando lo despaches.
+4. Cuando un cliente pague (todo o una parte), entra al pedido y usa
+   **Registrar abono**. Si paga de más, el excedente queda como saldo a
+   favor en su ficha de cliente para el próximo pedido.
+5. En **Clientes** ves quién debe y cuánto; en **Ganancias**, cómo va el
+   negocio por período.
 
 ## Notas
 

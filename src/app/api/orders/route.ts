@@ -1,6 +1,7 @@
 import { NextRequest, NextResponse } from "next/server";
 import { supabaseAdmin } from "@/lib/supabase";
 import { sendTelegramMessage } from "@/lib/telegram";
+import { findOrCreateClient } from "@/lib/clients";
 import {
   toKg,
   formatCOP,
@@ -43,7 +44,7 @@ export async function POST(request: NextRequest) {
 
   const { data: settings, error: settingsError } = await supabaseAdmin
     .from("settings")
-    .select("price_per_kg")
+    .select("price_per_kg, cost_per_kg")
     .eq("id", 1)
     .single();
 
@@ -55,18 +56,30 @@ export async function POST(request: NextRequest) {
   }
 
   const pricePerKg = Number(settings.price_per_kg);
+  const costPerKg = Number(settings.cost_per_kg ?? 0);
   const total = Math.round(toKg(quantity, unit) * pricePerKg);
+
+  let clientId: string;
+  try {
+    clientId = await findOrCreateClient(clientName);
+  } catch {
+    return NextResponse.json({ error: "No se pudo registrar el cliente" }, { status: 500 });
+  }
 
   const { data: order, error: insertError } = await supabaseAdmin
     .from("orders")
     .insert({
+      client_id: clientId,
       client_name: clientName.trim(),
       quantity,
       unit,
       cheese_type: cheeseType,
       salt_level: saltLevel,
       price_per_kg_snapshot: pricePerKg,
+      cost_per_kg_snapshot: costPerKg,
       total,
+      amount_paid: 0,
+      payment_status: "debe",
       status: "pendiente",
     })
     .select()
