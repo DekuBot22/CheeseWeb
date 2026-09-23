@@ -11,6 +11,7 @@ export interface ClientRow {
   credit_balance: number;
   total_debe: number;
   orders_count: number;
+  days_in_debt: number | null;
 }
 
 export default function ClientsList({ clients }: { clients: ClientRow[] }) {
@@ -55,9 +56,16 @@ export default function ClientsList({ clients }: { clients: ClientRow[] }) {
               </div>
               <div className="text-right">
                 {client.total_debe > 0 && (
-                  <p className="text-sm font-semibold text-red-700">
-                    Debe {formatCOP(client.total_debe)}
-                  </p>
+                  <>
+                    <p className="text-sm font-semibold text-red-700">
+                      Debe {formatCOP(client.total_debe)}
+                    </p>
+                    {client.days_in_debt !== null && client.days_in_debt >= 7 && (
+                      <p className="text-xs font-medium text-red-500">
+                        Hace {client.days_in_debt} días
+                      </p>
+                    )}
+                  </>
                 )}
                 {client.credit_balance > 0 && (
                   <p className="text-sm font-semibold text-emerald-700">

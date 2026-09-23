@@ -5,6 +5,7 @@ import {
   toKg,
   formatCOP,
   formatDate,
+  KG_PER_LB,
   CHEESE_TYPE_LABELS,
   SALT_LEVEL_LABELS,
 } from "@/lib/constants";
@@ -15,6 +16,12 @@ type Status = "idle" | "loading" | "success" | "error";
 
 const CHEESE_TYPES: CheeseType[] = ["duro", "semi", "blando"];
 const SALT_LEVELS: SaltLevel[] = ["alto", "intermedio", "bajo"];
+
+const CHIP_BASE =
+  "rounded-lg border px-2 py-2 text-sm font-semibold transition-transform duration-150";
+const CHIP_ACTIVE = "border-curado bg-curado text-cuajada -rotate-1 shadow-sm";
+const CHIP_INACTIVE =
+  "border-corteza bg-white text-tinta hover:border-curado hover:-rotate-1";
 
 export default function OrderForm({
   pricePerKg,
@@ -36,6 +43,8 @@ export default function OrderForm({
     if (!Number.isFinite(qtyNumber) || qtyNumber <= 0) return 0;
     return Math.round(toKg(qtyNumber, unit) * pricePerKg);
   }, [qtyNumber, unit, pricePerKg]);
+
+  const pricePerLb = pricePerKg * KG_PER_LB;
 
   async function handleSubmit(e: React.FormEvent) {
     e.preventDefault();
@@ -70,7 +79,9 @@ export default function OrderForm({
     return (
       <div className="rounded-2xl border border-emerald-200 bg-emerald-50 p-6 text-center shadow-sm">
         <div className="mb-2 text-4xl">✅</div>
-        <h2 className="text-lg font-semibold text-emerald-900">¡Pedido enviado!</h2>
+        <h2 className="font-display text-lg font-semibold text-emerald-900">
+          ¡Pedido enviado!
+        </h2>
         <p className="mt-1 text-sm text-emerald-800">
           Gracias {clientName}, tu pedido de {quantity} {unit} fue recibido. Te
           contactaremos para confirmarlo.
@@ -92,20 +103,30 @@ export default function OrderForm({
   return (
     <form
       onSubmit={handleSubmit}
-      className="rounded-2xl border border-amber-200 bg-white p-6 shadow-sm"
+      className="rounded-2xl border border-corteza bg-white p-6 shadow-sm"
     >
-      <div className="mb-1 flex items-baseline justify-between rounded-xl bg-amber-100/70 px-4 py-3">
-        <span className="text-sm font-medium text-amber-900">Precio por kg</span>
-        <span className="text-lg font-bold text-amber-950">{formatCOP(pricePerKg)}</span>
+      <div className="price-tag mb-1 rounded-xl bg-corteza/40 px-5 py-3">
+        <div className="flex items-baseline justify-between">
+          <span className="text-sm font-medium text-tinta/80">Precio por kg</span>
+          <span className="font-mono text-lg font-bold text-tinta">
+            {formatCOP(pricePerKg)}
+          </span>
+        </div>
+        <div className="mt-0.5 flex items-baseline justify-between">
+          <span className="text-xs font-medium text-tinta/60">Precio por libra</span>
+          <span className="font-mono text-sm font-semibold text-tinta/80">
+            {formatCOP(pricePerLb)}
+          </span>
+        </div>
       </div>
       {updatedAt && (
-        <p className="mb-5 mt-1.5 text-xs text-amber-700">
+        <p className="mb-5 mt-1.5 text-xs text-tinta/50">
           Actualizado el {formatDate(updatedAt)}
         </p>
       )}
 
       <label className="mb-4 block">
-        <span className="mb-1 block text-sm font-medium text-zinc-700">Tu nombre</span>
+        <span className="mb-1 block text-sm font-medium text-tinta/80">Tu nombre</span>
         <input
           required
           minLength={2}
@@ -113,23 +134,19 @@ export default function OrderForm({
           value={clientName}
           onChange={(e) => setClientName(e.target.value)}
           placeholder="Ej. María Pérez"
-          className="w-full rounded-lg border border-zinc-300 px-3 py-2 text-zinc-900 outline-none focus:border-amber-500 focus:ring-2 focus:ring-amber-200"
+          className="w-full rounded-lg border border-corteza px-3 py-2 text-tinta outline-none focus:border-curado focus:ring-2 focus:ring-curado/30"
         />
       </label>
 
       <div className="mb-4">
-        <span className="mb-1 block text-sm font-medium text-zinc-700">Unidad</span>
+        <span className="mb-1 block text-sm font-medium text-tinta/80">Unidad</span>
         <div className="grid grid-cols-2 gap-2">
           {(["kg", "lb"] as Unit[]).map((u) => (
             <button
               key={u}
               type="button"
               onClick={() => setUnit(u)}
-              className={`rounded-lg border px-3 py-2 text-sm font-semibold transition-colors ${
-                unit === u
-                  ? "border-amber-600 bg-amber-600 text-white"
-                  : "border-zinc-300 bg-white text-zinc-700 hover:border-amber-400"
-              }`}
+              className={`${CHIP_BASE} ${unit === u ? CHIP_ACTIVE : CHIP_INACTIVE}`}
             >
               {u === "kg" ? "Kilogramos" : "Libras"}
             </button>
@@ -138,17 +155,15 @@ export default function OrderForm({
       </div>
 
       <div className="mb-4">
-        <span className="mb-1 block text-sm font-medium text-zinc-700">Tipo de queso</span>
+        <span className="mb-1 block text-sm font-medium text-tinta/80">Tipo de queso</span>
         <div className="grid grid-cols-3 gap-2">
           {CHEESE_TYPES.map((type) => (
             <button
               key={type}
               type="button"
               onClick={() => setCheeseType(type)}
-              className={`rounded-lg border px-2 py-2 text-sm font-semibold transition-colors ${
-                cheeseType === type
-                  ? "border-amber-600 bg-amber-600 text-white"
-                  : "border-zinc-300 bg-white text-zinc-700 hover:border-amber-400"
+              className={`${CHIP_BASE} px-2 ${
+                cheeseType === type ? CHIP_ACTIVE : CHIP_INACTIVE
               }`}
             >
               {CHEESE_TYPE_LABELS[type]}
@@ -158,17 +173,15 @@ export default function OrderForm({
       </div>
 
       <div className="mb-4">
-        <span className="mb-1 block text-sm font-medium text-zinc-700">Nivel de sal</span>
+        <span className="mb-1 block text-sm font-medium text-tinta/80">Nivel de sal</span>
         <div className="grid grid-cols-3 gap-2">
           {SALT_LEVELS.map((level) => (
             <button
               key={level}
               type="button"
               onClick={() => setSaltLevel(level)}
-              className={`rounded-lg border px-2 py-2 text-xs font-semibold transition-colors sm:text-sm ${
-                saltLevel === level
-                  ? "border-amber-600 bg-amber-600 text-white"
-                  : "border-zinc-300 bg-white text-zinc-700 hover:border-amber-400"
+              className={`${CHIP_BASE} px-2 text-xs sm:text-sm ${
+                saltLevel === level ? CHIP_ACTIVE : CHIP_INACTIVE
               }`}
             >
               {SALT_LEVEL_LABELS[level]}
@@ -178,7 +191,7 @@ export default function OrderForm({
       </div>
 
       <label className="mb-5 block">
-        <span className="mb-1 block text-sm font-medium text-zinc-700">
+        <span className="mb-1 block text-sm font-medium text-tinta/80">
           Cantidad ({unit})
         </span>
         <input
@@ -190,13 +203,13 @@ export default function OrderForm({
           value={quantity}
           onChange={(e) => setQuantity(e.target.value)}
           placeholder="Ej. 2"
-          className="w-full rounded-lg border border-zinc-300 px-3 py-2 text-zinc-900 outline-none focus:border-amber-500 focus:ring-2 focus:ring-amber-200"
+          className="w-full rounded-lg border border-corteza px-3 py-2 text-tinta outline-none focus:border-curado focus:ring-2 focus:ring-curado/30"
         />
       </label>
 
-      <div className="mb-5 flex items-center justify-between border-t border-dashed border-zinc-200 pt-4">
-        <span className="text-sm font-medium text-zinc-600">Total estimado</span>
-        <span className="text-xl font-bold text-amber-950">{formatCOP(total)}</span>
+      <div className="mb-5 flex items-center justify-between border-t border-dashed border-terracota/30 pt-4">
+        <span className="text-sm font-medium text-tinta/70">Total estimado</span>
+        <span className="font-mono text-xl font-bold text-tinta">{formatCOP(total)}</span>
       </div>
 
       {errorMsg && (
@@ -206,7 +219,7 @@ export default function OrderForm({
       <button
         type="submit"
         disabled={status === "loading"}
-        className="w-full rounded-lg bg-amber-600 px-4 py-3 text-sm font-semibold text-white transition-colors hover:bg-amber-700 disabled:opacity-60"
+        className="w-full rounded-lg bg-curado px-4 py-3 text-sm font-semibold text-cuajada transition-colors hover:bg-terracota disabled:opacity-60"
       >
         {status === "loading" ? "Enviando..." : "Enviar pedido"}
       </button>
