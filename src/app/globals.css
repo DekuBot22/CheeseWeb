@@ -1,26 +1,71 @@
 @import "tailwindcss";
 
+/*
+ * Paleta "queso campesino": crema de cuajada, corteza dorada, ámbar de
+ * queso curado y terracota de las ollas de barro donde se cuaja. Nombrados
+ * por el material real, no por su rol en la UI, para que sea fácil de
+ * ajustar si más adelante entran fotos reales del negocio.
+ */
 :root {
-  --background: #ffffff;
-  --foreground: #171717;
+  --cuajada: #fbf4e4;
+  --corteza: #ecd5a0;
+  --curado: #b5651d;
+  --terracota: #9a4a34;
+  --tinta: #2e2115;
 }
 
 @theme inline {
-  --color-background: var(--background);
-  --color-foreground: var(--foreground);
+  --color-background: var(--cuajada);
+  --color-foreground: var(--tinta);
+  --color-cuajada: var(--cuajada);
+  --color-corteza: var(--corteza);
+  --color-curado: var(--curado);
+  --color-terracota: var(--terracota);
+  --color-tinta: var(--tinta);
   --font-sans: var(--font-geist-sans);
   --font-mono: var(--font-geist-mono);
-}
-
-@media (prefers-color-scheme: dark) {
-  :root {
-    --background: #0a0a0a;
-    --foreground: #ededed;
-  }
+  --font-display: var(--font-fraunces);
 }
 
 body {
-  background: var(--background);
-  color: var(--foreground);
-  font-family: Arial, Helvetica, sans-serif;
+  background: var(--color-background);
+  color: var(--color-foreground);
+  font-family: var(--font-sans), Arial, Helvetica, sans-serif;
+}
+
+@media (prefers-reduced-motion: reduce) {
+  *,
+  *::before,
+  *::after {
+    animation-duration: 0.01ms !important;
+    animation-iteration-count: 1 !important;
+    transition-duration: 0.01ms !important;
+  }
+}
+
+/* Precio mostrado como una etiqueta colgante con muescas de boleto,
+   en vez de una tarjeta genérica: el queso campesino se vende con precio
+   escrito a mano en una tira de cartulina. */
+.price-tag {
+  --mask: radial-gradient(circle 9px at 0 50%, transparent 9px, black 9.5px),
+    radial-gradient(circle 9px at 100% 50%, transparent 9px, black 9.5px);
+  -webkit-mask-image: var(--mask);
+  mask-image: var(--mask);
+  -webkit-mask-composite: source-in;
+  mask-composite: intersect;
+}
+
+@keyframes rise-in {
+  from {
+    opacity: 0;
+    transform: translateY(10px);
+  }
+  to {
+    opacity: 1;
+    transform: translateY(0);
+  }
+}
+
+.rise-in {
+  animation: rise-in 0.5s ease-out both;
 }

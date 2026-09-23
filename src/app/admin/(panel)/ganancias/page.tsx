@@ -1,110 +1,177 @@
 import Link from "next/link";
 import { supabaseAdmin } from "@/lib/supabase";
-import { toKg, formatCOP } from "@/lib/constants";
-import type { Order } from "@/lib/types";
+import { formatCOP } from "@/lib/constants";
+import { weekRange, shiftWeek, formatWeekLabel } from "@/lib/weeks";
+import { computeStats, type PeriodStats } from "@/lib/accounting";
+import type { Order, Purchase, ProviderPayment } from "@/lib/types";
 
 export const dynamic = "force-dynamic";
 
-type Range = "hoy" | "semana" | "mes" | "todo";
+async function loadRange(start: Date, end: Date | null) {
+  let ordersQuery = supabaseAdmin
+    .from("orders")
+    .select(
+      "quantity, unit, total, amount_paid, price_per_kg_snapshot, cost_per_kg_snapshot, created_at"
+    )
+    .gte("created_at", start.toISOString());
+  if (end) ordersQuery = ordersQuery.lte("created_at", end.toISOString());
 
-const RANGE_LABELS: Record<Range, string> = {
-  hoy: "Hoy",
-  semana: "Últimos 7 días",
-  mes: "Últimos 30 días",
-  todo: "Todo",
-};
+  let purchasesQuery = supabaseAdmin
+    .from("purchases")
+    .select("kg, total_cost, purchase_date")
+    .gte("purchase_date", start.toISOString().slice(0, 10));
+  if (end) purchasesQuery = purchasesQuery.lte("purchase_date", end.toISOString().slice(0, 10));
 
-function rangeStart(range: Range): Date | null {
-  const now = new Date();
-  if (range === "hoy") {
-    return new Date(now.getFullYear(), now.getMonth(), now.getDate());
-  }
-  if (range === "semana") {
-    return new Date(now.getTime() - 7 * 24 * 60 * 60 * 1000);
-  }
-  if (range === "mes") {
-    return new Date(now.getTime() - 30 * 24 * 60 * 60 * 1000);
-  }
-  return null;
+  let providerPaymentsQuery = supabaseAdmin
+    .from("provider_payments")
+    .select("amount, payment_date")
+    .gte("payment_date", start.toISOString().slice(0, 10));
+  if (end)
+    providerPaymentsQuery = providerPaymentsQuery.lte(
+      "payment_date",
+      end.toISOString().slice(0, 10)
+    );
+
+  const [{ data: orders }, { data: purchases }, { data: providerPayments }] = await Promise.all([
+    ordersQuery,
+    purchasesQuery,
+    providerPaymentsQuery,
+  ]);
+
+  return {
+    orders: (orders as Order[]) ?? [],
+    purchases: (purchases as Purchase[]) ?? [],
+    providerPayments: (providerPayments as ProviderPayment[]) ?? [],
+  };
 }
 
 export default async function GananciasPage({
   searchParams,
 }: {
-  searchParams: Promise<{ rango?: string }>;
+  searchParams: Promise<{ semana?: string; vista?: string }>;
 }) {
-  const { rango } = await searchParams;
-  const range: Range =
-    rango === "hoy" || rango === "semana" || rango === "mes" || rango === "todo"
-      ? rango
-      : "mes";
+  const { semana, vista } = await searchParams;
 
-  let query = supabaseAdmin
-    .from("orders")
-    .select("quantity, unit, total, amount_paid, price_per_kg_snapshot, cost_per_kg_snapshot, created_at");
+  if (vista === "todo") {
+    const { orders, purchases, providerPayments } = await loadRange(new Date(0), null);
+    const stats = computeStats(orders, purchases, providerPayments);
+    return (
+      <div>
+        <div className="mb-6 flex items-center justify-between">
+          <Link href="/admin/ganancias" className="text-sm font-medium text-amber-700">
+            ◀ Ver por semana
+          </Link>
+          <span className="text-sm font-semibold text-zinc-700">Todo el tiempo</span>
+        </div>
+        <StatsGrid stats={stats} orderCount={orders.length} />
+        <ExportLink start={new Date(0)} end={new Date()} label="Descargar Excel (todo)" />
+      </div>
+    );
+  }
 
-  const start = rangeStart(range);
-  if (start) query = query.gte("created_at", start.toISOString());
+  const anchor = semana ? new Date(`${semana}T00:00:00`) : new Date();
+  const { start, end } = weekRange(anchor);
+  const { orders, purchases, providerPayments } = await loadRange(start, end);
+  const stats = computeStats(orders, purchases, providerPayments);
 
-  const { data: orders } = await query;
-  const list =
-    (orders as Pick<
-      Order,
-      "quantity" | "unit" | "total" | "amount_paid" | "price_per_kg_snapshot" | "cost_per_kg_snapshot" | "created_at"
-    >[]) ?? [];
-
-  const revenue = list.reduce((sum, o) => sum + Number(o.total), 0);
-  const collected = list.reduce((sum, o) => sum + Number(o.amount_paid), 0);
-  const cost = list.reduce(
-    (sum, o) => sum + toKg(Number(o.quantity), o.unit) * Number(o.cost_per_kg_snapshot),
-    0
-  );
-  const profit = revenue - cost;
-  const margin = revenue > 0 ? (profit / revenue) * 100 : 0;
+  const prevWeekStart = shiftWeek(start.toISOString(), -1).toISOString().slice(0, 10);
+  const nextWeekStart = shiftWeek(start.toISOString(), 1).toISOString().slice(0, 10);
+  const isCurrentWeek = weekRange().start.getTime() === start.getTime();
 
   return (
     <div>
-      <div className="mb-6 flex gap-1 rounded-full bg-zinc-100 p-1 text-sm">
-        {(Object.keys(RANGE_LABELS) as Range[]).map((r) => (
+      <div className="mb-6 flex items-center justify-between">
+        <Link
+          href={`/admin/ganancias?semana=${prevWeekStart}`}
+          className="text-sm font-medium text-amber-700 hover:text-amber-900"
+        >
+          ◀ Semana anterior
+        </Link>
+        <div className="text-center">
+          <p className="text-sm font-semibold text-zinc-800">{formatWeekLabel(start, end)}</p>
+          {isCurrentWeek && <p className="text-xs text-zinc-400">Semana actual</p>}
+        </div>
+        {isCurrentWeek ? (
+          <span className="text-sm text-zinc-300">Semana siguiente ▶</span>
+        ) : (
           <Link
-            key={r}
-            href={`/admin/ganancias?rango=${r}`}
-            className={`rounded-full px-3 py-1.5 font-medium transition-colors ${
-              range === r ? "bg-white text-zinc-900 shadow-sm" : "text-zinc-500 hover:text-zinc-800"
-            }`}
+            href={`/admin/ganancias?semana=${nextWeekStart}`}
+            className="text-sm font-medium text-amber-700 hover:text-amber-900"
           >
-            {RANGE_LABELS[r]}
+            Semana siguiente ▶
           </Link>
-        ))}
+        )}
       </div>
 
-      <div className="grid grid-cols-2 gap-3 sm:grid-cols-4">
+      <StatsGrid stats={stats} orderCount={orders.length} />
+
+      <div className="mt-4 flex items-center justify-between">
+        <Link href="/admin/ganancias?vista=todo" className="text-xs font-medium text-zinc-500 underline">
+          Ver todo el tiempo
+        </Link>
+        <ExportLink start={start} end={end} label="Descargar Excel de esta semana" />
+      </div>
+    </div>
+  );
+}
+
+function StatsGrid({ stats, orderCount }: { stats: PeriodStats; orderCount: number }) {
+  return (
+    <>
+      <div className="grid grid-cols-2 gap-3 sm:grid-cols-3">
         <div className="rounded-2xl border border-zinc-200 bg-white p-4 shadow-sm">
           <p className="text-xs text-zinc-500">Ingresos (pedidos)</p>
-          <p className="mt-1 text-lg font-bold text-zinc-900">{formatCOP(revenue)}</p>
+          <p className="mt-1 text-lg font-bold text-zinc-900">{formatCOP(stats.revenue)}</p>
         </div>
         <div className="rounded-2xl border border-zinc-200 bg-white p-4 shadow-sm">
           <p className="text-xs text-zinc-500">Cobrado</p>
-          <p className="mt-1 text-lg font-bold text-zinc-900">{formatCOP(collected)}</p>
+          <p className="mt-1 text-lg font-bold text-zinc-900">{formatCOP(stats.collected)}</p>
         </div>
         <div className="rounded-2xl border border-zinc-200 bg-white p-4 shadow-sm">
-          <p className="text-xs text-zinc-500">Costo estimado</p>
-          <p className="mt-1 text-lg font-bold text-zinc-900">{formatCOP(cost)}</p>
+          <p className="text-xs text-zinc-500">
+            Costo {stats.usingRealCost ? "(compras registradas)" : "(estimado por kg)"}
+          </p>
+          <p className="mt-1 text-lg font-bold text-zinc-900">{formatCOP(stats.cost)}</p>
+        </div>
+        <div className="rounded-2xl border border-zinc-200 bg-white p-4 shadow-sm">
+          <p className="text-xs text-zinc-500">Pagado al proveedor</p>
+          <p className="mt-1 text-lg font-bold text-zinc-900">{formatCOP(stats.pagadoProveedor)}</p>
+        </div>
+        <div className="rounded-2xl border border-zinc-200 bg-white p-4 shadow-sm">
+          <p className="text-xs text-zinc-500">Saldo con proveedor</p>
+          <p className="mt-1 text-lg font-bold text-zinc-900">{formatCOP(stats.saldoProveedor)}</p>
         </div>
         <div className="rounded-2xl border border-amber-200 bg-amber-50 p-4 shadow-sm">
           <p className="text-xs text-amber-800">Ganancia</p>
           <p className="mt-1 text-lg font-bold text-amber-950">
-            {formatCOP(profit)}{" "}
-            <span className="text-xs font-medium text-amber-700">({margin.toFixed(0)}%)</span>
+            {formatCOP(stats.profit)}{" "}
+            <span className="text-xs font-medium text-amber-700">
+              ({stats.margin.toFixed(0)}%)
+            </span>
           </p>
         </div>
       </div>
 
       <p className="mt-4 text-xs text-zinc-400">
-        {list.length} pedido{list.length === 1 ? "" : "s"} en este rango · La ganancia se calcula
-        con el costo por kg que configures en Pedidos. Si lo dejas en 0, la ganancia será igual a
-        los ingresos.
+        {orderCount} pedido{orderCount === 1 ? "" : "s"} en este período.
+        {!stats.usingRealCost &&
+          " El costo se calcula con el costo por kg que configures en Pedidos, porque aún no hay compras registradas en Compras esta semana."}
       </p>
-    </div>
+    </>
+  );
+}
+
+function ExportLink({ start, end, label }: { start: Date; end: Date; label: string }) {
+  const params = new URLSearchParams({
+    start: start.toISOString(),
+    end: end.toISOString(),
+  });
+  return (
+    <a
+      href={`/api/admin/export?${params.toString()}`}
+      className="rounded-lg border border-zinc-300 bg-white px-3 py-1.5 text-xs font-semibold text-zinc-700 hover:border-amber-400"
+    >
+      {label}
+    </a>
   );
 }
