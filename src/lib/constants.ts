@@ -1,6 +1,8 @@
 import type { CheeseType, SaltLevel, PaymentStatus } from "./types";
 
-export const KG_PER_LB = 0.45359237;
+// En la región donde opera el negocio se maneja 1 kg = 2 lb (no el valor
+// internacional 0.4536). Todos los totales y costos dependen de esta constante.
+export const KG_PER_LB = 0.5;
 
 // Número de WhatsApp del negocio (con indicativo de país, sin "+" ni espacios)
 // para el botón de pedido directo.
