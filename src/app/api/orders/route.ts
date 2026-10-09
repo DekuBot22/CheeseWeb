@@ -10,13 +10,20 @@ import {
 } from "@/lib/constants";
 import type { CheeseType, SaltLevel } from "@/lib/types";
 
+const MIN_AMOUNT = 1000;
+const MAX_AMOUNT = 5_000_000;
+
 export async function POST(request: NextRequest) {
   const body = await request.json().catch(() => null);
   const clientName = body?.client_name;
   const unit = body?.unit;
   const cheeseType = body?.cheese_type;
   const saltLevel = body?.salt_level;
-  const quantity = Number(body?.quantity);
+  // Pedido por valor: el cliente indica cuántos pesos de queso quiere en vez
+  // de una cantidad de peso. Si viene `amount`, se ignora `quantity`/`unit`.
+  const hasAmount = body?.amount !== undefined && body?.amount !== null && body?.amount !== "";
+  const amount = hasAmount ? Number(body.amount) : 0;
+  let quantity = Number(body?.quantity);
 
   if (
     typeof clientName !== "string" ||
@@ -26,7 +33,16 @@ export async function POST(request: NextRequest) {
     return NextResponse.json({ error: "Ingresa un nombre válido" }, { status: 400 });
   }
 
-  if (unit !== "kg" && unit !== "lb") {
+  if (hasAmount) {
+    if (!Number.isFinite(amount) || amount < MIN_AMOUNT || amount > MAX_AMOUNT) {
+      return NextResponse.json(
+        {
+          error: `El valor del pedido debe estar entre ${formatCOP(MIN_AMOUNT)} y ${formatCOP(MAX_AMOUNT)}`,
+        },
+        { status: 400 }
+      );
+    }
+  } else if (unit !== "kg" && unit !== "lb") {
     return NextResponse.json({ error: "Unidad inválida" }, { status: 400 });
   }
 
@@ -38,7 +54,7 @@ export async function POST(request: NextRequest) {
     return NextResponse.json({ error: "Elige un nivel de sal válido" }, { status: 400 });
   }
 
-  if (!Number.isFinite(quantity) || quantity <= 0 || quantity > 1000) {
+  if (!hasAmount && (!Number.isFinite(quantity) || quantity <= 0 || quantity > 1000)) {
     return NextResponse.json({ error: "Ingresa una cantidad válida" }, { status: 400 });
   }
 
@@ -57,7 +73,18 @@ export async function POST(request: NextRequest) {
 
   const pricePerKg = Number(settings.price_per_kg);
   const costPerKg = Number(settings.cost_per_kg ?? 0);
-  const total = Math.round(toKg(quantity, unit) * pricePerKg);
+
+  let orderUnit: "kg" | "lb" = unit;
+  let total: number;
+  if (hasAmount) {
+    // Se guardan los kg equivalentes (2 decimales, como el resto de pedidos)
+    // pero el total queda exacto en el valor que pidió el cliente.
+    orderUnit = "kg";
+    quantity = Math.max(0.01, Math.round((amount / pricePerKg) * 100) / 100);
+    total = Math.round(amount);
+  } else {
+    total = Math.round(toKg(quantity, unit) * pricePerKg);
+  }
 
   let clientId: string;
   try {
@@ -72,7 +99,7 @@ export async function POST(request: NextRequest) {
       client_id: clientId,
       client_name: clientName.trim(),
       quantity,
-      unit,
+      unit: orderUnit,
       cheese_type: cheeseType,
       salt_level: saltLevel,
       price_per_kg_snapshot: pricePerKg,
@@ -92,7 +119,9 @@ export async function POST(request: NextRequest) {
   await sendTelegramMessage(
     "🧀 <b>Nuevo pedido de queso</b>\n\n" +
       `Cliente: ${order.client_name}\n` +
-      `Cantidad: ${order.quantity} ${order.unit}\n` +
+      (hasAmount
+        ? `Pedido por valor: ${formatCOP(total)} (≈ ${order.quantity} kg)\n`
+        : `Cantidad: ${order.quantity} ${order.unit}\n`) +
       `Tipo: ${CHEESE_TYPE_LABELS[order.cheese_type as CheeseType]}\n` +
       `Sal: ${SALT_LEVEL_LABELS[order.salt_level as SaltLevel]}\n` +
       `Total: ${formatCOP(order.total)}\n` +

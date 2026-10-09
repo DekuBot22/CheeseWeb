@@ -2,7 +2,7 @@ import { BUSINESS_WHATSAPP_NUMBER } from "@/lib/constants";
 
 const MESSAGE_TEMPLATE = `Hola, quiero hacer un pedido de queso 🧀
 - Nombre:
-- Cantidad (kg o lb):
+- Cantidad (kg o lb) o valor en pesos (ej. $15.000):
 - Tipo de queso (duro/semi-duro/blando):
 - Nivel de sal (alto/intermedio/bajo):
 - Dirección de entrega:`;

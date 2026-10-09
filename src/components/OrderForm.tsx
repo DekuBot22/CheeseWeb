@@ -12,6 +12,7 @@ import {
 import type { CheeseType, SaltLevel } from "@/lib/types";
 
 type Unit = "kg" | "lb";
+type Mode = "cantidad" | "valor";
 type Status = "idle" | "loading" | "success" | "error";
 
 const CHEESE_TYPES: CheeseType[] = ["duro", "semi", "blando"];
@@ -35,16 +36,24 @@ export default function OrderForm({
   const [cheeseType, setCheeseType] = useState<CheeseType>("semi");
   const [saltLevel, setSaltLevel] = useState<SaltLevel>("intermedio");
   const [quantity, setQuantity] = useState("");
+  const [mode, setMode] = useState<Mode>("cantidad");
+  const [amount, setAmount] = useState("");
   const [status, setStatus] = useState<Status>("idle");
   const [errorMsg, setErrorMsg] = useState("");
 
+  const byAmount = mode === "valor";
   const qtyNumber = Number(quantity);
+  const amountNumber = Number(amount);
+  const amountValid = Number.isFinite(amountNumber) && amountNumber > 0;
   const total = useMemo(() => {
+    if (byAmount) return amountValid ? Math.round(amountNumber) : 0;
     if (!Number.isFinite(qtyNumber) || qtyNumber <= 0) return 0;
     return Math.round(toKg(qtyNumber, unit) * pricePerKg);
-  }, [qtyNumber, unit, pricePerKg]);
+  }, [byAmount, amountValid, amountNumber, qtyNumber, unit, pricePerKg]);
 
   const pricePerLb = pricePerKg * KG_PER_LB;
+  const equivKg = amountValid ? amountNumber / pricePerKg : 0;
+  const equivLb = equivKg / KG_PER_LB;
 
   async function handleSubmit(e: React.FormEvent) {
     e.preventDefault();
@@ -56,8 +65,7 @@ export default function OrderForm({
         headers: { "Content-Type": "application/json" },
         body: JSON.stringify({
           client_name: clientName,
-          quantity: qtyNumber,
-          unit,
+          ...(byAmount ? { amount: amountNumber } : { quantity: qtyNumber, unit }),
           cheese_type: cheeseType,
           salt_level: saltLevel,
         }),
@@ -83,14 +91,16 @@ export default function OrderForm({
           ¡Pedido enviado!
         </h2>
         <p className="mt-1 text-sm text-emerald-800">
-          Gracias {clientName}, tu pedido de {quantity} {unit} fue recibido. Te
-          contactaremos para confirmarlo.
+          Gracias {clientName}, tu pedido de{" "}
+          {byAmount ? `${formatCOP(total)} de queso` : `${quantity} ${unit}`} fue
+          recibido. Te contactaremos para confirmarlo.
         </p>
         <button
           onClick={() => {
             setStatus("idle");
             setClientName("");
             setQuantity("");
+            setAmount("");
           }}
           className="mt-4 text-sm font-medium text-emerald-700 underline underline-offset-2"
         >
@@ -139,20 +149,38 @@ export default function OrderForm({
       </label>
 
       <div className="mb-4">
-        <span className="mb-1 block text-sm font-medium text-tinta/80">Unidad</span>
+        <span className="mb-1 block text-sm font-medium text-tinta/80">¿Cómo quieres pedir?</span>
         <div className="grid grid-cols-2 gap-2">
-          {(["kg", "lb"] as Unit[]).map((u) => (
+          {(["cantidad", "valor"] as Mode[]).map((m) => (
             <button
-              key={u}
+              key={m}
               type="button"
-              onClick={() => setUnit(u)}
-              className={`${CHIP_BASE} ${unit === u ? CHIP_ACTIVE : CHIP_INACTIVE}`}
+              onClick={() => setMode(m)}
+              className={`${CHIP_BASE} ${mode === m ? CHIP_ACTIVE : CHIP_INACTIVE}`}
             >
-              {u === "kg" ? "Kilogramos" : "Libras"}
+              {m === "cantidad" ? "Por cantidad" : "Por valor ($)"}
             </button>
           ))}
         </div>
       </div>
+
+      {!byAmount && (
+        <div className="mb-4">
+          <span className="mb-1 block text-sm font-medium text-tinta/80">Unidad</span>
+          <div className="grid grid-cols-2 gap-2">
+            {(["kg", "lb"] as Unit[]).map((u) => (
+              <button
+                key={u}
+                type="button"
+                onClick={() => setUnit(u)}
+                className={`${CHIP_BASE} ${unit === u ? CHIP_ACTIVE : CHIP_INACTIVE}`}
+              >
+                {u === "kg" ? "Kilogramos" : "Libras"}
+              </button>
+            ))}
+          </div>
+        </div>
+      )}
 
       <div className="mb-4">
         <span className="mb-1 block text-sm font-medium text-tinta/80">Tipo de queso</span>
@@ -190,22 +218,47 @@ export default function OrderForm({
         </div>
       </div>
 
-      <label className="mb-5 block">
-        <span className="mb-1 block text-sm font-medium text-tinta/80">
-          Cantidad ({unit})
-        </span>
-        <input
-          required
-          type="number"
-          step="0.01"
-          min="0.01"
-          max="1000"
-          value={quantity}
-          onChange={(e) => setQuantity(e.target.value)}
-          placeholder="Ej. 2"
-          className="w-full rounded-lg border border-corteza px-3 py-2 text-tinta outline-none focus:border-curado focus:ring-2 focus:ring-curado/30"
-        />
-      </label>
+      {byAmount ? (
+        <label className="mb-5 block">
+          <span className="mb-1 block text-sm font-medium text-tinta/80">
+            ¿Cuántos pesos de queso quieres?
+          </span>
+          <input
+            required
+            type="number"
+            inputMode="numeric"
+            step="500"
+            min="1000"
+            max="5000000"
+            value={amount}
+            onChange={(e) => setAmount(e.target.value)}
+            placeholder="Ej. 15000"
+            className="w-full rounded-lg border border-corteza px-3 py-2 text-tinta outline-none focus:border-curado focus:ring-2 focus:ring-curado/30"
+          />
+          {amountValid && (
+            <span className="mt-1 block text-xs text-tinta/60">
+              Aproximadamente {equivLb.toFixed(2)} lb ({equivKg.toFixed(2)} kg)
+            </span>
+          )}
+        </label>
+      ) : (
+        <label className="mb-5 block">
+          <span className="mb-1 block text-sm font-medium text-tinta/80">
+            Cantidad ({unit})
+          </span>
+          <input
+            required
+            type="number"
+            step="0.01"
+            min="0.01"
+            max="1000"
+            value={quantity}
+            onChange={(e) => setQuantity(e.target.value)}
+            placeholder="Ej. 2"
+            className="w-full rounded-lg border border-corteza px-3 py-2 text-tinta outline-none focus:border-curado focus:ring-2 focus:ring-curado/30"
+          />
+        </label>
+      )}
 
       <div className="mb-5 flex items-center justify-between border-t border-dashed border-terracota/30 pt-4">
         <span className="text-sm font-medium text-tinta/70">Total estimado</span>
