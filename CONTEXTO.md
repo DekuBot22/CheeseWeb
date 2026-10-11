@@ -14,7 +14,16 @@
 - **Rediseño del panel `/admin` ("El Cuaderno")**, reestructura de carpetas por
   funcionalidad y correcciones de contabilidad (ver abajo): ya está en `main` y
   desplegado.
-- **Rama `descuentos-libra-icono` (2026-10-11, sin commitear ni desplegar):**
+- **Rama `animaciones` (2026-10-11, sin commitear ni desplegar):** 7 animaciones
+  del panel, sutiles y baratas (hoja que sube/entra, aviso de "guardado" tras
+  abono/compra en hojas, respuesta al pulsar, barrita de carga en filtros y
+  pestañas, fundido esqueleto→contenido, mensajes en línea, color suave en
+  insignias). CSS puro, sin dependencias; detalle, tokens, lo que NO se hace y
+  movimiento reducido en `docs/ARQUITECTURA.md` (sección "Movimiento del panel").
+  Falta probar en el teléfono (Xiaomi Poco X8 Pro): teclado + hoja del abono y la
+  opción "Quitar animaciones".
+- **Descuentos, precio por libra e ícono (2026-10-11, ya en `main` y desplegado;
+  la migración 004 ya está corrida en Supabase):**
   1. **Descuentos del proveedor** en Compras (nota crédito: queso salado, mal
      estado, faltante, otro). Bajan el saldo con el proveedor y el costo real de
      su semana; la compra original no se toca. Tabla nueva `provider_discounts`.

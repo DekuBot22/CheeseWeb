@@ -112,8 +112,8 @@ export function ProviderDiscountForm({
         Registrar descuento
       </Button>
       <div aria-live="polite">
-        {status.error && <p role="alert" className="text-sm font-medium text-debe">{status.error}</p>}
-        {status.saved && !status.error && <p className="text-sm font-medium text-cobrado">✓ Descuento registrado</p>}
+        {status.error && <p role="alert" className="aparece text-sm font-medium text-debe">{status.error}</p>}
+        {status.saved && !status.error && <p className="aparece text-sm font-medium text-cobrado">✓ Descuento registrado</p>}
       </div>
     </form>
   );

@@ -1,5 +1,6 @@
 import Link from "next/link";
 import { cx } from "@/lib/cx";
+import { LinkPending } from "./LinkPending";
 
 // Selector por enlaces (funciona sin JS y respeta el botón "atrás").
 export function SegmentedControl({
@@ -25,13 +26,14 @@ export function SegmentedControl({
             href={o.href}
             aria-current={active ? "true" : undefined}
             className={cx(
-              "flex h-10 items-center rounded-sm px-3 text-sm font-medium whitespace-nowrap md:h-8",
+              "presionable relative flex h-10 items-center rounded-sm px-3 text-sm font-medium whitespace-nowrap md:h-8",
               active
                 ? "bg-acento-suave text-acento ring-1 ring-inset ring-acento/40"
-                :"text-tinta-2 hover:bg-hoja-2 hover:text-tinta"
+                : "text-tinta-2 hover:bg-hoja-2 hover:text-tinta"
             )}
           >
             {o.label}
+            <LinkPending />
           </Link>
         );
       })}

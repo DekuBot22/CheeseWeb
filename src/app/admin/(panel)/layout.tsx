@@ -7,6 +7,7 @@ import { SettingsLink } from "@/features/shell/components/SettingsLink";
 import { SidebarNav } from "@/features/shell/components/SidebarNav";
 import { formatWeekLabel } from "@/lib/format";
 import { weekRange } from "@/domain/week";
+import { Toast } from "@/ui/Toast";
 
 export default async function AdminPanelLayout({ children }: { children: React.ReactNode }) {
   const { start, end } = weekRange();
@@ -61,6 +62,7 @@ export default async function AdminPanelLayout({ children }: { children: React.R
         </main>
 
         <BottomNav />
+        <Toast />
       </div>
     </>
   );

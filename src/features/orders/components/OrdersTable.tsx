@@ -4,6 +4,7 @@ import { useState } from "react";
 import type { Order } from "@/domain/order";
 import { DataTable } from "@/ui/DataTable";
 import { EmptyState } from "@/ui/EmptyState";
+import { avisar } from "@/ui/toast-store";
 import { OrderMobileCard } from "./OrderMobileCard";
 import { PaymentSheet } from "./PaymentSheet";
 import { buildOrderColumns } from "./order-columns";
@@ -69,7 +70,10 @@ export function OrdersTable({
         onClose={() => setPayingId(null)}
         orders={paying ? [paying] : []}
         initialOrderId={paying?.id}
-        onPaid={(updated) => setOrders((prev) => prev.map((o) => (o.id === updated.id ? updated : o)))}
+        onPaid={(updated) => {
+          setOrders((prev) => prev.map((o) => (o.id === updated.id ? updated : o)));
+          avisar("Abono registrado");
+        }}
       />
     </>
   );

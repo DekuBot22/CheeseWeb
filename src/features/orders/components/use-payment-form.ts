@@ -7,6 +7,12 @@ export type PayableOrder = Pick<Order, "id" | "client_name" | "total" | "amount_
 
 // Estado del formulario de abono: qué cliente y qué pedido están elegidos, el
 // monto (por defecto lo que falta) y el envío a la API.
+//
+// Ojo con el teclado: PaymentForm pone `autoFocus` en el monto, así que en Android el
+// teclado se abre mientras la hoja sube (240 ms) y el viewport cambia de tamaño a mitad
+// de la animación. Si en el teléfono se nota un tirón, hay dos salidas: enfocar el campo
+// con un setTimeout de 240 ms (lo que dura la entrada) o quitar `autoFocus` en móvil.
+// Se deja como está hasta probarlo en el dispositivo.
 export function usePaymentForm(
   orders: PayableOrder[],
   initialOrderId: string | undefined,

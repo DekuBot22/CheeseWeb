@@ -91,8 +91,33 @@ app ──► features ──► domain ──► lib
 
 - Los tokens (colores, sombras) viven en `src/app/globals.css`: los claros en `:root` (reserva) y los **oscuros solo bajo `[data-theme="oscuro"]`**. El atributo se pone en el `div.admin-root` de `src/app/admin/layout.tsx`.
 - **No cambies los valores de `:root` para oscurecer el panel**: la página pública comparte `--tinta` y se rompería. Un tema nuevo = otro bloque `[data-theme="..."]` con los **mismos nombres de token** y el atributo en el layout; ningún componente cambia.
-- Los componentes usan solo clases de token (`bg-hoja`, `text-tinta-2`, `bg-acento`, `text-sobre-acento`…). Nada de hex, `zinc-*`, `bg-white` ni `text-white` dentro de `ui/`, `features/` y `app/admin` (excepto `backdrop:bg-black/70` del `Sheet`, porque `::backdrop` no hereda bien las variables).
+- Los componentes usan solo clases de token (`bg-hoja`, `text-tinta-2`, `bg-acento`, `text-sobre-acento`…). Nada de hex, `zinc-*`, `bg-white` ni `text-white` dentro de `ui/`, `features/` y `app/admin` (excepto el velo `rgb(0 0 0 / 0.75)` de `.hoja::backdrop` en `globals.css`, porque `::backdrop` no hereda bien las variables).
 - Gráficas: series `serie-1/2/3` y `serie-1-claro`; antigüedad de deuda `--aging-1..4`. Si cambias una paleta, valida contraste (≥4.5:1 texto, ≥3:1 UI) y daltonismo.
+
+## Movimiento del panel
+
+Pocas animaciones, útiles y baratas (se usa a diario, en un teléfono de gama media-alta). Todo en CSS puro (`globals.css`, sección "Movimiento del panel"), cero dependencias.
+
+**Tokens** (en `.admin-root` y en `.hoja::backdrop`): `--dur-instante` 100 ms (pulsar), `--dur-rapida` 150 (salidas, color), `--dur-media` 200 (entradas), `--dur-hoja` 240 (entrada de la hoja, el máximo) y `--dur-hoja-sale` 180; curvas `--ease-salida` `cubic-bezier(0.23,1,0.32,1)` y `--ease-hoja` `cubic-bezier(0.32,0.72,0,1)`; `--escala-press` 0.97.
+
+**Reglas:** solo `transform` y `opacity` (más color en elementos diminutos); nunca `transition: all`; entradas con ease-out (nunca ease-in); salidas ~25 % más cortas; nada pasa de 240 ms; duraciones en ms (igual de rápido a 60 y a 120 Hz); `will-change` solo en `.hoja[open]`.
+
+**Lo que hay (7):**
+1. **Hoja** (`ui/Sheet.tsx`, clase `.hoja`): sube desde abajo en móvil, entra por la derecha en escritorio; el velo es solo opacidad (sin `backdrop-blur`). La salida se anima con `transition-behavior: allow-discrete`, sin `transitionend`. El `Sheet` congela el último contenido mientras sale y lo remonta (otra `key`) en cada apertura.
+2. **Aviso** (`ui/Toast.tsx` + `ui/toast-store.ts`): confirma el guardado en los flujos que cierran una hoja (abono y compra rápida de Inicio, abono desde Pedidos). Uso: `avisar("Abono registrado")`. Uno a la vez (el nuevo reemplaza), 2,4 s visible, 150 ms de salida con timeout. Los formularios fijos de `/admin/compras` y `ClientEditor` conservan su "✓" en línea: no se duplican mensajes.
+3. **Pulsar** (`@utility presionable`): `scale(0.97)` en `:active` para botones, segmentos, cerrar de la hoja; `0.94` (`[--escala-press:0.94]`) en la insignia de estado; la pastilla de `BottomNav` escala vía `group-active`. Nunca en filas ni tarjetas.
+4. **Carga en enlaces** (`ui/LinkPending.tsx`, `useLinkStatus`): barrita bajo la etiqueta en segmentos, `BottomNav` y `SidebarNav`; aparece tras 120 ms, así que con red rápida no se ve.
+5. **Esqueleto → contenido:** `.esqueleto-tardio` (aparece a los 120 ms) y `main#contenido > :not([aria-busy])` con fundido de opacidad. Depende de que `loading.tsx` mantenga `aria-busy` y de que la página cuelgue directo de `main` (sin `template.tsx`).
+6. **Mensajes en línea** (`.aparece`): "✓ Guardado" y errores entran con un ascenso de 4 px.
+7. **Color suave** en insignias (`Badge`) y en la pastilla/ítem activo de la navegación.
+
+**Lo que NO se hace (y por qué):** contadores que suben hasta la cifra y barras/líneas que crecen (retrasan leer el dato); entrada escalonada de tarjetas o filas (decorativa, se abre decenas de veces al día); animar tablas completas o resaltar la fila guardada; tooltip de gráfica con deslizamiento (debe seguir al dedo); shimmer en esqueletos; rebotes/springs y `scale(0)`; transiciones de página con View Transitions (las páginas son `force-dynamic` y pasan por `loading.tsx`, así que el morph no se forma; cuesta GPU y cansa); indicador deslizante en segmentos/barra inferior; arrastrar la hoja para cerrar; sacudir campos con error; confeti, parallax, fondos animados; `backdrop-blur` animado.
+
+**Movimiento reducido:** la regla global heredada de la web pública (todo a 0,01 ms con `!important`) está limitada a lo que NO es `.admin-root`. En el panel: sin escala al pulsar, sin desplazamiento (la hoja y el aviso pasan a fundido de opacidad), sin pulso en la barrita; se conservan los fundidos cortos y el cambio de color. En Android/HyperOS se activa con "Quitar animaciones".
+
+**Cómo añadir una animación nueva:** primero justifica el propósito (contexto espacial, confirmación o reducir la espera); usa los tokens de arriba; solo `transform`/`opacity`; añade su rama en el bloque `prefers-reduced-motion` del panel; y revisa en DevTools → Performance con la CPU a 4× que no haya tareas largas ni animaciones "non-composited".
+
+**Pendiente de probar en el teléfono:** el `autoFocus` del monto del abono abre el teclado mientras la hoja sube; si se nota un tirón, ver el comentario de `features/orders/components/use-payment-form.ts`.
 
 ## Autenticación
 

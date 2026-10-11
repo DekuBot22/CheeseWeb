@@ -61,8 +61,8 @@ export function ClientEditor({ client }: { client: Client }) {
             <Button type="submit" loading={status === "loading"}>
               Guardar
             </Button>
-            {status === "saved" && <span className="text-sm font-medium text-cobrado">✓ Guardado</span>}
-            {status === "error" && <span className="text-sm font-medium text-debe">Error al guardar</span>}
+            {status === "saved" && <span className="aparece inline-block text-sm font-medium text-cobrado">✓ Guardado</span>}
+            {status === "error" && <span className="aparece inline-block text-sm font-medium text-debe">Error al guardar</span>}
           </div>
         </form>
       </CardBody>

@@ -33,7 +33,7 @@ export function StatusToggle({
       onClick={() => onToggle(order)}
       disabled={disabled}
       aria-label={label}
-      className="rounded-full disabled:opacity-60"
+      className="presionable rounded-full [--escala-press:0.94] disabled:opacity-60"
     >
       <OrderStatusBadge status={order.status} />
     </button>

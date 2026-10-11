@@ -30,7 +30,7 @@ export function Field({
         </p>
       )}
       {error && (
-        <p id={`${htmlFor}-desc`} role="alert" className="text-[0.8125rem] font-medium text-debe">
+        <p id={`${htmlFor}-desc`} role="alert" className="aparece text-[0.8125rem] font-medium text-debe">
           {error}
         </p>
       )}

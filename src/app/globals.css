@@ -162,10 +162,13 @@ body {
   font-family: var(--font-sans), Arial, Helvetica, sans-serif;
 }
 
+/* Movimiento reducido en la página pública: todo a ~0 ms. El panel (.admin-root) queda
+   fuera a propósito: administra su propio "reducido" al final de este archivo, donde
+   los fundidos cortos se conservan y solo desaparece el desplazamiento. */
 @media (prefers-reduced-motion: reduce) {
-  *,
-  *::before,
-  *::after {
+  :where(:not(.admin-root, .admin-root *)),
+  :where(:not(.admin-root, .admin-root *))::before,
+  :where(:not(.admin-root, .admin-root *))::after {
     animation-duration: 0.01ms !important;
     animation-iteration-count: 1 !important;
     transition-duration: 0.01ms !important;
@@ -246,4 +249,238 @@ html:has([data-theme="oscuro"]) body {
 /* Doble subrayado bajo los totales, como en un libro contable. */
 .total-doble {
   border-bottom: 3px double var(--tinta);
+}
+
+/* ==========================================================================
+   Movimiento del panel
+   Reglas (ver docs/ARQUITECTURA.md, sección "Movimiento"):
+   - solo transform y opacity (más color en elementos pequeños); nunca `transition: all`;
+   - entradas con ease-out, salidas ~25 % más cortas; nada pasa de 240 ms;
+   - sin escalonado, sin rebotes, sin librerías;
+   - todo con duraciones en ms (no por fotograma): igual de rápido a 60 y a 120 Hz.
+   ========================================================================== */
+
+/* El ::backdrop del <dialog> no siempre hereda las variables de .admin-root: se declaran también ahí. */
+.admin-root,
+.hoja::backdrop {
+  --dur-instante: 100ms; /* pulsar */
+  --dur-rapida: 150ms; /* salidas, fondo, cambios de color */
+  --dur-media: 200ms; /* entradas: aviso, mensajes, contenido */
+  --dur-hoja: 240ms; /* entrada de la hoja (el máximo del panel) */
+  --dur-hoja-sale: 180ms; /* salida de la hoja (siempre más corta) */
+  --ease-salida: cubic-bezier(0.23, 1, 0.32, 1);
+  --ease-hoja: cubic-bezier(0.32, 0.72, 0, 1);
+  --escala-press: 0.97;
+}
+
+/* A3 · Respuesta al pulsar: "te escuché" antes de que llegue la red. Solo en controles
+   pequeños (botones, segmentos, insignias); nunca en filas ni tarjetas enteras. */
+@utility presionable {
+  transition-property: color, background-color, border-color, opacity, transform;
+  transition-duration: var(--dur-instante);
+  transition-timing-function: var(--ease-salida);
+  -webkit-tap-highlight-color: transparent;
+
+  &:active:not(:disabled) {
+    transform: scale(var(--escala-press));
+  }
+}
+
+/* A1 · Hoja (<dialog>): sube desde abajo en móvil y entra por la derecha en escritorio.
+   `allow-discrete` anima display/overlay para poder animar también la SALIDA sin JS ni
+   `transitionend`; en navegadores sin soporte simplemente aparece/desaparece. */
+.hoja {
+  transform: translateY(100%);
+  transition:
+    transform var(--dur-hoja-sale) var(--ease-hoja),
+    overlay var(--dur-hoja-sale) allow-discrete,
+    display var(--dur-hoja-sale) allow-discrete;
+}
+
+.hoja[open] {
+  transform: none;
+  will-change: transform;
+  transition-duration: var(--dur-hoja);
+}
+
+@starting-style {
+  .hoja[open] {
+    transform: translateY(100%);
+  }
+}
+
+/* Velo: opacidad pura (sin blur: desenfocar toda la pantalla en cada fotograma es lo más caro). */
+.hoja::backdrop {
+  background: rgb(0 0 0 / 0.75);
+  opacity: 0;
+  transition:
+    opacity var(--dur-rapida) var(--ease-salida),
+    overlay var(--dur-rapida) allow-discrete,
+    display var(--dur-rapida) allow-discrete;
+}
+
+.hoja[open]::backdrop {
+  opacity: 1;
+  transition-duration: var(--dur-media);
+}
+
+@starting-style {
+  .hoja[open]::backdrop {
+    opacity: 0;
+  }
+}
+
+@media (min-width: 48rem) {
+  .hoja {
+    transform: translateX(100%);
+  }
+
+  @starting-style {
+    .hoja[open] {
+      transform: translateX(100%);
+    }
+  }
+}
+
+/* A2 · Aviso de confirmación tras guardar en una hoja. Entra con @starting-style y sale
+   con data-saliendo (el componente lo desmonta a los 150 ms con un timeout). */
+.aviso {
+  opacity: 1;
+  transform: none;
+  transition:
+    opacity var(--dur-media) var(--ease-salida),
+    transform var(--dur-media) var(--ease-salida);
+}
+
+@starting-style {
+  .aviso {
+    opacity: 0;
+    transform: translateY(8px);
+  }
+}
+
+.aviso[data-saliendo] {
+  opacity: 0;
+  transform: translateY(4px);
+  transition-duration: var(--dur-rapida);
+}
+
+/* A6 · Mensajes en línea ("✓ Guardado", errores): aparecen con un leve ascenso al montarse. */
+.aparece {
+  opacity: 1;
+  transform: none;
+  transition:
+    opacity var(--dur-media) var(--ease-salida),
+    transform var(--dur-media) var(--ease-salida);
+}
+
+@starting-style {
+  .aparece {
+    opacity: 0;
+    transform: translateY(4px);
+  }
+}
+
+/* A4 · Barrita de "cargando" dentro de los enlaces de filtros y pestañas. Siempre está en
+   el DOM (no mueve el diseño). Tarda 120 ms en aparecer: con red rápida nunca se ve. */
+.link-pendiente {
+  position: absolute;
+  inset-inline: 0.75rem;
+  bottom: 0.125rem;
+  height: 2px;
+  border-radius: 1px;
+  background: var(--acento);
+  opacity: 0;
+  pointer-events: none;
+}
+
+.link-pendiente[data-pending] {
+  animation:
+    aparece-tarde var(--dur-rapida) var(--ease-salida) 120ms both,
+    pulso-pendiente 1s ease-in-out 270ms infinite;
+}
+
+@keyframes aparece-tarde {
+  from {
+    opacity: 0;
+  }
+  to {
+    opacity: 1;
+  }
+}
+
+@keyframes pulso-pendiente {
+  0%,
+  100% {
+    opacity: 1;
+  }
+  50% {
+    opacity: 0.4;
+  }
+}
+
+/* A5 · Del esqueleto al contenido, solo con opacidad.
+   OJO, depende de la estructura: loading.tsx marca su raíz con aria-busy y la página
+   cuelga DIRECTO de main#contenido (sin template.tsx ni envoltorios). Si eso cambia,
+   mover este fundido a una clase explícita. No usa fill-mode para no dejar un
+   contexto de apilamiento permanente; router.refresh() no remonta, así que no se repite. */
+.admin-root main#contenido > :not([aria-busy]) {
+  animation: llega var(--dur-media) var(--ease-salida);
+}
+
+@keyframes llega {
+  from {
+    opacity: 0;
+  }
+}
+
+/* El esqueleto espera 120 ms antes de verse: si los datos llegan antes, ni parpadea. */
+.esqueleto-tardio {
+  animation: aparece-tarde var(--dur-rapida) var(--ease-salida) 120ms backwards;
+}
+
+/* Movimiento reducido en el panel: sin desplazamientos ni escalas; se conservan los
+   fundidos cortos (comunican el cambio sin marear). */
+@media (prefers-reduced-motion: reduce) {
+  .admin-root,
+  .hoja::backdrop {
+    --escala-press: 1;
+  }
+
+  .hoja,
+  .hoja[open] {
+    transform: none;
+  }
+
+  .hoja {
+    opacity: 0;
+    transition:
+      opacity var(--dur-rapida) var(--ease-salida),
+      overlay var(--dur-rapida) allow-discrete,
+      display var(--dur-rapida) allow-discrete;
+  }
+
+  .hoja[open] {
+    opacity: 1;
+  }
+
+  @starting-style {
+    .hoja[open] {
+      opacity: 0;
+      transform: none;
+    }
+
+    .aviso,
+    .aparece {
+      transform: none;
+    }
+  }
+
+  .aviso[data-saliendo] {
+    transform: none;
+  }
+
+  .link-pendiente[data-pending] {
+    animation: aparece-tarde var(--dur-rapida) var(--ease-salida) 120ms both;
+  }
 }

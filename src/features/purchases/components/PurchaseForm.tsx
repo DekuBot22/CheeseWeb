@@ -101,8 +101,8 @@ export function PurchaseForm({ onDone }: { onDone?: () => void }) {
         Registrar compra
       </Button>
       <div aria-live="polite">
-        {error && <p role="alert" className="text-sm font-medium text-debe">{error}</p>}
-        {saved && !error && <p className="text-sm font-medium text-cobrado">✓ Compra registrada</p>}
+        {error && <p role="alert" className="aparece text-sm font-medium text-debe">{error}</p>}
+        {saved && !error && <p className="aparece text-sm font-medium text-cobrado">✓ Compra registrada</p>}
       </div>
     </form>
   );

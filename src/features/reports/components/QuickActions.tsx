@@ -5,6 +5,7 @@ import { useRouter } from "next/navigation";
 import { Button } from "@/ui/Button";
 import { Sheet } from "@/ui/Sheet";
 import { IconPlus } from "@/ui/icons";
+import { avisar } from "@/ui/toast-store";
 import { PaymentSheet } from "@/features/orders/components/PaymentSheet";
 import type { PayableOrder } from "@/features/orders/components/use-payment-form";
 import { PurchaseForm } from "@/features/purchases/components/PurchaseForm";
@@ -27,12 +28,16 @@ export function QuickActions({ payable }: { payable: PayableOrder[] }) {
         open={mode === "abono"}
         onClose={() => setMode(null)}
         orders={payable}
-        onPaid={() => router.refresh()}
+        onPaid={() => {
+          avisar("Abono registrado");
+          router.refresh();
+        }}
       />
       <Sheet open={mode === "compra"} onClose={() => setMode(null)} title="Nueva compra al proveedor">
         <PurchaseForm
           onDone={() => {
             setMode(null);
+            avisar("Compra registrada");
             router.refresh();
           }}
         />

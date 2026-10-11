@@ -36,7 +36,8 @@ export function Badge({
   return (
     <span
       className={cx(
-        "inline-flex items-center gap-1.5 rounded-full border px-2.5 py-0.5 text-xs font-semibold whitespace-nowrap",
+        // Solo color: al marcar "listo" o saldar un pedido el tono cambia suave en vez de saltar.
+        "inline-flex items-center gap-1.5 rounded-full border px-2.5 py-0.5 text-xs font-semibold whitespace-nowrap transition-[color,background-color,border-color] duration-(--dur-rapida)",
         TONES[tone],
         className
       )}
