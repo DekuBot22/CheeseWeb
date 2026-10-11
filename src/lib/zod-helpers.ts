@@ -24,6 +24,12 @@ export function dateField(message: string) {
 }
 
 // Texto libre opcional: vacío → null; si es largo se recorta (no se rechaza).
+// OJO: `.optional()` antes de `transform` es imprescindible. Sin él, zod 4 rechaza
+// la clave cuando falta en el JSON ("expected nonoptional"), y los formularios
+// omiten los campos vacíos (`campo || undefined`).
 export function optionalText(maxLength: number) {
-  return z.unknown().transform((v) => (v ? String(v).slice(0, maxLength) : null));
+  return z
+    .unknown()
+    .optional()
+    .transform((v) => (v ? String(v).slice(0, maxLength) : null));
 }

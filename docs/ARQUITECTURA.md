@@ -33,7 +33,7 @@ src/
 public/            cuaderno.webmanifest · sw.js · offline.html · icons/ (app instalable)
 scripts/           generate-icons.mjs + icons/*.svg (fuente de los íconos)
 └─ instrumentation.ts  Valida las variables de entorno al arrancar el servidor
-supabase/migrations/   001_base · 002_compras_proveedor · 003_indices (en orden)
+supabase/migrations/   001_base · 002_compras_proveedor · 003_indices · 004_descuentos_proveedor (en orden)
 supabase/schema.sql    Foto consolidada para crear una base nueva
 docs/ARQUITECTURA.md   Este archivo
 ```
@@ -82,6 +82,10 @@ app ──► features ──► domain ──► lib
 - Variables de entorno: solo con `env()` (`server/env.ts`, validado con zod). Nunca `process.env` suelto.
 - **Abonos no atómicos:** `register-payment.ts` hace 3 escrituras seguidas (pago, pedido, saldo a favor). Si falla a la mitad o llegan dos abonos a la vez, el saldo puede quedar mal. Mejora pendiente: una función SQL llamada por RPC.
 - Fechas y semanas: siempre hora de Colombia (`lib/bogota-time.ts`, `domain/week.ts`). La semana de negocio va de sábado a viernes.
+- **Campos opcionales con zod 4:** `z.unknown().transform(...)` rechaza la clave si FALTA en el JSON ("expected nonoptional"). Escribe `z.unknown().optional().transform(...)` (o usa `optionalText`); los formularios omiten los campos vacíos. Hay pruebas de regresión en `features/purchases/schemas.regression.test.ts`.
+- **Tabla que puede no existir (`provider_discounts`, migración 004):** sus lecturas pasan por `orEmptyIfMissing` (`provider-discounts.repo.ts`), que usa `isMissingTableError` (`server/db.ts`) y devuelve vacío en vez de romper la pantalla; guardar responde 503 con el mensaje de "corre la migración 004". Úsalo como patrón al desplegar código antes que el SQL.
+- **Descuentos del proveedor:** `domain/accounting.ts` (`computeStats` recibe `discounts` como 4.º parámetro: costo neto = compras − descuentos, nunca negativo; sin compras no se resta del estimado) y `domain/provider-ledger.ts` (saldo = comprado − descontado − pagado; `remainingForDiscount` da el tope por compra).
+- **Precios por libra:** la base guarda por kg; la pantalla de Ajustes edita por libra y convierte con `perLbToPerKg`/`perKgToPerLb` (`domain/units.ts`) antes de enviar. `domain/pricing.ts`: `unitProfit` (ganancia y margen por unidad) y `profitPerLb` (ganancia real ÷ libras vendidas).
 
 ## Tema oscuro del panel ("Bodega de curado")
 

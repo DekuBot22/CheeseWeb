@@ -2,26 +2,29 @@
 
 import { useRouter } from "next/navigation";
 import { useState } from "react";
+import { perKgToPerLb, perLbToPerKg } from "@/domain/units";
 
-// Estado del formulario de precio y costo: valida, guarda en la API y refresca la página.
+// Estado del formulario de precio y costo. El dueño piensa y cobra por LIBRA, así
+// que el formulario trabaja en libras; la base y la API siguen en kg, y la
+// conversión se hace aquí, justo antes de enviar.
 export function usePriceEditor(initialPrice: number | null, initialCost: number | null, updatedAt: string | null) {
   const router = useRouter();
-  const [price, setPrice] = useState(initialPrice ? String(initialPrice) : "");
-  const [cost, setCost] = useState(initialCost ? String(initialCost) : "");
+  const [price, setPrice] = useState(initialPrice ? String(perKgToPerLb(initialPrice)) : "");
+  const [cost, setCost] = useState(initialCost ? String(perKgToPerLb(initialCost)) : "");
   const [loading, setLoading] = useState(false);
   const [error, setError] = useState("");
   const [lastUpdated, setLastUpdated] = useState(updatedAt);
 
   async function submit(e: React.FormEvent) {
     e.preventDefault();
-    const priceValue = Number(price);
-    const costValue = cost ? Number(cost) : 0;
-    if (!Number.isFinite(priceValue) || priceValue <= 0) {
-      setError("Ingresa un precio de venta válido");
+    const priceLb = Number(price);
+    const costLb = cost ? Number(cost) : 0;
+    if (!Number.isFinite(priceLb) || priceLb <= 0) {
+      setError("Ingresa el precio de venta por libra");
       return;
     }
-    if (!Number.isFinite(costValue) || costValue < 0) {
-      setError("Ingresa un costo válido");
+    if (!Number.isFinite(costLb) || costLb < 0) {
+      setError("El costo por libra no puede ser negativo");
       return;
     }
     setLoading(true);
@@ -30,7 +33,7 @@ export function usePriceEditor(initialPrice: number | null, initialCost: number 
       const res = await fetch("/api/admin/settings", {
         method: "POST",
         headers: { "Content-Type": "application/json" },
-        body: JSON.stringify({ price_per_kg: priceValue, cost_per_kg: costValue }),
+        body: JSON.stringify({ price_per_kg: perLbToPerKg(priceLb), cost_per_kg: perLbToPerKg(costLb) }),
       });
       const data = await res.json();
       if (!res.ok) {

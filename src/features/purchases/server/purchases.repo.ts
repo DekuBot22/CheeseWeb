@@ -38,6 +38,12 @@ export function listPurchasesInRange(from: string, toDate: string): Promise<Purc
   );
 }
 
+// Una compra por id (null si no existe).
+export async function getPurchase(id: string): Promise<Purchase | null> {
+  const { data } = await db().from("purchases").select("*").eq("id", id).maybeSingle();
+  return (data as Purchase | null) ?? null;
+}
+
 export async function insertPurchase(row: {
   purchase_date: string;
   kg: number;

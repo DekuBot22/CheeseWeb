@@ -63,6 +63,13 @@ export default async function GananciasPage({
         </Callout>
       )}
 
+      {r.stats.descuentoSinCompra && (
+        <Callout tone="aviso">
+          Hay un descuento del proveedor en una semana sin compra registrada. Registra la compra para que el descuento
+          cuente en la ganancia (por ahora solo baja lo que le debes).
+        </Callout>
+      )}
+
       <ProfitCharts weeks={r.visible} selected={r.selected} />
 
       <section aria-labelledby="libro">

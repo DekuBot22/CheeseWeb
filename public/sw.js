@@ -4,7 +4,7 @@
 //  - Sin internet: una navegación a /admin muestra /offline.html. No hay cola de envíos
 //    a propósito (evita abonos duplicados).
 // Cambia VERSION si cambian los íconos u offline.html.
-const VERSION = "cuaderno-v1";
+const VERSION = "cuaderno-v2";
 const STATIC = `static-${VERSION}`;
 const SHELL = `shell-${VERSION}`;
 const SHELL_URLS = ["/offline.html", "/icons/icon-192.png"];

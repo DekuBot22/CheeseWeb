@@ -45,7 +45,10 @@ export default async function InicioPage() {
         ariaLabel={`Ingresos y costo de las últimas ${DASHBOARD_WEEKS} semanas. Última semana: ingresos ${formatCOP(d.cur.stats.revenue)}, costo ${formatCOP(d.cur.stats.cost)}.`}
       />
 
-      <PriceSummaryCard pricePerKg={d.settings ? Number(d.settings.price_per_kg) : null} />
+      <PriceSummaryCard
+        pricePerKg={d.settings ? Number(d.settings.price_per_kg) : null}
+        costPerKg={d.settings ? Number(d.settings.cost_per_kg) : null}
+      />
     </div>
   );
 }

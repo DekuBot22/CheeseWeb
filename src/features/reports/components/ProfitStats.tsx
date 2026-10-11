@@ -1,4 +1,5 @@
 import { percentChange, type PeriodStats } from "@/domain/accounting";
+import { profitPerLb } from "@/domain/pricing";
 import { formatCOP, formatKg, plural } from "@/lib/format";
 import { Delta } from "@/ui/Delta";
 import { Money } from "@/ui/Money";
@@ -16,6 +17,8 @@ export function ProfitStats({
   orderCount: number;
   previous?: PeriodStats;
 }) {
+  const perLb = profitPerLb(stats.profit, kg);
+
   return (
     <div className="grid grid-cols-2 gap-3 lg:grid-cols-3 lg:gap-4">
       <Stat
@@ -25,15 +28,20 @@ export function ProfitStats({
         hint={`${formatKg(kg)} kg · ${plural(orderCount, "pedido")}`}
       />
       <Stat
-        label={stats.usingRealCost ? "Costo (compras reales)" : "Costo (estimado)"}
+        label={stats.usingRealCost ? "Costo neto (compras reales)" : "Costo (estimado)"}
         value={<Money value={stats.cost} />}
         delta={previous ? <Delta pct={percentChange(stats.cost, previous.cost)} goodWhen="down" /> : undefined}
+        hint={
+          stats.descontado > 0
+            ? `Comprado ${formatCOP(stats.comprado)} − descuentos ${formatCOP(stats.descontado)}`
+            : undefined
+        }
       />
       <Stat
         label="Ganancia"
         value={<Money value={stats.profit} tone="auto" />}
         delta={previous ? <Delta pct={percentChange(stats.profit, previous.profit)} /> : undefined}
-        hint={`Margen ${stats.margin.toFixed(0)} %`}
+        hint={`Margen ${stats.margin.toFixed(0)} %${perLb === null ? "" : ` · ${formatCOP(Math.round(perLb))} por libra`}`}
         className="col-span-2 lg:col-span-1"
       />
       <Stat
@@ -53,7 +61,7 @@ export function ProfitStats({
       <Stat
         label="Saldo del período"
         value={<Money value={stats.saldoProveedor} tone="auto" />}
-        hint="Compras menos pagos al proveedor"
+        hint="Compras − descuentos − pagos al proveedor"
       />
     </div>
   );

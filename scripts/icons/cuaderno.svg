@@ -1,14 +1,19 @@
 <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 512 512" width="512" height="512">
-  <!-- Ícono "Cuaderno": cuña de queso curado (oro) sobre el negro cálido del panel.
-       La cuña ocupa el 64 % del lado. Fuente de verdad: se rasteriza con
-       `node scripts/generate-icons.mjs` hacia public/icons/. -->
-  <rect width="512" height="512" fill="#0F0E0C" />
-  <g transform="translate(256 256) scale(3.28) translate(-60 -53.5)">
-    <path d="M10 92 L58 8 L110 92 Q60 106 10 92 Z" fill="#D9A441" stroke="#BC872A" stroke-width="3" stroke-linejoin="round" />
-    <path d="M10 92 Q60 106 110 92" fill="none" stroke="#BC872A" stroke-width="7" stroke-linecap="round" />
-    <circle cx="50" cy="66" r="7" fill="#0F0E0C" />
-    <circle cx="75" cy="76" r="5.5" fill="#0F0E0C" />
-    <circle cx="61" cy="40" r="4" fill="#0F0E0C" />
-    <circle cx="68" cy="58" r="3.5" fill="#0F0E0C" />
+  <!-- Ícono "Cuaderno": cuña de queso curado cuya cara es una hoja de cuentas
+       (renglones, doble margen, ojos del queso) sobre la doble raya de total.
+       Fuente de verdad: `node scripts/generate-icons.mjs` → public/icons/. -->
+  <rect width="512" height="512" fill="#0F0E0C"/>
+  <g transform="translate(256 256) scale(1) translate(-256 -279)">
+    <path d="M88 232 L312 104 L424 232 Z" fill="#E6B65A"/>
+    <rect x="88" y="232" width="336" height="152" fill="#D9A441"/>
+    <path d="M88 284 H424 M88 334 H424" stroke="#BC872A" stroke-width="6"/>
+    <path d="M140 238 V384 M152 238 V384" stroke="#0F0E0C" stroke-opacity="0.55" stroke-width="4"/>
+    <path d="M88 232 H424" stroke="#BC872A" stroke-width="12"/>
+    <path d="M88 232 L312 104 L424 232 V384 H88 Z" fill="none" stroke="#BC872A" stroke-width="8" stroke-linejoin="round"/>
+    <circle cx="322" cy="306" r="26" fill="#0F0E0C"/>
+    <circle cx="232" cy="352" r="15" fill="#0F0E0C"/>
+    <circle cx="384" cy="356" r="10" fill="#0F0E0C"/>
+    <circle cx="208" cy="232" r="20" fill="#0F0E0C"/>
+    <path d="M88 424 H424 M88 452 H424" stroke="#EFE8DC" stroke-width="12"/>
   </g>
 </svg>

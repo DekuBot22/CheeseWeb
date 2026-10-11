@@ -6,6 +6,7 @@ export const updateSettingsSchema = z.object({
   // Si no viene el costo, se guarda 0.
   cost_per_kg: z
     .unknown()
+    .optional()
     .transform((v) => (v === undefined ? 0 : Number(v)))
     .refine(isNonNegative, "Costo inválido"),
 });

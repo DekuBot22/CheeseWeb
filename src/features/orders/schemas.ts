@@ -12,7 +12,11 @@ export const updateOrderStatusSchema = z.object({
 
 export const registerPaymentSchema = z.object({
   amount: numberField(isPositive, "Ingresa un monto válido"),
-  method: z.unknown().transform((v) => (typeof v === "string" && v.trim() ? v.trim() : null)),
+  // `.optional()` antes de transform: el formulario omite el método si está vacío.
+  method: z
+    .unknown()
+    .optional()
+    .transform((v) => (typeof v === "string" && v.trim() ? v.trim() : null)),
 });
 
 export interface CreateOrderInput {

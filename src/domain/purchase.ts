@@ -15,3 +15,27 @@ export interface ProviderPayment {
   notes: string | null;
   created_at: string;
 }
+
+// Motivos rápidos de un descuento del proveedor (nota crédito).
+export const DISCOUNT_REASONS = ["salado", "mal_estado", "faltante", "otro"] as const;
+export type DiscountReason = (typeof DISCOUNT_REASONS)[number];
+
+export const DISCOUNT_REASON_LABELS: Record<DiscountReason, string> = {
+  salado: "Queso salado",
+  mal_estado: "Mal estado",
+  faltante: "Faltante de peso",
+  otro: "Otro",
+};
+
+// Rebaja que el proveedor le hace al dueño sobre lo que le debe. No edita la
+// compra original: es un movimiento propio, como un pago, para dejar trazabilidad.
+export interface ProviderDiscount {
+  id: string;
+  discount_date: string;
+  amount: number;
+  reason: DiscountReason;
+  purchase_id: string | null;
+  kg: number | null;
+  notes: string | null;
+  created_at: string;
+}

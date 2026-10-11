@@ -1,10 +1,17 @@
 import { sumWeeks, type WeekPoint } from "@/domain/accounting";
+import { profitPerLb } from "@/domain/pricing";
 import { formatCOP, formatKg, formatWeekLabel, plural } from "@/lib/format";
 import { Badge } from "@/ui/Badge";
 import { DataTable, type Column } from "@/ui/DataTable";
 import { Money } from "@/ui/Money";
 
 const isEstimated = (w: WeekPoint) => !w.stats.usingRealCost && w.stats.revenue > 0;
+
+// Ganancia por libra de una semana; "—" si no se vendió nada.
+const perLbText = (profit: number, kg: number) => {
+  const v = profitPerLb(profit, kg);
+  return v === null ? "—" : formatCOP(Math.round(v));
+};
 
 const COLUMNS: Column<WeekPoint>[] = [
   {
@@ -37,12 +44,14 @@ const COLUMNS: Column<WeekPoint>[] = [
     cell: (w) => <Money value={w.stats.profit} tone="auto" className="font-semibold" />,
   },
   { key: "mar", header: "Margen", align: "right", cell: (w) => `${w.stats.margin.toFixed(0)} %` },
+  { key: "lb", header: "Por lb", align: "right", cell: (w) => perLbText(w.stats.profit, w.kgSold) },
   { key: "cob", header: "Cobrado", align: "right", cell: (w) => <Money value={w.stats.collected} tone="cobrado" /> },
 ];
 
 // Una fila por semana (la más reciente arriba) y el total del período mostrado.
 export function WeeklyLedgerTable({ weeks }: { weeks: WeekPoint[] }) {
   const total = sumWeeks(weeks);
+  const totalKg = weeks.reduce((s, w) => s + w.kgSold, 0);
 
   return (
     <DataTable
@@ -60,18 +69,21 @@ export function WeeklyLedgerTable({ weeks }: { weeks: WeekPoint[] }) {
             <p className="num text-xs text-tinta-3">
               Ingresos {formatCOP(w.stats.revenue)} · costo {formatCOP(w.stats.cost)}
               {isEstimated(w) ? " (est.)" : ""}
+              {w.stats.descontado > 0 ? ` · desc. ${formatCOP(w.stats.descontado)}` : ""}
             </p>
           </div>
           <div className="text-right">
             <Money value={w.stats.profit} tone="auto" className="text-base font-semibold" />
-            <p className="num text-xs text-tinta-3">{w.stats.margin.toFixed(0)} %</p>
+            <p className="num text-xs text-tinta-3">
+              {w.stats.margin.toFixed(0)} % · {perLbText(w.stats.profit, w.kgSold)}/lb
+            </p>
           </div>
         </div>
       )}
       footer={
         <tr className="border-t-2 border-linea-fuerte bg-hoja-2 font-semibold">
           <td className="px-3 py-2.5 text-tinta-2">Total ({weeks.length} sem.)</td>
-          <td className="num px-3 py-2.5 text-right">{formatKg(weeks.reduce((s, w) => s + w.kgSold, 0))}</td>
+          <td className="num px-3 py-2.5 text-right">{formatKg(totalKg)}</td>
           <td className="px-3 py-2.5 text-right">
             <Money value={total.revenue} />
           </td>
@@ -82,6 +94,7 @@ export function WeeklyLedgerTable({ weeks }: { weeks: WeekPoint[] }) {
             <Money value={total.profit} tone="auto" />
           </td>
           <td className="num px-3 py-2.5 text-right">{total.margin.toFixed(0)} %</td>
+          <td className="num px-3 py-2.5 text-right">{perLbText(total.profit, totalKg)}</td>
           <td className="px-3 py-2.5 text-right">
             <Money value={total.collected} tone="cobrado" />
           </td>

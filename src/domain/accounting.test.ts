@@ -183,3 +183,81 @@ describe("sumWeeks", () => {
     expect(sumWeeks(onlyReal).usingRealCost).toBe(true);
   });
 });
+
+describe("descuentos del proveedor", () => {
+  const discount = (amount: number, discount_date = "2026-10-06") => ({ amount, discount_date });
+
+  it("el descuento baja el costo neto y sube la ganancia", () => {
+    const orders = [order({ total: 1300 })];
+    const sin = computeStats(orders, [purchase({ total_cost: 900 })], []);
+    const con = computeStats(orders, [purchase({ total_cost: 900 })], [], [discount(150)]);
+    expect(con.cost).toBe(750);
+    expect(con.descontado).toBe(150);
+    expect(con.profit - sin.profit).toBe(150);
+  });
+
+  it("el saldo con el proveedor es comprado − descontado − pagado", () => {
+    const s = computeStats(
+      [],
+      [purchase({ total_cost: 900 })],
+      [{ amount: 400, payment_date: "2026-10-06" }],
+      [discount(150)]
+    );
+    expect(s.saldoProveedor).toBe(350);
+  });
+
+  it("semana con descuento pero sin compras: no resta del costo estimado, solo del saldo", () => {
+    const s = computeStats([order({ total: 1000, cost_per_kg_snapshot: 300 })], [], [], [discount(100)]);
+    expect(s.usingRealCost).toBe(false);
+    expect(s.cost).toBe(300);
+    expect(s.descuentoSinCompra).toBe(true);
+    expect(s.saldoProveedor).toBe(-100);
+  });
+
+  it("un descuento mayor que la compra deja el costo en 0 y el saldo negativo", () => {
+    const s = computeStats([], [purchase({ total_cost: 500 })], [], [discount(800)]);
+    expect(s.cost).toBe(0);
+    expect(s.saldoProveedor).toBe(-300);
+  });
+
+  it("weeklySeries: el descuento del viernes va a la semana anterior y el del sábado a la nueva", () => {
+    const now = new Date("2026-10-10T15:00:00Z");
+    const series = weeklySeries(
+      {
+        orders: [],
+        purchases: [],
+        providerPayments: [],
+        discounts: [discount(100, "2026-10-09"), discount(200, "2026-10-10")],
+      },
+      2,
+      now
+    );
+    expect(series[0].stats.descontado).toBe(100);
+    expect(series[1].stats.descontado).toBe(200);
+  });
+
+  it("sumWeeks suma los descuentos y propaga descuentoSinCompra", () => {
+    const now = new Date("2026-10-13T15:00:00Z");
+    const series = weeklySeries(
+      {
+        orders: [],
+        purchases: [purchase({ purchase_date: "2026-10-05", total_cost: 600 })],
+        providerPayments: [],
+        discounts: [discount(100, "2026-10-06"), discount(50, "2026-10-12")],
+      },
+      2,
+      now
+    );
+    const total = sumWeeks(series);
+    expect(total.descontado).toBe(150);
+    expect(total.saldoProveedor).toBe(450);
+    expect(total.descuentoSinCompra).toBe(true);
+  });
+
+  it("sin descuentos todo queda como antes (retrocompatible)", () => {
+    const s = computeStats([order()], [purchase({ total_cost: 600 })], []);
+    expect(s.descontado).toBe(0);
+    expect(s.descuentoSinCompra).toBe(false);
+    expect(s.cost).toBe(600);
+  });
+});

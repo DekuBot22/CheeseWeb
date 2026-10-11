@@ -1,4 +1,5 @@
 import { formatWeekLabel } from "@/lib/format";
+import { ProviderDiscountForm } from "@/features/purchases/components/ProviderDiscountForm";
 import { ProviderLedgerTable } from "@/features/purchases/components/ProviderLedgerTable";
 import { ProviderPaymentForm } from "@/features/purchases/components/ProviderPaymentForm";
 import { ProviderStats } from "@/features/purchases/components/ProviderStats";
@@ -17,13 +18,11 @@ export default async function ComprasPage() {
       <PageHeader title="Compras" subtitle={`Proveedor · semana ${formatWeekLabel(o.week.start, o.week.end)}`} />
 
       <ProviderStats
-        week={{ comprado: o.compradoSemana, kg: o.kgSemana, pagado: o.pagadoSemana }}
-        totalComprado={o.totals.comprado}
-        purchaseCount={o.purchaseCount}
+        week={{ comprado: o.compradoSemana, kg: o.kgSemana, pagado: o.pagadoSemana, descontado: o.descontadoSemana }}
         saldo={o.totals.saldo}
       />
 
-      <div className="grid gap-4 md:grid-cols-2 lg:gap-6">
+      <div className="grid gap-4 md:grid-cols-2 xl:grid-cols-3 lg:gap-6">
         <Card>
           <CardHeader title="Nueva compra" subtitle="Queso que le compraste al proveedor." />
           <CardBody>
@@ -36,6 +35,15 @@ export default async function ComprasPage() {
             <ProviderPaymentForm />
           </CardBody>
         </Card>
+        <Card className="md:col-span-2 xl:col-span-1">
+          <CardHeader
+            title="Nuevo descuento"
+            subtitle="Rebaja que te hace el proveedor sobre lo que le debes. La compra no cambia."
+          />
+          <CardBody>
+            <ProviderDiscountForm purchases={o.purchaseOptions} ready={o.discountsReady} />
+          </CardBody>
+        </Card>
       </div>
 
       <section aria-labelledby="libro">
@@ -43,10 +51,10 @@ export default async function ComprasPage() {
           Libro del proveedor
         </h2>
         <p className="mb-3 text-[0.8125rem] text-tinta-2">
-          Cada compra suma al saldo y cada pago lo reduce.
+          Cada compra suma al saldo; cada pago y cada descuento lo reducen.
           {o.ledgerTotalRows > LEDGER_MAX_ROWS && ` Mostrando los ${LEDGER_MAX_ROWS} movimientos más recientes.`}
         </p>
-        <ProviderLedgerTable rows={o.ledger} totals={o.totals} />
+        <ProviderLedgerTable rows={o.ledger} totals={o.totals} purchaseCount={o.purchaseCount} />
       </section>
     </div>
   );

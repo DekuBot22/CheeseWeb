@@ -1,0 +1,16 @@
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 512 512" width="512" height="512">
+  <!-- Favicon (32 px): la misma cuña, más grande y sin renglones ni margen, que a
+       ese tamaño se funden en ruido. Conserva lo que sí se lee: silueta, ojos del
+       queso y la doble raya de total. -->
+  <rect width="512" height="512" fill="#0F0E0C"/>
+  <g transform="translate(256 256) scale(1.2) translate(-256 -279)">
+    <path d="M88 232 L312 104 L424 232 Z" fill="#E6B65A"/>
+    <rect x="88" y="232" width="336" height="152" fill="#D9A441"/>
+    <path d="M88 232 H424" stroke="#BC872A" stroke-width="14"/>
+    <path d="M88 232 L312 104 L424 232 V384 H88 Z" fill="none" stroke="#BC872A" stroke-width="14" stroke-linejoin="round"/>
+    <circle cx="322" cy="306" r="32" fill="#0F0E0C"/>
+    <circle cx="224" cy="350" r="22" fill="#0F0E0C"/>
+    <circle cx="208" cy="232" r="24" fill="#0F0E0C"/>
+    <path d="M88 424 H424 M88 456 H424" stroke="#EFE8DC" stroke-width="18"/>
+  </g>
+</svg>

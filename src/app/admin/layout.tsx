@@ -15,7 +15,7 @@ export const metadata: Metadata = {
   manifest: "/cuaderno.webmanifest",
   robots: { index: false, follow: false },
   appleWebApp: { capable: true, title: "Cuaderno", statusBarStyle: "black-translucent" },
-  icons: { icon: "/icons/favicon-32.png", apple: "/icons/apple-touch-icon.png" },
+  icons: { icon: "/icons/favicon-32.png?v=2", apple: "/icons/apple-touch-icon.png?v=2" },
   formatDetection: { telephone: false },
 };
 

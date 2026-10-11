@@ -16,12 +16,16 @@ Dos cosas en una sola web:
     pedidos como listos y registrar abonos.
   - **Clientes**: se crean solos con cada pedido; deuda, saldo a favor,
     antigüedad de la deuda, historial y datos de contacto.
-  - **Compras**: compras y pagos al proveedor, con el "libro del proveedor" y su
-    saldo acumulado.
+  - **Compras**: compras, pagos y **descuentos** del proveedor (p. ej. un queso
+    que llegó muy salado y hubo que venderlo más barato), con el "libro del
+    proveedor" y su saldo acumulado. Un descuento baja lo que le debes y el costo
+    de esa semana; la compra original no se modifica.
   - **Ganancias**: por semana (sábado a viernes), 12 semanas o todo el tiempo,
-    con gráficas y descarga a Excel. El costo usa las compras reales de cada
-    semana; si no hay, usa el costo estimado por kg.
-  - **Ajustes**: precio de venta y costo por kg.
+    con gráficas, ganancia por libra y descarga a Excel. El costo usa las compras
+    reales de cada semana (menos los descuentos); si no hay, usa el costo
+    estimado.
+  - **Ajustes**: precio de venta y costo **por libra**; muestra en vivo cuánto
+    ganas por libra y el kilo como estimado.
 
 Tecnologías: Next.js 16 + TypeScript + Tailwind CSS (gratis en Vercel),
 Supabase (Postgres gratis) y Telegram para los avisos.
@@ -35,10 +39,13 @@ Si vas a tocar el código, lee antes [`docs/ARQUITECTURA.md`](./docs/ARQUITECTUR
 2. En **SQL Editor > New query**:
    - **Base nueva:** pega todo [`supabase/schema.sql`](./supabase/schema.sql) y
      dale **Run**. Crea todas las tablas (`settings`, `clients`, `orders`,
-     `payments`, `purchases`, `provider_payments`) y sus índices.
+     `payments`, `purchases`, `provider_payments`, `provider_discounts`) y sus
+     índices.
    - **Base que ya estaba en marcha:** corre solo las migraciones que te falten
      de [`supabase/migrations/`](./supabase/migrations), en orden
-     (`001_base`, `002_compras_proveedor`, `003_indices`). Son idempotentes.
+     (`001_base`, `002_compras_proveedor`, `003_indices`,
+     `004_descuentos_proveedor`). Son idempotentes. **Corre la 004 antes de
+     usar los descuentos del proveedor** (sin ella, Compras muestra un aviso).
 3. En **Project Settings > API** copia:
    - **Project URL** → `SUPABASE_URL`
    - **service_role key** (no la `anon`) → `SUPABASE_SERVICE_ROLE_KEY`
@@ -126,15 +133,18 @@ Los íconos se regeneran con `node scripts/generate-icons.mjs`.
 
 ## Uso diario
 
-1. Entra a `/admin/ajustes` y actualiza el precio (y el costo, si quieres ver
-   ganancias estimadas) antes de compartir el enlace.
+1. Entra a `/admin/ajustes` y actualiza el precio **por libra** (y el costo por
+   libra, si quieres ver cuánto ganas y las ganancias estimadas) antes de
+   compartir el enlace.
 2. Comparte el link de la página principal con tus clientes.
 3. Cada pedido te llega por Telegram y queda en **Pedidos**; márcalo como listo
    cuando lo despaches.
 4. Cuando alguien pague (todo o una parte), usa **Abonar**. Si paga de más, el
    excedente queda como saldo a favor del cliente.
 5. Cuando llegue el queso (los sábados) registra la compra en **Compras** y los
-   pagos que le hagas al proveedor: así las ganancias usan el costo real.
+   pagos que le hagas al proveedor: así las ganancias usan el costo real. Si un
+   queso llegó mal (muy salado, faltante…), registra un **descuento** con su
+   motivo para bajar lo que le debes.
 6. **Inicio** y **Ganancias** te dicen cómo va el negocio.
 
 ## Notas

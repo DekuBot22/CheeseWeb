@@ -11,11 +11,25 @@
 - **Producción** (`main`): la web está desplegada en Vercel
   (`https://cheese-web-phi.vercel.app`, repo `https://github.com/DekuBot22/CheeseWeb`).
   Supabase y el bot de Telegram ya existen y funcionan.
-- **Rama `rediseno-admin` (sin commitear, sin desplegar):** rediseño completo del
-  panel `/admin` ("El Cuaderno") + reestructura de carpetas por funcionalidad +
-  correcciones de contabilidad (ver abajo). `npm run check` y `npm run build`
-  pasan. **Falta:** revisar las pantallas en el navegador con datos reales,
-  hacer commit y fusionar a `main`.
+- **Rediseño del panel `/admin` ("El Cuaderno")**, reestructura de carpetas por
+  funcionalidad y correcciones de contabilidad (ver abajo): ya está en `main` y
+  desplegado.
+- **Rama `descuentos-libra-icono` (2026-10-11, sin commitear ni desplegar):**
+  1. **Descuentos del proveedor** en Compras (nota crédito: queso salado, mal
+     estado, faltante, otro). Bajan el saldo con el proveedor y el costo real de
+     su semana; la compra original no se toca. Tabla nueva `provider_discounts`.
+     ⚠️ **ANTES de desplegar, el dueño debe correr
+     `supabase/migrations/004_descuentos_proveedor.sql` en el SQL Editor de
+     Supabase.** Si se despliega antes, nada se rompe (las lecturas devuelven
+     vacío y guardar da un aviso claro), pero la función no sirve.
+  2. **Precio por libra** en Ajustes: el dueño edita precio y costo por LIBRA, ve
+     en vivo su ganancia por libra (13.000 − 11.000 = 2.000) y el kilo como
+     estimado. La base sigue guardando por kg. Nueva métrica "ganancia por libra"
+     real en Ganancias, Inicio y el libro semanal.
+  3. **Ícono nuevo** ("cuña contable": queso con renglones de cuaderno y doble
+     raya de total) y favicon simplificado; service worker en `cuaderno-v2`.
+  4. Se corrigió un error de validación de campos opcionales que ya estaba en
+     producción (ver abajo).
 - Pendientes del dueño: borrar los datos de prueba de Supabase (cliente "Prueba
   Claude" con un pedido, una compra de $900.000 y un pago de $500.000) y poner
   el precio real en `/admin/ajustes` (la web pública dice "El precio aún no ha
@@ -41,6 +55,12 @@
 4. Los totales de "todo el tiempo" y el **Excel** piden los datos por páginas
    (Supabase corta en 1000 filas y los números salían incompletos en silencio).
 5. Las fechas que se muestran y el aviso de Telegram usan hora de Colombia.
+6. **Error de zod 4 corregido (rama `descuentos-libra-icono`):** un campo opcional
+   escrito como `z.unknown().transform(...)` rechaza la clave cuando FALTA en el
+   JSON ("expected nonoptional"), y los formularios omiten los campos vacíos. Esto
+   rompía compras sin descripción, pagos al proveedor sin método/nota y abonos sin
+   método. Regla: `.optional()` antes de `transform` (ver `lib/zod-helpers.ts` y
+   `features/purchases/schemas.regression.test.ts`).
 
 ## Qué es esto
 
@@ -74,7 +94,12 @@ proyecto hermano de **QueseriaApp** (escritorio, Python/Tkinter, en
 7. **Pedido por valor:** el cliente puede pedir "$15.000 de queso"; se guardan
    los kg equivalentes (2 decimales) pero el total queda exacto. Límites $1.000 a $5.000.000.
 8. **Costo real vs estimado:** si una semana tiene compras registradas, el costo
-   es lo comprado; si no, kg × costo por kg estimado.
+   es lo comprado **menos los descuentos del proveedor** (costo neto, nunca
+   negativo); si no, kg × costo por kg estimado. Un descuento en una semana SIN
+   compras no se resta del estimado (solo baja el saldo, con aviso en Ganancias).
+   Saldo con el proveedor = comprado − descontado − pagado.
+10. **El dueño piensa por libra:** Ajustes edita precio y costo por libra; se
+    guarda por kg (`perLbToPerKg`, exacto con 1 kg = 2 lb).
 9. **Route handlers, no Server Actions**, y el dominio puro con pruebas
    (detalle y razones en `docs/ARQUITECTURA.md`).
 
@@ -100,9 +125,10 @@ proyecto hermano de **QueseriaApp** (escritorio, Python/Tkinter, en
 
 ## Modelo de datos
 
-`supabase/migrations/` (001 base, 002 compras al proveedor, 003 índices) y
-`supabase/schema.sql` consolidado. Tablas: `settings` (fila única), `clients`,
-`orders`, `payments`, `purchases`, `provider_payments`. RLS activado sin
+`supabase/migrations/` (001 base, 002 compras al proveedor, 003 índices, 004
+descuentos del proveedor) y `supabase/schema.sql` consolidado. Tablas:
+`settings` (fila única), `clients`, `orders`, `payments`, `purchases`,
+`provider_payments`, `provider_discounts`. RLS activado sin
 políticas públicas (todo pasa por la service role desde el servidor).
 **Regla:** cada cambio de esquema = migración nueva + `schema.sql` actualizado.
 
@@ -111,8 +137,9 @@ políticas públicas (todo pasa por la service role desde el servidor).
 - **Pública `/`:** formulario por cantidad o por valor, botón de WhatsApp
   (número en `src/features/storefront/constants.ts`).
 - **Panel:** Inicio (resumen), Pedidos (filtros en la URL), Clientes, Compras
-  (libro del proveedor), Ganancias (semana / 12 semanas / todo, gráficas, Excel),
-  Ajustes (precio y costo).
+  (libro del proveedor con compras, pagos y descuentos), Ganancias (semana / 12
+  semanas / todo, gráficas, ganancia por libra, Excel), Ajustes (precio y costo
+  por libra, instalación en el teléfono).
 
 ## Mejoras pendientes / ideas
 

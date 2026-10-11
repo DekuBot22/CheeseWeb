@@ -2,6 +2,7 @@ import "server-only";
 import ExcelJS from "exceljs";
 import { CHEESE_TYPE_LABELS, SALT_LEVEL_LABELS } from "@/domain/catalog";
 import { PAYMENT_STATUS_LABELS } from "@/domain/order";
+import { DISCOUNT_REASON_LABELS } from "@/domain/purchase";
 import type { ExportData } from "./get-export-data";
 
 function addSheet(workbook: ExcelJS.Workbook, name: string, columns: Partial<ExcelJS.Column>[]) {
@@ -21,8 +22,10 @@ function summarySheet(workbook: ExcelJS.Workbook, data: ExportData) {
     { concepto: "Período", valor: `${data.startDate} a ${data.endDate}` },
     { concepto: "Ingresos (pedidos)", valor: stats.revenue },
     { concepto: "Cobrado", valor: stats.collected },
+    { concepto: "Comprado al proveedor", valor: stats.comprado },
+    { concepto: "Descuentos del proveedor", valor: stats.descontado },
     {
-      concepto: stats.usingRealCost ? "Costo (compras registradas)" : "Costo (estimado por kg)",
+      concepto: stats.usingRealCost ? "Costo neto (compras − descuentos)" : "Costo (estimado por kg)",
       valor: stats.cost,
     },
     { concepto: "Pagado al proveedor", valor: stats.pagadoProveedor },
@@ -69,12 +72,26 @@ function debtorsSheet(workbook: ExcelJS.Workbook, data: ExportData) {
   for (const d of data.debtors) sheet.addRow({ cliente: d.name, debe: d.owed });
 }
 
+function discountRows(sheet: ExcelJS.Worksheet, data: ExportData) {
+  for (const d of data.discounts) {
+    sheet.addRow({
+      tipo: "Descuento proveedor",
+      fecha: d.discount_date,
+      kg: d.kg ? Number(d.kg) : "",
+      monto: Number(d.amount),
+      motivo: DISCOUNT_REASON_LABELS[d.reason],
+      detalle: [d.notes, d.purchase_id ? "ligado a una compra" : null].filter(Boolean).join(" · "),
+    });
+  }
+}
+
 function providerSheet(workbook: ExcelJS.Workbook, data: ExportData) {
   const sheet = addSheet(workbook, "Compras y pagos a proveedor", [
-    { header: "Tipo", key: "tipo", width: 12 },
+    { header: "Tipo", key: "tipo", width: 18 },
     { header: "Fecha", key: "fecha", width: 14 },
     { header: "Kg", key: "kg", width: 10 },
     { header: "Monto", key: "monto", width: 14 },
+    { header: "Motivo", key: "motivo", width: 18 },
     { header: "Detalle", key: "detalle", width: 30 },
   ]);
   for (const p of data.purchases) {
@@ -95,6 +112,7 @@ function providerSheet(workbook: ExcelJS.Workbook, data: ExportData) {
       detalle: [p.method, p.notes].filter(Boolean).join(" · "),
     });
   }
+  discountRows(sheet, data);
 }
 
 export async function buildExportWorkbook(data: ExportData): Promise<Uint8Array> {

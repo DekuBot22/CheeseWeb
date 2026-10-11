@@ -3,6 +3,7 @@ import { computeStats } from "@/domain/accounting";
 import { receivables } from "@/domain/receivables";
 import { bogotaDate } from "@/lib/bogota-time";
 import { listOpenOrders, listOrdersInRange } from "@/features/orders/server/orders.repo";
+import { listProviderDiscountsInRange } from "@/features/purchases/server/provider-discounts.repo";
 import { listProviderPaymentsInRange } from "@/features/purchases/server/provider-payments.repo";
 import { listPurchasesInRange } from "@/features/purchases/server/purchases.repo";
 
@@ -12,10 +13,11 @@ export async function getExportData(start: Date, end: Date) {
   const startDate = bogotaDate(start);
   const endDate = bogotaDate(end);
 
-  const [orders, purchases, payments, openOrders] = await Promise.all([
+  const [orders, purchases, payments, discounts, openOrders] = await Promise.all([
     listOrdersInRange(start, end),
     listPurchasesInRange(startDate, endDate),
     listProviderPaymentsInRange(startDate, endDate),
+    listProviderDiscountsInRange(startDate, endDate),
     listOpenOrders(),
   ]);
 
@@ -25,7 +27,8 @@ export async function getExportData(start: Date, end: Date) {
     orders,
     purchases,
     payments,
-    stats: computeStats(orders, purchases, payments),
+    discounts,
+    stats: computeStats(orders, purchases, payments, discounts),
     debtors: receivables(openOrders).debtors,
   };
 }

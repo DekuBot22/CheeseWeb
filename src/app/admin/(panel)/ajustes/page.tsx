@@ -10,7 +10,7 @@ export default async function AjustesPage() {
 
   return (
     <div className="max-w-2xl space-y-6">
-      <PageHeader title="Ajustes" subtitle="Precio de venta y costo por kilo, e instalación en el teléfono." />
+      <PageHeader title="Ajustes" subtitle="Precio de venta y costo por libra, e instalación en el teléfono." />
       <PriceEditor
         initialPrice={settings?.price_per_kg ?? null}
         initialCost={settings?.cost_per_kg ?? null}

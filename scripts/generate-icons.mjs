@@ -11,6 +11,8 @@ const out = join(root, "public", "icons");
 
 const normal = await readFile(join(root, "scripts", "icons", "cuaderno.svg"));
 const maskable = await readFile(join(root, "scripts", "icons", "cuaderno-maskable.svg"));
+// A 32 px los renglones se funden: el favicon usa una versión simplificada y más grande.
+const favicon = await readFile(join(root, "scripts", "icons", "cuaderno-favicon.svg"));
 
 const targets = [
   { file: "icon-192.png", svg: normal, size: 192 },
@@ -18,7 +20,7 @@ const targets = [
   { file: "icon-maskable-512.png", svg: maskable, size: 512 },
   // iOS no admite transparencia: el SVG ya trae fondo a sangre.
   { file: "apple-touch-icon.png", svg: normal, size: 180 },
-  { file: "favicon-32.png", svg: normal, size: 32 },
+  { file: "favicon-32.png", svg: favicon, size: 32 },
 ];
 
 await mkdir(out, { recursive: true });

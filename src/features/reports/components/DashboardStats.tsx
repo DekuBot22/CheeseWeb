@@ -1,5 +1,6 @@
 import type { WeekPoint } from "@/domain/accounting";
-import { formatKg, plural } from "@/lib/format";
+import { profitPerLb } from "@/domain/pricing";
+import { formatCOP, formatKg, plural } from "@/lib/format";
 import { Delta } from "@/ui/Delta";
 import { Money } from "@/ui/Money";
 import { Stat } from "@/ui/Stat";
@@ -21,6 +22,9 @@ interface Props {
 export function DashboardStats({ week, debt, provider }: Props) {
   const { cur, series } = week;
   const stats = cur.stats;
+  const perLb = profitPerLb(stats.profit, cur.kgSold);
+  const perLbText = perLb === null ? "" : ` · ${formatCOP(Math.round(perLb))} por libra`;
+  const discountText = stats.descontado > 0 ? ` · descuentos −${formatCOP(stats.descontado)}` : "";
 
   return (
     <>
@@ -32,11 +36,13 @@ export function DashboardStats({ week, debt, provider }: Props) {
         delta={<Delta pct={week.profitChange} />}
         hint={
           stats.usingRealCost ? (
-            <>Margen {stats.margin.toFixed(0)} % · costo real de las compras ✓</>
+            <>
+              Margen {stats.margin.toFixed(0)} %{perLbText} · costo real de las compras ✓{discountText}
+            </>
           ) : (
             <>
-              Margen {stats.margin.toFixed(0)} % · costo <strong>estimado</strong>. Registra la compra de la
-              semana para ver la ganancia real.
+              Margen {stats.margin.toFixed(0)} %{perLbText} · costo <strong>estimado</strong>. Registra la compra de
+              la semana para ver la ganancia real.
             </>
           )
         }
