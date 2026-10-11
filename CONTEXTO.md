@@ -1,142 +1,129 @@
 # Contexto del proyecto QuesoWeb
 
 > Este archivo es para que, en una próxima conversación, el usuario solo diga
-> "lee CONTEXTO.md" (o "lee QuesoWeb\CONTEXTO.md") y Claude tenga todo el
-> panorama sin tener que volver a explicar nada.
+> "lee CONTEXTO.md" y Claude tenga todo el panorama sin volver a preguntar.
+> Cómo está organizado el código: `docs/ARQUITECTURA.md`.
 
-**Última actualización: 2026-09-04.**
+**Última actualización: 2026-10-11.**
 
 ## 📍 Dónde quedamos (retomar desde aquí)
 
-Toda la app está **construida y funcionando localmente** (build de
-producción probado, sin errores de tipos ni lint). Lo único que falta es
-**desplegarla**, y ahí no se ha avanzado nada todavía — el usuario dijo que
-seguía con esto "después". El siguiente paso al retomar es literalmente el
-**paso 1** de la lista de pendientes más abajo: crear el proyecto de
-Supabase. Nadie ha creado todavía ninguna cuenta/proyecto de Supabase ni el
-bot de Telegram para este proyecto.
+- **Producción** (`main`): la web está desplegada en Vercel
+  (`https://cheese-web-phi.vercel.app`, repo `https://github.com/DekuBot22/CheeseWeb`).
+  Supabase y el bot de Telegram ya existen y funcionan.
+- **Rama `rediseno-admin` (sin commitear, sin desplegar):** rediseño completo del
+  panel `/admin` ("El Cuaderno") + reestructura de carpetas por funcionalidad +
+  correcciones de contabilidad (ver abajo). `npm run check` y `npm run build`
+  pasan. **Falta:** revisar las pantallas en el navegador con datos reales,
+  hacer commit y fusionar a `main`.
+- Pendientes del dueño: borrar los datos de prueba de Supabase (cliente "Prueba
+  Claude" con un pedido, una compra de $900.000 y un pago de $500.000) y poner
+  el precio real en `/admin/ajustes` (la web pública dice "El precio aún no ha
+  sido configurado" hasta entonces).
+- Se canceló la automatización de pedidos por chat con n8n. No retomarla.
+- **Tema oscuro, auth local y app instalable (2026-10-11, también sin commitear):**
+  tema "Bodega de curado" (negro cálido + oro ámbar) solo para `/admin`; el
+  usuario pidió "sin contraseña por ahora" → `ADMIN_AUTH=off` en `.env.local`
+  (solo localhost, ignorado en producción); sesión de 400 días renovable para el
+  teléfono; PWA instalable (manifest, service worker, íconos, página sin
+  conexión). **Falta:** que el usuario cambie `ADMIN_PASSWORD` en Vercel (la
+  contraseña local ya se cambió), desplegar y probar la instalación en el
+  teléfono. Detalle en `docs/ARQUITECTURA.md` (secciones Tema, Autenticación, PWA).
 
-No hay código pendiente de escribir salvo que el usuario pida una función
-nueva — lo que sigue es 100% configuración y despliegue (Supabase, Telegram,
-variables de entorno, GitHub, Vercel), con los pasos exactos en la sección
-"Estado actual" de este archivo y en `README.md`.
+### Correcciones de contabilidad hechas en esta rama (cambian cifras de semanas pasadas)
+
+1. La semana de negocio se calcula en **hora de Colombia** (antes usaba la hora
+   del servidor: en Vercel es UTC y el corte caía el viernes a las 7 p. m.).
+2. Una compra o pago al proveedor hecho el **sábado de llegada** ya no cuenta en
+   dos semanas (el fin de semana es el viernes, no el sábado siguiente).
+3. El **saldo con el proveedor** usa todas las compras y pagos, no solo los
+   últimos 30.
+4. Los totales de "todo el tiempo" y el **Excel** piden los datos por páginas
+   (Supabase corta en 1000 filas y los números salían incompletos en silencio).
+5. Las fechas que se muestran y el aviso de Telegram usan hora de Colombia.
 
 ## Qué es esto
 
-Web para que los clientes de un negocio de queso (Colombia, dueño: Jorge)
-hagan pedidos en línea. El dueño recibe el aviso al instante por Telegram y
-gestiona precio, clientes, pagos y ganancias desde un panel `/admin`.
+Web para que los clientes de un negocio de queso (Colombia, dueño: Jorge) hagan
+pedidos en línea. El dueño recibe el aviso por Telegram y gestiona precio,
+clientes, pagos, compras al proveedor y ganancias desde `/admin`. Es el
+proyecto hermano de **QueseriaApp** (escritorio, Python/Tkinter, en
+`Escritorio\All\QueseriaApp\`).
 
-Es un proyecto hermano de **QueseriaApp** (app de escritorio Python/Tkinter
-en `Escritorio\All\QueseriaApp\QueseriaApp\`, contabilidad completa por
-semanas con manejo de proveedor). QuesoWeb NO reemplaza esa app: es la cara
-pública para tomar pedidos, con una versión "esencial" de la contabilidad
-(ver decisiones abajo).
+- Ubicación: `C:\Users\jorge\Desktop\All\QuesoWeb\`.
+- Stack: Next.js 16 (App Router) + TypeScript + Tailwind 4 + Supabase (solo
+  servidor, service role) + Telegram + `exceljs` + zod + vitest.
+- **`AGENTS.md` avisa que este Next tiene cambios incompatibles**: lee
+  `node_modules/next/dist/docs/` antes de escribir código de Next. Ejemplos:
+  `error.tsx` recibe `retry` (no `reset`), el middleware se llama `proxy.ts`,
+  `params`/`searchParams` son `Promise`.
+- `npm run build` usa `next build --webpack` (con Turbopack el build de Vercel
+  falla al resolver `next/font/google`).
 
-- **Ubicación**: `C:\Users\jorge\OneDrive - Universidad del Magdalena\Escritorio\QuesoWeb\`
-- **Git**: inicializado localmente, varios commits. Aún **no subido a GitHub**.
-- El usuario ya tiene cuentas de GitHub y Vercel (no hay que guiarlo a crearlas).
+## Decisiones clave (con el porqué)
 
-## Stack técnico
+1. **Telegram** para avisos: gratis e instantáneo (opcional: sin token el pedido se guarda igual).
+2. **Un solo precio por kg**; tipo de queso y sal son informativos. Todo se guarda con precio por kg.
+3. **1 kg = 2 lb** (no 0.4536): así se maneja en la región (`src/domain/units.ts`).
+4. **Semana de negocio = sábado 00:00 a viernes 23:59, hora de Colombia**
+   (`src/domain/week.ts`): el queso llega los sábados.
+5. **Clientes se crean solos** al llegar un pedido (nombre normalizado). Riesgo
+   aceptado: variaciones del nombre duplican clientes; no hay UI para fusionar.
+6. **Saldo a favor:** el excedente de un abono queda en `credit_balance`; no se
+   descuenta solo del siguiente pedido.
+7. **Pedido por valor:** el cliente puede pedir "$15.000 de queso"; se guardan
+   los kg equivalentes (2 decimales) pero el total queda exacto. Límites $1.000 a $5.000.000.
+8. **Costo real vs estimado:** si una semana tiene compras registradas, el costo
+   es lo comprado; si no, kg × costo por kg estimado.
+9. **Route handlers, no Server Actions**, y el dominio puro con pruebas
+   (detalle y razones en `docs/ARQUITECTURA.md`).
 
-- Next.js 16 (App Router) + TypeScript + Tailwind CSS 4
-- Supabase (Postgres) — **solo se usa desde el servidor** con la
-  `service_role key` (`src/lib/supabase.ts`). El navegador nunca habla
-  directo con Supabase, todo pasa por route handlers de Next.
-- Telegram Bot API para notificar pedidos nuevos (`src/lib/telegram.ts`)
-- Auth del panel admin: cookie HMAC-SHA256 (Web Crypto, no Node `crypto`)
-  derivada de `ADMIN_PASSWORD`, sin tabla de sesiones (`src/lib/auth.ts`).
-  Protegido en `src/proxy.ts` (Next.js 16 renombró `middleware.ts` a
-  `proxy.ts`; ya está migrado).
-- Todo gratis: Vercel (hosting) + Supabase (DB, free tier).
+## Estructura (resumen; mapa completo en `docs/ARQUITECTURA.md`)
 
-## Decisiones clave tomadas (con el porqué)
+- `src/app/` rutas finas · `src/features/<modulo>/{components,server,schemas.ts}`
+  (auth, shell, storefront, orders, clients, purchases, settings, reports) ·
+  `src/domain/` reglas puras + pruebas · `src/server/` env, db, http, errors,
+  telegram · `src/ui/` sistema de diseño "El Cuaderno" · `src/lib/` utilidades.
+- Paleta del panel (tokens `papel`, `hoja`, `linea`, `tinta`, `acento`, `debe`,
+  `cobrado`, `aviso`, `serie-*`, `aging-*`) en `src/app/globals.css`: los valores
+  **oscuros** van bajo `[data-theme="oscuro"]` (atributo en `src/app/admin/layout.tsx`);
+  los de `:root` son reserva clara. No cambiar `:root` para oscurecer: la página
+  pública comparte `--tinta`. Fuente IBM Plex Sans solo en `/admin`; títulos en
+  Fraunces. La página pública conserva su paleta (`cuajada`, `corteza`, `curado`, `terracota`).
+- Auth del panel: cookie HMAC derivada de `ADMIN_PASSWORD`, sin tabla de
+  sesiones (`src/features/auth/server/session.ts`), **400 días y renovada en cada
+  navegación**; protegida en `src/proxy.ts`. Reglas puras y modo local en
+  `src/features/auth/auth-mode.ts`. Para revocar sesiones: cambiar `ADMIN_PASSWORD`.
+- App instalable: `public/{cuaderno.webmanifest,sw.js,offline.html,icons/}`,
+  `src/features/pwa/`, íconos con `node scripts/generate-icons.mjs`. El service
+  worker nunca cachea `/api/*` ni HTML (datos financieros).
 
-1. **Notificación por Telegram**, no email/WhatsApp — el usuario lo eligió
-   por ser gratis e instantáneo.
-2. **Un solo precio por kg**, sin importar tipo de queso o nivel de sal — el
-   usuario confirmó que el precio no varía por esas combinaciones; esos
-   campos son solo informativos para que sepa qué preparar.
-3. **Alcance de contabilidad "esencial"** (no portar TODO QueseriaApp): se
-   le preguntó al usuario y se recomendó, y eligió, traer solo clientes +
-   ventas con estado de pago/abonos + ganancias. Se dejó fuera a propósito:
-   manejo de compras/inventario al proveedor (llegadas, pagos_prov) y el
-   ciclo de cierre semanal — son back-office puro, no algo que encaje en un
-   formulario web orientado al cliente.
-4. **Clientes se crean solos**: no hay login de cliente. Al llegar un
-   pedido, se busca un cliente por nombre normalizado (trim + lowercase) y
-   si no existe se crea (`src/lib/clients.ts`, función
-   `findOrCreateClient`). Riesgo aceptado: variaciones de escritura del
-   mismo nombre crean clientes duplicados; el usuario puede fusionarlos
-   manualmente si hace falta (no hay UI para fusionar todavía).
-5. **Saldo a favor**: si un cliente abona más de lo que debe en un pedido,
-   el excedente se guarda como `credit_balance` en su ficha de cliente
-   (igual que el concepto `saldo_favor` de QueseriaApp). No se resta
-   automáticamente del siguiente pedido — solo queda visible.
+## Modelo de datos
 
-## Funcionalidad implementada (compila, pasa `tsc` y `eslint`, build de
-producción probado con credenciales falsas)
+`supabase/migrations/` (001 base, 002 compras al proveedor, 003 índices) y
+`supabase/schema.sql` consolidado. Tablas: `settings` (fila única), `clients`,
+`orders`, `payments`, `purchases`, `provider_payments`. RLS activado sin
+políticas públicas (todo pasa por la service role desde el servidor).
+**Regla:** cada cambio de esquema = migración nueva + `schema.sql` actualizado.
 
-### Página pública `/` (`src/app/page.tsx` + `src/components/OrderForm.tsx`)
-Cliente escribe su nombre, elige **kg o lb**, **tipo de queso** (duro / semi
-/ blando), **nivel de sal** (alto / intermedio / bajo), cantidad → ve precio
-del día y total calculado en vivo → envía. `POST /api/orders`
-(`src/app/api/orders/route.ts`) valida, busca/crea el cliente, calcula el
-total con el precio vigente, guarda el pedido y notifica por Telegram.
+## Funcionalidad
 
-### Panel `/admin` (contraseña = `ADMIN_PASSWORD`)
-Layout con pestañas en `src/app/admin/(panel)/layout.tsx` +
-`src/components/admin/AdminNav.tsx`. Login en `src/app/admin/login/page.tsx`
-(fuera del grupo `(panel)`, sin nav).
+- **Pública `/`:** formulario por cantidad o por valor, botón de WhatsApp
+  (número en `src/features/storefront/constants.ts`).
+- **Panel:** Inicio (resumen), Pedidos (filtros en la URL), Clientes, Compras
+  (libro del proveedor), Ganancias (semana / 12 semanas / todo, gráficas, Excel),
+  Ajustes (precio y costo).
 
-- **Pedidos** (`/admin`, `src/app/admin/(panel)/page.tsx`):
-  - `PriceEditor`: precio de venta por kg + costo por kg (opcional, para
-    ganancias). Guarda con fecha automática.
-  - `OrdersTable`: lista de pedidos, botón para marcar
-    pendiente/completado (preparación), badge de estado de pago
-    (debe/parcial/pagado) y botón **"Registrar abono"** que abre un mini
-    formulario (monto + método) → `POST /api/admin/orders/[id]/payments`.
-- **Clientes** (`/admin/clientes`, `/admin/clientes/[id]`):
-  - Lista con buscador (`ClientsList`), muestra cuánto debe cada uno o su
-    saldo a favor.
-  - Detalle de cliente (`ClientEditor` para editar teléfono/notas +
-    `OrdersTable` reutilizada mostrando solo los pedidos de ese cliente).
-- **Ganancias** (`/admin/ganancias`): ingresos, cobrado, costo estimado y
-  ganancia con margen %, filtrable por hoy / 7 días / 30 días / todo
-  (`?rango=` en la URL).
+## Mejoras pendientes / ideas
 
-## Modelo de datos (`supabase/schema.sql`)
-
-- `settings` (fila única id=1): `price_per_kg`, `cost_per_kg`, `updated_at`
-- `clients`: `name`, `name_key` (único, para find-or-create), `phone`,
-  `notes`, `credit_balance`
-- `orders`: `client_id`, `client_name`, `quantity`, `unit` (kg/lb),
-  `cheese_type` (duro/semi/blando), `salt_level` (alto/intermedio/bajo),
-  `price_per_kg_snapshot`, `cost_per_kg_snapshot`, `total`, `amount_paid`,
-  `payment_status` (debe/parcial/pagado), `status` (pendiente/completado)
-- `payments` (abonos): `order_id`, `amount`, `method`, `created_at`
-- RLS activado en las 4 tablas, sin políticas públicas (todo pasa por la
-  service role key desde el servidor).
-
-## Estado actual: **NO desplegado**. Pendiente (pasos exactos en `README.md`)
-
-1. Crear proyecto gratis en Supabase → correr `supabase/schema.sql` en el
-   SQL Editor → copiar `Project URL` y `service_role key`.
-2. Crear bot de Telegram con `@BotFather` → obtener `TELEGRAM_BOT_TOKEN` y,
-   escribiéndole y consultando `getUpdates`, el `TELEGRAM_CHAT_ID`.
-3. Copiar `.env.example` a `.env.local` y completar las 5 variables
-   (`SUPABASE_URL`, `SUPABASE_SERVICE_ROLE_KEY`, `ADMIN_PASSWORD`,
-   `TELEGRAM_BOT_TOKEN`, `TELEGRAM_CHAT_ID`). Probar con `npm run dev`.
-4. Subir el repo a GitHub y conectarlo en Vercel, agregando las mismas 5
-   variables de entorno ahí. Deploy → la URL de Vercel es lo que se
-   comparte con los clientes; `/admin` es el panel.
+- Abono atómico (función SQL por RPC): hoy son 3 escrituras seguidas.
+- Fusionar clientes duplicados; descontar el saldo a favor en el siguiente pedido.
+- Foto real del negocio en vez del dibujo SVG de `CheeseWedge.tsx`.
+- Tipos generados de Supabase (`supabase gen types`).
+- Nuevos módulos (gastos, inventario): sigue "Cómo agregar un módulo" en `docs/ARQUITECTURA.md`.
 
 ## Notas para retomar
 
-- Si el usuario dice "sigamos con QuesoWeb" o similar, ir directo al paso
-  pendiente (probablemente el 1: crear el proyecto de Supabase).
-- El proyecto ya fue probado con `npm run build` usando credenciales falsas
-  en `.env.local` — compila limpio. Ese `.env.local` de prueba se borró al
-  terminar (no debe quedar commiteado; `.gitignore` ya excluye `.env*`).
-- Si se agregan más campos o tablas, actualizar tanto `supabase/schema.sql`
-  como este archivo para que seguridad futura no se desalinee.
+- Si el usuario dice "sigamos con QuesoWeb" o "CheeseWeb", es este proyecto.
+- `.env.local` tiene credenciales reales: **nunca** commitearlo ni imprimir sus valores.
+- Antes de dar algo por terminado: `npm run check && npm run build`.

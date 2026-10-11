@@ -1,17 +1,12 @@
-import { supabaseAdmin } from "@/lib/supabase";
-import OrderForm from "@/components/OrderForm";
-import WhatsAppOrderLink from "@/components/WhatsAppOrderLink";
-import CheeseWedge from "@/components/CheeseWedge";
+import { OrderForm } from "@/features/storefront/components/OrderForm";
+import { WhatsAppOrderLink } from "@/features/storefront/components/WhatsAppOrderLink";
+import { CheeseWedge } from "@/features/storefront/components/CheeseWedge";
+import { getSettings } from "@/features/settings/server/settings.repo";
 
 export const dynamic = "force-dynamic";
 
 export default async function Home() {
-  const { data: settings } = await supabaseAdmin
-    .from("settings")
-    .select("price_per_kg, updated_at")
-    .eq("id", 1)
-    .single();
-
+  const settings = await getSettings();
   const pricePerKg = settings ? Number(settings.price_per_kg) : null;
   const updatedAt = settings?.updated_at ?? null;
 
@@ -20,12 +15,8 @@ export default async function Home() {
       <div className="w-full max-w-md">
         <header className="rise-in mb-8 text-center">
           <CheeseWedge className="mx-auto mb-3 h-16 w-20" />
-          <h1 className="font-display text-3xl font-semibold italic text-tinta">
-            Pedidos de Queso
-          </h1>
-          <p className="mt-1.5 text-sm text-tinta/70">
-            Queso fresco directo del sábado a tu mesa.
-          </p>
+          <h1 className="font-display text-3xl font-semibold italic text-tinta">Pedidos de Queso</h1>
+          <p className="mt-1.5 text-sm text-tinta/70">Queso fresco directo del sábado a tu mesa.</p>
         </header>
 
         {pricePerKg ? (

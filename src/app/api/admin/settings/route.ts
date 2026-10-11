@@ -1,29 +1,11 @@
-import { NextRequest, NextResponse } from "next/server";
-import { supabaseAdmin } from "@/lib/supabase";
+import { AppError } from "@/server/errors";
+import { handle, ok, parseJson } from "@/server/http";
+import { updateSettingsSchema } from "@/features/settings/schemas";
+import { updateSettings } from "@/features/settings/server/settings.repo";
 
-export async function POST(request: NextRequest) {
-  const body = await request.json().catch(() => null);
-  const price = Number(body?.price_per_kg);
-  const cost = body?.cost_per_kg === undefined ? 0 : Number(body.cost_per_kg);
-
-  if (!Number.isFinite(price) || price <= 0) {
-    return NextResponse.json({ error: "Precio inválido" }, { status: 400 });
-  }
-
-  if (!Number.isFinite(cost) || cost < 0) {
-    return NextResponse.json({ error: "Costo inválido" }, { status: 400 });
-  }
-
-  const { data, error } = await supabaseAdmin
-    .from("settings")
-    .update({ price_per_kg: price, cost_per_kg: cost, updated_at: new Date().toISOString() })
-    .eq("id", 1)
-    .select()
-    .single();
-
-  if (error || !data) {
-    return NextResponse.json({ error: "No se pudo actualizar el precio" }, { status: 500 });
-  }
-
-  return NextResponse.json({ settings: data });
-}
+export const POST = handle(async (request) => {
+  const { price_per_kg, cost_per_kg } = await parseJson(request, updateSettingsSchema);
+  const settings = await updateSettings(price_per_kg, cost_per_kg);
+  if (!settings) throw new AppError("No se pudo actualizar el precio");
+  return ok({ settings });
+});

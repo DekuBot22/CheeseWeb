@@ -1,0 +1,57 @@
+<!doctype html>
+<html lang="es">
+<head>
+  <meta charset="utf-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover" />
+  <meta name="theme-color" content="#0F0E0C" />
+  <meta name="color-scheme" content="dark" />
+  <meta name="robots" content="noindex, nofollow" />
+  <title>Sin conexión · Cuaderno</title>
+  <style>
+    :root { color-scheme: dark; }
+    * { box-sizing: border-box; }
+    body {
+      margin: 0;
+      min-height: 100dvh;
+      display: grid;
+      place-items: center;
+      padding: 24px;
+      background: #0f0e0c;
+      color: #efe8dc;
+      font-family: system-ui, -apple-system, "Segoe UI", Roboto, sans-serif;
+      line-height: 1.5;
+    }
+    main { max-width: 360px; text-align: center; }
+    svg { display: block; margin: 0 auto 20px; }
+    h1 { margin: 0 0 8px; font-size: 1.5rem; font-weight: 600; }
+    p { margin: 0 0 24px; color: #bdb3a3; font-size: 0.9375rem; }
+    button {
+      min-height: 44px;
+      padding: 0 24px;
+      border: 0;
+      border-radius: 10px;
+      background: #d9a441;
+      color: #17120a;
+      font: inherit;
+      font-weight: 600;
+      cursor: pointer;
+    }
+    button:hover { background: #e6b65a; }
+    button:focus-visible { outline: 2px solid #d9a441; outline-offset: 3px; }
+  </style>
+</head>
+<body>
+  <main>
+    <svg width="72" height="72" viewBox="0 0 120 110" aria-hidden="true">
+      <path d="M10 92 L58 8 L110 92 Q60 106 10 92 Z" fill="#d9a441" stroke="#bc872a" stroke-width="3" stroke-linejoin="round" />
+      <path d="M10 92 Q60 106 110 92" fill="none" stroke="#bc872a" stroke-width="7" stroke-linecap="round" />
+      <circle cx="50" cy="66" r="7" fill="#0f0e0c" />
+      <circle cx="75" cy="76" r="5.5" fill="#0f0e0c" />
+      <circle cx="61" cy="40" r="4" fill="#0f0e0c" />
+    </svg>
+    <h1>Sin conexión</h1>
+    <p>El Cuaderno necesita internet para mostrar tus cuentas al día. Nada se guardó sin conexión.</p>
+    <button type="button" onclick="location.reload()">Reintentar</button>
+  </main>
+</body>
+</html>

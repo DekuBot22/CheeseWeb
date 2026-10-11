@@ -1,0 +1,93 @@
+"use client";
+
+import { useMemo, useState } from "react";
+import { remainingOf, type Order } from "@/domain/order";
+
+export type PayableOrder = Pick<Order, "id" | "client_name" | "total" | "amount_paid" | "created_at">;
+
+// Estado del formulario de abono: qué cliente y qué pedido están elegidos, el
+// monto (por defecto lo que falta) y el envío a la API.
+export function usePaymentForm(
+  orders: PayableOrder[],
+  initialOrderId: string | undefined,
+  onDone: (order: Order) => void
+) {
+  const first = orders.find((o) => o.id === initialOrderId) ?? orders[0];
+
+  const [clientName, setClientName] = useState(first.client_name);
+  const [orderId, setOrderId] = useState(first.id);
+  const [amount, setAmount] = useState(String(remainingOf(first)));
+  const [method, setMethod] = useState("");
+  const [loading, setLoading] = useState(false);
+  const [error, setError] = useState("");
+
+  // Clientes con deuda, de mayor a menor.
+  const clientNames = useMemo(() => {
+    const totals = new Map<string, number>();
+    for (const o of orders) totals.set(o.client_name, (totals.get(o.client_name) ?? 0) + remainingOf(o));
+    return [...totals.entries()].sort((a, b) => b[1] - a[1]).map(([name]) => name);
+  }, [orders]);
+
+  const clientOrders = orders.filter((o) => o.client_name === clientName);
+  const selected = orders.find((o) => o.id === orderId) ?? first;
+
+  function pickClient(name: string) {
+    setClientName(name);
+    const oldest = orders.find((o) => o.client_name === name);
+    if (oldest) {
+      setOrderId(oldest.id);
+      setAmount(String(remainingOf(oldest)));
+    }
+  }
+
+  function pickOrder(id: string) {
+    setOrderId(id);
+    const order = orders.find((o) => o.id === id);
+    if (order) setAmount(String(remainingOf(order)));
+  }
+
+  async function submit(e: React.FormEvent) {
+    e.preventDefault();
+    const value = Number(amount);
+    if (!Number.isFinite(value) || value <= 0) {
+      setError("Ingresa un monto válido");
+      return;
+    }
+    setLoading(true);
+    setError("");
+    try {
+      const res = await fetch(`/api/admin/orders/${selected.id}/payments`, {
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({ amount: value, method: method || undefined }),
+      });
+      const data = await res.json();
+      if (!res.ok) {
+        setError(data.error ?? "No se pudo registrar el abono");
+        return;
+      }
+      onDone(data.order);
+    } catch {
+      setError("No se pudo conectar. Intenta de nuevo.");
+    } finally {
+      setLoading(false);
+    }
+  }
+
+  return {
+    clientNames,
+    clientName,
+    clientOrders,
+    selected,
+    orderId,
+    amount,
+    setAmount,
+    method,
+    setMethod,
+    loading,
+    error,
+    pickClient,
+    pickOrder,
+    submit,
+  };
+}

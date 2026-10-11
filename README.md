@@ -1,110 +1,149 @@
-# 🧀 QuesoWeb — Pedidos de Queso
+# 🧀 QuesoWeb — Pedidos y contabilidad de queso
 
-Web sencilla para que tus clientes hagan pedidos de queso (en kg o lb) y a ti
-te llegue el aviso al instante por Telegram. Tú controlas el precio desde un
-panel de administrador antes de compartir el enlace.
+Dos cosas en una sola web:
 
-- **`/`** — página pública donde el cliente escribe su nombre, elige kg o lb,
-  el tipo de queso (duro/semi/blando) y el nivel de sal, pone la cantidad y ve
-  el total calculado con el precio del día.
-- **`/admin`** — panel privado (con contraseña) con tres secciones:
-  - **Pedidos**: cambias el precio (y costo) por kg, ves cada pedido, lo
-    marcas como completado y registras abonos/pagos.
-  - **Clientes**: se crean solos con cada pedido; ahí ves su historial,
-    cuánto debe o si tiene saldo a favor, y editas teléfono/notas.
-  - **Ganancias**: ingresos, cobrado, costo y ganancia estimada por hoy,
-    últimos 7/30 días o todo.
+- **`/`** — página pública donde el cliente escribe su nombre, elige el tipo de
+  queso (duro/semi/blando) y el nivel de sal, y pide **por cantidad** (kg o lb)
+  **o por valor en pesos**. Ve el total con el precio del día y puede pedir
+  también por WhatsApp. A ti te llega el aviso al instante por Telegram.
+- **`/admin`** — "El Cuaderno": el panel privado (con contraseña) para llevar la
+  contabilidad del negocio. Seis secciones:
+  - **Inicio**: ganancia de la semana, vendido, cobrado, cuánto te deben y cuánto
+    le debes al proveedor, comparación con la semana anterior, quién te debe,
+    pedidos pendientes y las últimas 8 semanas. Accesos rápidos para registrar un
+    abono o una compra.
+  - **Pedidos**: lista con filtros (cliente, estado, pago, período), marcar
+    pedidos como listos y registrar abonos.
+  - **Clientes**: se crean solos con cada pedido; deuda, saldo a favor,
+    antigüedad de la deuda, historial y datos de contacto.
+  - **Compras**: compras y pagos al proveedor, con el "libro del proveedor" y su
+    saldo acumulado.
+  - **Ganancias**: por semana (sábado a viernes), 12 semanas o todo el tiempo,
+    con gráficas y descarga a Excel. El costo usa las compras reales de cada
+    semana; si no hay, usa el costo estimado por kg.
+  - **Ajustes**: precio de venta y costo por kg.
 
-Tecnologías: Next.js 16 + TypeScript + Tailwind CSS (gratis en Vercel) y
-Supabase (base de datos Postgres gratis) + notificaciones por Telegram.
+Tecnologías: Next.js 16 + TypeScript + Tailwind CSS (gratis en Vercel),
+Supabase (Postgres gratis) y Telegram para los avisos.
+
+Si vas a tocar el código, lee antes [`docs/ARQUITECTURA.md`](./docs/ARQUITECTURA.md).
 
 ## 1. Crear la base de datos (Supabase)
 
-1. Ve a [supabase.com](https://supabase.com), crea una cuenta gratis y un
-   proyecto nuevo (elige una contraseña de base de datos y guárdala).
-2. Dentro del proyecto, ve a **SQL Editor > New query**, pega todo el
-   contenido del archivo [`supabase/schema.sql`](./supabase/schema.sql) y
-   dale **Run**. Esto crea las tablas `settings` (precio/costo), `clients`
-   (clientes y su saldo), `orders` (pedidos/ventas) y `payments` (abonos),
-   con un precio inicial de ejemplo ($20.000/kg) que luego cambias desde el
-   panel.
-3. Ve a **Project Settings > API** y copia:
-   - **Project URL** → será `SUPABASE_URL`
-   - **service_role key** (no la `anon` key) → será `SUPABASE_SERVICE_ROLE_KEY`
+1. Crea una cuenta gratis en [supabase.com](https://supabase.com) y un proyecto
+   nuevo (guarda la contraseña de la base de datos).
+2. En **SQL Editor > New query**:
+   - **Base nueva:** pega todo [`supabase/schema.sql`](./supabase/schema.sql) y
+     dale **Run**. Crea todas las tablas (`settings`, `clients`, `orders`,
+     `payments`, `purchases`, `provider_payments`) y sus índices.
+   - **Base que ya estaba en marcha:** corre solo las migraciones que te falten
+     de [`supabase/migrations/`](./supabase/migrations), en orden
+     (`001_base`, `002_compras_proveedor`, `003_indices`). Son idempotentes.
+3. En **Project Settings > API** copia:
+   - **Project URL** → `SUPABASE_URL`
+   - **service_role key** (no la `anon`) → `SUPABASE_SERVICE_ROLE_KEY`
 
-   ⚠️ La `service_role key` es secreta: nunca la subas a un repositorio
-   público ni la pongas en código del navegador. Solo va en variables de
-   entorno del servidor.
+   ⚠️ La `service_role key` es secreta: solo va en variables de entorno del
+   servidor, nunca en el navegador ni en un repositorio público.
 
 ## 2. Crear el bot de Telegram (para recibir avisos)
 
-1. En Telegram, busca **@BotFather** y envíale `/newbot`. Sigue las
-   instrucciones (nombre y usuario del bot) y te dará un **token** — será
-   `TELEGRAM_BOT_TOKEN`.
-2. Escríbele cualquier mensaje a tu bot recién creado (por ejemplo "hola").
-3. Abre en el navegador, reemplazando `<TOKEN>` por tu token:
-   `https://api.telegram.org/bot<TOKEN>/getUpdates`
-4. Busca en el JSON el campo `"chat":{"id":...}` — ese número es
-   `TELEGRAM_CHAT_ID`.
+1. En Telegram, escríbele a **@BotFather** `/newbot` y sigue los pasos: te da un
+   **token** → `TELEGRAM_BOT_TOKEN`.
+2. Escríbele un mensaje cualquiera a tu bot.
+3. Abre `https://api.telegram.org/bot<TOKEN>/getUpdates` y busca
+   `"chat":{"id":...}` → ese número es `TELEGRAM_CHAT_ID`.
 
-## 3. Configurar variables de entorno
+Telegram es opcional: sin estas dos variables los pedidos se guardan igual, solo
+que sin aviso.
 
-Copia `.env.example` a `.env.local` y completa los valores:
+## 3. Variables de entorno
 
-```bash
-cp .env.example .env.local
-```
+Copia `.env.example` a `.env.local` y completa:
 
 ```
 SUPABASE_URL=...
 SUPABASE_SERVICE_ROLE_KEY=...
-ADMIN_PASSWORD=...        # la contraseña para entrar a /admin
-TELEGRAM_BOT_TOKEN=...
-TELEGRAM_CHAT_ID=...
+ADMIN_PASSWORD=...        # contraseña para entrar a /admin
+TELEGRAM_BOT_TOKEN=...    # opcional
+TELEGRAM_CHAT_ID=...      # opcional
+ADMIN_AUTH=off            # opcional, SOLO en .env.local: panel sin contraseña en tu PC
 ```
+
+**`ADMIN_AUTH=off` es solo para trabajar en tu computador.** Se ignora en
+producción, en Vercel y si entras desde otro aparato (por la IP de tu red): ahí
+siempre pide contraseña. **No la pongas en Vercel.** Mientras está activa verás
+la franja "Sin contraseña (modo local)".
+
+Si falta alguna obligatoria, el servidor lo dice al arrancar (con el nombre de
+la variable, nunca su valor).
 
 ## 4. Probar en tu computador
 
 ```bash
 npm install
-npm run dev
+npm run dev      # http://localhost:3000  y  http://localhost:3000/admin
 ```
 
-Abre [http://localhost:3000](http://localhost:3000) (pedido de cliente) y
-[http://localhost:3000/admin](http://localhost:3000/admin) (panel, pide la
-contraseña `ADMIN_PASSWORD`).
+Otros comandos:
+
+| Comando | Para qué |
+|---|---|
+| `npm run build` | Compilar para producción (usa webpack: el build de Vercel no resuelve bien las fuentes con Turbopack). |
+| `npm test` | Pruebas del dominio (semanas, contabilidad, deudas). |
+| `npm run check` | Tipos + lint + pruebas. Córrelo antes de subir cambios. |
 
 ## 5. Publicar gratis en Vercel
 
-1. Sube este proyecto a un repositorio de GitHub.
-2. En [vercel.com](https://vercel.com), **Add New > Project**, importa el
-   repositorio.
-3. En **Environment Variables**, agrega las mismas 5 variables del paso 3
-   (`SUPABASE_URL`, `SUPABASE_SERVICE_ROLE_KEY`, `ADMIN_PASSWORD`,
-   `TELEGRAM_BOT_TOKEN`, `TELEGRAM_CHAT_ID`).
-4. Dale **Deploy**. Cuando termine, tu web pública queda en algo como
-   `https://tu-proyecto.vercel.app` — ese es el enlace que compartes con tus
-   clientes. El panel queda en `https://tu-proyecto.vercel.app/admin`.
+1. Sube el proyecto a GitHub.
+2. En [vercel.com](https://vercel.com): **Add New > Project** e importa el repo.
+3. En **Environment Variables** agrega las mismas variables del paso 3.
+4. **Deploy**. La web pública queda en `https://tu-proyecto.vercel.app` y el
+   panel en `/admin`.
+
+## 6. Instalar la app en el teléfono (sin tiendas)
+
+El panel es una app instalable (PWA): ícono propio, pantalla completa y la sesión
+abierta. Escribes la contraseña **una sola vez**; la sesión dura 400 días y se
+renueva cada vez que entras. Funciona con la dirección de Vercel (necesita HTTPS).
+
+**Android (Chrome):**
+1. Abre `https://tu-proyecto.vercel.app/admin` e inicia sesión.
+2. En **Ajustes → Instalar Cuaderno** (o menú ⋮ → *Instalar app*) → Instalar.
+3. Abre «Cuaderno» desde el escritorio. Mantén pulsado el ícono para los accesos
+   directos (Pedidos, Compras, Ganancias).
+
+**iPhone (Safari, iOS 16.4 o posterior):**
+1. Abre la dirección en **Safari** (no en Chrome).
+2. Compartir → **Agregar a pantalla de inicio** → Agregar.
+3. Abre «Cuaderno» desde el ícono e **inicia sesión dentro de la app** (la app
+   instalada guarda sus cookies aparte de las de Safari).
+
+Sin internet muestra una pantalla de "Sin conexión": no guarda datos financieros
+en el teléfono. **Quien tenga tu teléfono desbloqueado ve la contabilidad.** Para
+cerrar todas las sesiones, cambia `ADMIN_PASSWORD` en Vercel y vuelve a desplegar.
+Los íconos se regeneran con `node scripts/generate-icons.mjs`.
 
 ## Uso diario
 
-1. Antes de compartir el link (por WhatsApp, redes, etc.), entra a
-   `/admin`, actualiza el precio (y opcionalmente el costo, para ver
-   ganancias) por kg y guarda. La fecha de actualización se registra sola.
+1. Entra a `/admin/ajustes` y actualiza el precio (y el costo, si quieres ver
+   ganancias estimadas) antes de compartir el enlace.
 2. Comparte el link de la página principal con tus clientes.
-3. Cada pedido te llega al instante por Telegram y queda guardado en
-   `/admin`, donde puedes marcarlo como "completado" cuando lo despaches.
-4. Cuando un cliente pague (todo o una parte), entra al pedido y usa
-   **Registrar abono**. Si paga de más, el excedente queda como saldo a
-   favor en su ficha de cliente para el próximo pedido.
-5. En **Clientes** ves quién debe y cuánto; en **Ganancias**, cómo va el
-   negocio por período.
+3. Cada pedido te llega por Telegram y queda en **Pedidos**; márcalo como listo
+   cuando lo despaches.
+4. Cuando alguien pague (todo o una parte), usa **Abonar**. Si paga de más, el
+   excedente queda como saldo a favor del cliente.
+5. Cuando llegue el queso (los sábados) registra la compra en **Compras** y los
+   pagos que le hagas al proveedor: así las ganancias usan el costo real.
+6. **Inicio** y **Ganancias** te dicen cómo va el negocio.
 
 ## Notas
 
-- Los precios se muestran en pesos colombianos (COP). Si necesitas otra
-  moneda, cambia `formatCOP` en `src/lib/constants.ts`.
-- La conversión kg ↔ lb usa el estándar 1 lb = 0.45359237 kg.
-- Si algún día quieres cambiar la contraseña del panel, solo actualiza
-  `ADMIN_PASSWORD` en Vercel (y en `.env.local` si pruebas localmente); las
-  sesiones anteriores dejan de funcionar automáticamente.
+- Los precios se muestran en pesos colombianos (COP); el formato está en
+  `src/lib/format.ts`.
+- **1 kg = 2 lb** (así se maneja en la región); el factor está en
+  `src/domain/units.ts` y todos los totales dependen de él.
+- La **semana de negocio** va de sábado 00:00 a viernes 23:59, siempre en hora de
+  Colombia, porque el queso llega los sábados (`src/domain/week.ts`).
+- Para cambiar la contraseña del panel, actualiza `ADMIN_PASSWORD` en Vercel (y
+  en `.env.local`); las sesiones anteriores dejan de funcionar solas.

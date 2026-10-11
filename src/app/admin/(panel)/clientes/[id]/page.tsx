@@ -1,41 +1,44 @@
 import Link from "next/link";
 import { notFound } from "next/navigation";
-import { supabaseAdmin } from "@/lib/supabase";
-import ClientEditor from "@/components/admin/ClientEditor";
-import OrdersTable from "@/components/admin/OrdersTable";
-import type { Client, Order } from "@/lib/types";
+import { remainingOf } from "@/domain/order";
+import { plural } from "@/lib/format";
+import { ClientEditor } from "@/features/clients/components/ClientEditor";
+import { ClientSummary } from "@/features/clients/components/ClientSummary";
+import { getClient } from "@/features/clients/server/clients.repo";
+import { OrdersTable } from "@/features/orders/components/OrdersTable";
+import { listOrdersByClient } from "@/features/orders/server/orders.repo";
+import { PageHeader } from "@/ui/PageHeader";
 
 export const dynamic = "force-dynamic";
 
-export default async function ClientDetailPage({
-  params,
-}: {
-  params: Promise<{ id: string }>;
-}) {
+export default async function ClientDetailPage({ params }: { params: Promise<{ id: string }> }) {
   const { id } = await params;
-
-  const [{ data: client }, { data: orders }] = await Promise.all([
-    supabaseAdmin.from("clients").select("*").eq("id", id).single(),
-    supabaseAdmin
-      .from("orders")
-      .select("*")
-      .eq("client_id", id)
-      .order("created_at", { ascending: false }),
-  ]);
-
+  const [client, orders] = await Promise.all([getClient(id), listOrdersByClient(id)]);
   if (!client) notFound();
 
   return (
-    <div>
-      <Link href="/admin/clientes" className="mb-4 inline-block text-sm text-zinc-500 hover:text-zinc-800">
-        ← Clientes
-      </Link>
-
-      <div className="mb-6">
-        <ClientEditor client={client as Client} />
+    <div className="space-y-6">
+      <div>
+        <Link href="/admin/clientes" className="mb-2 inline-block text-sm font-medium text-acento hover:underline">
+          ← Clientes
+        </Link>
+        <PageHeader title={client.name} subtitle={plural(orders.length, "pedido")} />
       </div>
 
-      <OrdersTable initialOrders={(orders as Order[]) ?? []} />
+      <ClientSummary
+        debe={orders.reduce((s, o) => s + remainingOf(o), 0)}
+        credit={Number(client.credit_balance)}
+        comprado={orders.reduce((s, o) => s + Number(o.total), 0)}
+      />
+
+      <ClientEditor client={client} />
+
+      <section aria-labelledby="historial">
+        <h2 id="historial" className="mb-3 font-display text-lg font-semibold text-tinta">
+          Historial de pedidos
+        </h2>
+        <OrdersTable initialOrders={orders} showClient={false} emptyTitle="Este cliente aún no tiene pedidos" />
+      </section>
     </div>
   );
 }

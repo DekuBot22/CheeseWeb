@@ -12,6 +12,95 @@
   --curado: #b5651d;
   --terracota: #9a4a34;
   --tinta: #2e2115;
+
+  /* Panel admin: libro de cuentas. Contrastes AA verificados. */
+  --papel: #f6f0e3;
+  --hoja: #fffdf8;
+  --hoja-2: #fbf7ee;
+  --linea: #e5d9c3;
+  --linea-fuerte: #8f7c62;
+  --tinta-2: #6b5a48;
+  --tinta-3: #7a6852;
+  --acento: #9a4a34;
+  --acento-hover: #7e3a28;
+  --acento-suave: #f3e3da;
+  --debe: #a3341f;
+  --debe-bg: #fbe9e4;
+  --debe-borde: #f0c4b8;
+  --cobrado: #2d6a41;
+  --cobrado-bg: #e6f2e9;
+  --cobrado-borde: #bfdcc8;
+  --aviso: #8a5300;
+  --aviso-bg: #fbefd9;
+  --aviso-borde: #ebcf98;
+  --info: #2f64b0;
+  --info-bg: #e7eef8;
+  --serie-1: #2f64b0;
+  --serie-2: #c27a2c;
+  --serie-3: #7a4fa8;
+  --serie-1-claro: #a9c1e6;
+
+  /* Reservas del tema claro (el panel hoy usa el oscuro, ver más abajo). */
+  --hoja-3: #f1ebdd;
+  --sobre-acento: #fffdf8;
+  --info-borde: #bcd0ea;
+  --aging-1: #f2c9b8;
+  --aging-2: #de9a80;
+  --aging-3: #c0644a;
+  --aging-4: #8e3420;
+  --sombra-hoja: 0 1px 0 rgb(46 33 21 / 0.04), 0 1px 2px rgb(46 33 21 / 0.06);
+  --sombra-flota: 0 12px 32px -12px rgb(46 33 21 / 0.22);
+}
+
+/*
+ * Tema oscuro del panel "Bodega de curado": negro cálido de cava de maduración
+ * con el oro ámbar del queso curado como único acento. Vive SOLO bajo
+ * [data-theme="oscuro"] (se pone en el div .admin-root de app/admin/layout.tsx):
+ * la página pública comparte --tinta con el panel y no debe oscurecerse.
+ * Para añadir otro tema: copia este bloque con otro nombre de data-theme,
+ * cambia los valores (mismos nombres de token) y valida contrastes AA.
+ */
+[data-theme="oscuro"] {
+  color-scheme: dark;
+  accent-color: var(--acento);
+  scrollbar-color: var(--linea-fuerte) transparent;
+
+  --papel: #0f0e0c;
+  --hoja: #191714;
+  --hoja-2: #221f1b;
+  --hoja-3: #2a2621;
+  --linea: #2f2b25;
+  --linea-fuerte: #776e60;
+  --tinta: #efe8dc;
+  --tinta-2: #bdb3a3;
+  --tinta-3: #9a9081;
+  --acento: #d9a441;
+  --acento-hover: #e6b65a;
+  --acento-suave: #2c2416;
+  --sobre-acento: #17120a;
+  --debe: #f0826b;
+  --debe-bg: #2b1714;
+  --debe-borde: #5a2c23;
+  --cobrado: #6fc28d;
+  --cobrado-bg: #13241a;
+  --cobrado-borde: #2a4a35;
+  --aviso: #e5c15a;
+  --aviso-bg: #2a2312;
+  --aviso-borde: #5a4a22;
+  --info: #7fa8e0;
+  --info-bg: #16202e;
+  --info-borde: #2b3d57;
+  --serie-1: #bc872a;
+  --serie-2: #4f8bdb;
+  --serie-3: #d0679a;
+  --serie-1-claro: #7a5a22;
+  --aging-1: #7e4334;
+  --aging-2: #a8533f;
+  --aging-3: #d26b53;
+  --aging-4: #f48c72;
+  /* En oscuro la elevación es luz (borde superior), no sombra. */
+  --sombra-hoja: inset 0 1px 0 rgb(255 240 220 / 0.04), 0 1px 2px rgb(0 0 0 / 0.4);
+  --sombra-flota: 0 0 0 1px rgb(255 240 220 / 0.05), 0 18px 40px -12px rgb(0 0 0 / 0.75);
 }
 
 @theme inline {
@@ -25,6 +114,46 @@
   --font-sans: var(--font-geist-sans);
   --font-mono: var(--font-geist-mono);
   --font-display: var(--font-fraunces);
+
+  /* --- Sistema "El Cuaderno" (panel /admin) --- */
+  --color-papel: var(--papel);
+  --color-hoja: var(--hoja);
+  --color-hoja-2: var(--hoja-2);
+  --color-hoja-3: var(--hoja-3);
+  --color-sobre-acento: var(--sobre-acento);
+  --color-info-borde: var(--info-borde);
+  --color-aging-1: var(--aging-1);
+  --color-aging-2: var(--aging-2);
+  --color-aging-3: var(--aging-3);
+  --color-aging-4: var(--aging-4);
+  --color-linea: var(--linea);
+  --color-linea-fuerte: var(--linea-fuerte);
+  --color-tinta-2: var(--tinta-2);
+  --color-tinta-3: var(--tinta-3);
+  --color-acento: var(--acento);
+  --color-acento-hover: var(--acento-hover);
+  --color-acento-suave: var(--acento-suave);
+  --color-debe: var(--debe);
+  --color-debe-bg: var(--debe-bg);
+  --color-debe-borde: var(--debe-borde);
+  --color-cobrado: var(--cobrado);
+  --color-cobrado-bg: var(--cobrado-bg);
+  --color-cobrado-borde: var(--cobrado-borde);
+  --color-aviso: var(--aviso);
+  --color-aviso-bg: var(--aviso-bg);
+  --color-aviso-borde: var(--aviso-borde);
+  --color-info: var(--info);
+  --color-info-bg: var(--info-bg);
+  --color-serie-1: var(--serie-1);
+  --color-serie-2: var(--serie-2);
+  --color-serie-3: var(--serie-3);
+  --color-serie-1-claro: var(--serie-1-claro);
+  --font-ui: var(--font-plex);
+  --radius-sm: 6px;
+  --radius-md: 10px;
+  --radius-lg: 14px;
+  --shadow-hoja: var(--sombra-hoja);
+  --shadow-flota: var(--sombra-flota);
 }
 
 body {
@@ -68,4 +197,53 @@ body {
 
 .rise-in {
   animation: rise-in 0.5s ease-out both;
+}
+
+/* ---- Panel admin ---- */
+.admin-root {
+  background: var(--papel);
+  color: var(--tinta);
+  font-family: var(--font-plex), var(--font-geist-sans), Arial, sans-serif;
+}
+
+.admin-root :focus-visible {
+  outline: 2px solid var(--acento);
+  outline-offset: 2px;
+}
+
+/* Las zonas táctiles de las gráficas son <rect> SVG: su foco se dibuja como trazo. */
+.admin-root svg [tabindex]:focus-visible {
+  outline: none;
+  stroke: var(--acento);
+  stroke-width: 2;
+}
+
+[data-theme="oscuro"] ::selection {
+  background: rgb(217 164 65 / 0.35);
+  color: var(--tinta);
+}
+
+/* Chrome pinta el autocompletado en azul claro: lo devolvemos a la paleta. */
+[data-theme="oscuro"] input:-webkit-autofill {
+  -webkit-text-fill-color: var(--tinta);
+  box-shadow: 0 0 0 1000px var(--hoja) inset;
+  caret-color: var(--acento);
+}
+
+/* Fuera de .admin-root (html/body) no llegan las variables: al estirar la página en
+   iOS o en las zonas seguras de la app instalada se vería el crema público. */
+html:has([data-theme="oscuro"]),
+html:has([data-theme="oscuro"]) body {
+  background: #0f0e0c;
+  color-scheme: dark;
+}
+
+/* Cifras alineadas en columnas: contabilidad. */
+.num {
+  font-variant-numeric: tabular-nums lining-nums;
+}
+
+/* Doble subrayado bajo los totales, como en un libro contable. */
+.total-doble {
+  border-bottom: 3px double var(--tinta);
 }

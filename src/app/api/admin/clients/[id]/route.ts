@@ -1,34 +1,18 @@
-import { NextRequest, NextResponse } from "next/server";
-import { supabaseAdmin } from "@/lib/supabase";
+import { ValidationError } from "@/server/errors";
+import { handle, ok, parseJson } from "@/server/http";
+import { updateClientSchema } from "@/features/clients/schemas";
+import { updateClient } from "@/features/clients/server/clients.repo";
 
-export async function PATCH(
-  request: NextRequest,
-  { params }: { params: Promise<{ id: string }> }
-) {
+type Context = { params: Promise<{ id: string }> };
+
+export const PATCH = handle<Context>(async (request, { params }) => {
   const { id } = await params;
-  const body = await request.json().catch(() => null);
+  const { phone, notes } = await parseJson(request, updateClientSchema);
 
-  const phone = typeof body?.phone === "string" ? body.phone.trim() || null : undefined;
-  const notes = typeof body?.notes === "string" ? body.notes.trim() || null : undefined;
+  const fields: { phone?: string | null; notes?: string | null } = {};
+  if (phone !== undefined) fields.phone = phone;
+  if (notes !== undefined) fields.notes = notes;
+  if (Object.keys(fields).length === 0) throw new ValidationError("Nada que actualizar");
 
-  const update: Record<string, string | null> = {};
-  if (phone !== undefined) update.phone = phone;
-  if (notes !== undefined) update.notes = notes;
-
-  if (Object.keys(update).length === 0) {
-    return NextResponse.json({ error: "Nada que actualizar" }, { status: 400 });
-  }
-
-  const { data, error } = await supabaseAdmin
-    .from("clients")
-    .update(update)
-    .eq("id", id)
-    .select()
-    .single();
-
-  if (error || !data) {
-    return NextResponse.json({ error: "No se pudo actualizar el cliente" }, { status: 500 });
-  }
-
-  return NextResponse.json({ client: data });
-}
+  return ok({ client: await updateClient(id, fields) });
+});

@@ -1,28 +1,11 @@
-import { NextRequest, NextResponse } from "next/server";
-import { supabaseAdmin } from "@/lib/supabase";
+import { handle, ok, parseJson } from "@/server/http";
+import { updateOrderStatusSchema } from "@/features/orders/schemas";
+import { updateOrderStatus } from "@/features/orders/server/orders.repo";
 
-export async function PATCH(
-  request: NextRequest,
-  { params }: { params: Promise<{ id: string }> }
-) {
+type Context = { params: Promise<{ id: string }> };
+
+export const PATCH = handle<Context>(async (request, { params }) => {
   const { id } = await params;
-  const body = await request.json().catch(() => null);
-  const status = body?.status;
-
-  if (status !== "pendiente" && status !== "completado") {
-    return NextResponse.json({ error: "Estado inválido" }, { status: 400 });
-  }
-
-  const { data, error } = await supabaseAdmin
-    .from("orders")
-    .update({ status })
-    .eq("id", id)
-    .select()
-    .single();
-
-  if (error || !data) {
-    return NextResponse.json({ error: "No se pudo actualizar el pedido" }, { status: 500 });
-  }
-
-  return NextResponse.json({ order: data });
-}
+  const { status } = await parseJson(request, updateOrderStatusSchema);
+  return ok({ order: await updateOrderStatus(id, status) });
+});
