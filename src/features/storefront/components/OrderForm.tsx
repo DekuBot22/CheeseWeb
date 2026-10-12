@@ -35,8 +35,16 @@ export function OrderForm({ pricePerKg, updatedAt }: { pricePerKg: number; updat
   }
 
   return (
-    <form onSubmit={f.submit} className="rounded-2xl border border-corteza bg-white p-6 shadow-sm">
+    <form onSubmit={f.submit} className="relative rounded-2xl border border-corteza bg-white p-6 shadow-sm">
       <PriceTag pricePerKg={pricePerKg} updatedAt={updatedAt} />
+
+      {/* Campo trampa para robots: fuera de pantalla y fuera del orden de tabulación. */}
+      <div aria-hidden="true" className="absolute -left-[9999px] h-0 w-0 overflow-hidden">
+        <label>
+          Sitio web
+          <input type="text" name="website" tabIndex={-1} autoComplete="off" />
+        </label>
+      </div>
 
       <label className="mb-4 block">
         <span className="mb-1 block text-sm font-medium text-tinta/80">Tu nombre</span>

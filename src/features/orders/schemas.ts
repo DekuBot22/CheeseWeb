@@ -20,6 +20,14 @@ export const registerPaymentSchema = z.object({
     .transform((v) => (typeof v === "string" && v.trim() ? v.trim() : null)),
 });
 
+// Campo trampa del formulario público: está escondido para las personas, así que
+// si viene con algo lo llenó un robot.
+export function isHoneypotFilled(body: unknown): boolean {
+  if (typeof body !== "object" || body === null) return false;
+  const value = (body as Record<string, unknown>).website;
+  return typeof value === "string" && value.trim().length > 0;
+}
+
 export interface CreateOrderInput {
   client_name: string;
   // Pedido por valor en pesos: si viene, se ignoran `quantity` y `unit`.

@@ -32,8 +32,10 @@ export function useOrderForm(pricePerKg: number) {
 
   const equivKg = amountValid ? amountNumber / pricePerKg : 0;
 
-  async function submit(e: React.FormEvent) {
+  async function submit(e: React.FormEvent<HTMLFormElement>) {
     e.preventDefault();
+    // Campo trampa (escondido): una persona nunca lo llena.
+    const website = new FormData(e.currentTarget).get("website");
     setStatus("loading");
     setErrorMsg("");
     try {
@@ -45,6 +47,7 @@ export function useOrderForm(pricePerKg: number) {
           ...(byAmount ? { amount: amountNumber } : { quantity: qtyNumber, unit }),
           cheese_type: cheeseType,
           salt_level: saltLevel,
+          website: typeof website === "string" ? website : "",
         }),
       });
       const data = await res.json();
