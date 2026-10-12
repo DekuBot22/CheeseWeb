@@ -14,6 +14,12 @@ export async function getSettings(): Promise<SettingsView | null> {
   return data ?? null;
 }
 
+// La fila completa de ajustes, para el respaldo.
+export async function getSettingsRow(): Promise<Settings | null> {
+  const { data } = await db().from("settings").select("*").eq("id", 1).maybeSingle();
+  return (data as Settings | null) ?? null;
+}
+
 // Precio de venta y costo vigentes, para fijar el precio de un pedido nuevo.
 export async function getPricing(): Promise<{ pricePerKg: number; costPerKg: number } | null> {
   const { data, error } = await db()

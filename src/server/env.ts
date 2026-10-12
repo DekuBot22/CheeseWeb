@@ -12,6 +12,8 @@ const schema = z.object({
   // El aviso por Telegram es opcional: sin estas dos el pedido se guarda igual.
   TELEGRAM_BOT_TOKEN: z.string().optional(),
   TELEGRAM_CHAT_ID: z.string().optional(),
+  // Secreto del cron de Vercel (respaldo diario). Sin él, esa ruta responde siempre 401.
+  CRON_SECRET: z.string().min(16).optional(),
 });
 
 export type Env = z.infer<typeof schema>;
