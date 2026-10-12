@@ -3,6 +3,7 @@ import ExcelJS from "exceljs";
 import { CHEESE_TYPE_LABELS, SALT_LEVEL_LABELS } from "@/domain/catalog";
 import { PAYMENT_STATUS_LABELS } from "@/domain/order";
 import { DISCOUNT_REASON_LABELS } from "@/domain/purchase";
+import { addExtraSheets } from "./export-extra-sheets";
 import type { ExportData } from "./get-export-data";
 
 function addSheet(workbook: ExcelJS.Workbook, name: string, columns: Partial<ExcelJS.Column>[]) {
@@ -124,6 +125,7 @@ export async function buildExportWorkbook(data: ExportData): Promise<Uint8Array>
   ordersSheet(workbook, data);
   debtorsSheet(workbook, data);
   providerSheet(workbook, data);
+  addExtraSheets(workbook, data);
 
   return new Uint8Array(await workbook.xlsx.writeBuffer());
 }

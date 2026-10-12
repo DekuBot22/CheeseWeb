@@ -25,12 +25,14 @@ export async function listPaymentsOfOrder(orderId: string): Promise<Payment[]> {
   return (data as Payment[]) ?? [];
 }
 
-// Abonos entre dos instantes, para el Excel.
-export function listPaymentsInRange(start: Date, end: Date): Promise<Payment[]> {
-  return fetchAll<Payment>((from, to) =>
+export type PaymentWithClient = Payment & { orders: { client_name: string } | null };
+
+// Abonos entre dos instantes con el nombre del cliente, para el Excel.
+export function listPaymentsInRange(start: Date, end: Date): Promise<PaymentWithClient[]> {
+  return fetchAll<PaymentWithClient>((from, to) =>
     db()
       .from("payments")
-      .select("*")
+      .select("*, orders(client_name)")
       .gte("created_at", start.toISOString())
       .lte("created_at", end.toISOString())
       .order("created_at", { ascending: true })
