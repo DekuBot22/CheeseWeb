@@ -1,4 +1,5 @@
 import { remainingOf } from "@/domain/order";
+import { activeOnly } from "@/domain/void";
 import { shiftWeek, weekRange } from "@/domain/week";
 import { formatCOP, plural } from "@/lib/format";
 import { pickParam } from "@/lib/search-params";
@@ -39,8 +40,9 @@ export default async function PedidosPage({ searchParams }: { searchParams: Prom
     LIMIT
   );
 
-  const total = orders.reduce((s, o) => s + Number(o.total), 0);
-  const pendiente = orders.reduce((s, o) => s + remainingOf(o), 0);
+  const active = activeOnly(orders);
+  const total = active.reduce((s, o) => s + Number(o.total), 0);
+  const pendiente = active.reduce((s, o) => s + remainingOf(o), 0);
   const filtered = Boolean(q) || estado !== "todos" || pago !== "todos" || periodo !== "todos";
 
   return (

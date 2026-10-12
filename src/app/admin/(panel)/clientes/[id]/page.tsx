@@ -1,6 +1,6 @@
 import Link from "next/link";
 import { notFound } from "next/navigation";
-import { remainingOf } from "@/domain/order";
+import { summarizeClientOrders } from "@/domain/client-balance";
 import { plural } from "@/lib/format";
 import { ClientEditor } from "@/features/clients/components/ClientEditor";
 import { ClientSummary } from "@/features/clients/components/ClientSummary";
@@ -15,6 +15,7 @@ export default async function ClientDetailPage({ params }: { params: Promise<{ i
   const { id } = await params;
   const [client, orders] = await Promise.all([getClient(id), listOrdersByClient(id)]);
   if (!client) notFound();
+  const summary = summarizeClientOrders(orders);
 
   return (
     <div className="space-y-6">
@@ -22,13 +23,13 @@ export default async function ClientDetailPage({ params }: { params: Promise<{ i
         <Link href="/admin/clientes" className="mb-2 inline-block text-sm font-medium text-acento hover:underline">
           ← Clientes
         </Link>
-        <PageHeader title={client.name} subtitle={plural(orders.length, "pedido")} />
+        <PageHeader title={client.name} subtitle={plural(summary.count, "pedido")} />
       </div>
 
       <ClientSummary
-        debe={orders.reduce((s, o) => s + remainingOf(o), 0)}
+        debe={summary.debe}
         credit={Number(client.credit_balance)}
-        comprado={orders.reduce((s, o) => s + Number(o.total), 0)}
+        comprado={summary.comprado}
       />
 
       <ClientEditor client={client} />

@@ -1,10 +1,10 @@
 import "server-only";
-import { db, fetchAll } from "@/server/db";
+import { db, fetchAll, hasVoidColumns, voidRow } from "@/server/db";
 import { AppError } from "@/server/errors";
 import type { StatPurchase } from "@/domain/accounting";
 import type { Purchase } from "@/domain/purchase";
 
-// Todas las compras, de la más vieja a la más nueva.
+// Todas las compras (también las anuladas), de la más vieja a la más nueva.
 export function listPurchases(): Promise<Purchase[]> {
   return fetchAll<Purchase>((from, to) =>
     db().from("purchases").select("*").order("purchase_date", { ascending: true }).range(from, to)
@@ -12,16 +12,13 @@ export function listPurchases(): Promise<Purchase[]> {
 }
 
 // Solo las columnas de la contabilidad, entre dos fechas AAAA-MM-DD (to = null → sin tope).
-export function listPurchasesForStats(from: string, toDate: string | null): Promise<StatPurchase[]> {
+export async function listPurchasesForStats(from: string, toDate: string | null): Promise<StatPurchase[]> {
+  const voidReady = await hasVoidColumns();
   return fetchAll<StatPurchase>((a, b) => {
-    let query = db()
-      .from("purchases")
-      .select("kg, total_cost, purchase_date")
-      .gte("purchase_date", from)
-      .order("purchase_date", { ascending: true })
-      .range(a, b);
+    let query = db().from("purchases").select("kg, total_cost, purchase_date").gte("purchase_date", from);
+    if (voidReady) query = query.is("voided_at", null);
     if (toDate) query = query.lte("purchase_date", toDate);
-    return query;
+    return query.order("purchase_date", { ascending: true }).range(a, b);
   });
 }
 
@@ -53,4 +50,8 @@ export async function insertPurchase(row: {
   const { data, error } = await db().from("purchases").insert(row).select().single();
   if (error || !data) throw new AppError("No se pudo registrar la compra");
   return data as Purchase;
+}
+
+export async function voidPurchase(id: string, reason: string): Promise<Purchase> {
+  return (await voidRow("purchases", id, reason)) as unknown as Purchase;
 }

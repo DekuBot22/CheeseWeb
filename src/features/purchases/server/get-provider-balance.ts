@@ -1,5 +1,6 @@
 import "server-only";
 import { providerTotals } from "@/domain/provider-ledger";
+import { activeOnly } from "@/domain/void";
 import { listProviderDiscounts } from "./provider-discounts.repo";
 import { listProviderPayments } from "./provider-payments.repo";
 import { listPurchases } from "./purchases.repo";
@@ -11,8 +12,9 @@ export async function getProviderBalance() {
     listProviderPayments(),
     listProviderDiscounts(),
   ]);
+  const active = activeOnly(purchases);
   return {
     ...providerTotals(purchases, payments, discounts),
-    lastPurchaseDate: purchases.length ? purchases[purchases.length - 1].purchase_date : null,
+    lastPurchaseDate: active.length ? active[active.length - 1].purchase_date : null,
   };
 }

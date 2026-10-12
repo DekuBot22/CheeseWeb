@@ -1,5 +1,5 @@
 import "server-only";
-import { db, fetchAll, isMissingTableError } from "@/server/db";
+import { db, fetchAll, hasVoidColumns, isMissingTableError, voidRow } from "@/server/db";
 import { AppError } from "@/server/errors";
 import type { StatDiscount } from "@/domain/accounting";
 import type { DiscountReason, ProviderDiscount } from "@/domain/purchase";
@@ -28,16 +28,13 @@ export async function listProviderDiscounts(): Promise<{ discounts: ProviderDisc
 
 // Solo las columnas de la contabilidad, entre dos fechas AAAA-MM-DD (to = null → sin tope).
 export async function listProviderDiscountsForStats(from: string, toDate: string | null): Promise<StatDiscount[]> {
+  const voidReady = await hasVoidColumns();
   const { rows } = await orEmptyIfMissing(() =>
     fetchAll<StatDiscount>((a, b) => {
-      let query = db()
-        .from("provider_discounts")
-        .select("amount, discount_date")
-        .gte("discount_date", from)
-        .order("discount_date", { ascending: true })
-        .range(a, b);
+      let query = db().from("provider_discounts").select("amount, discount_date").gte("discount_date", from);
+      if (voidReady) query = query.is("voided_at", null);
       if (toDate) query = query.lte("discount_date", toDate);
-      return query;
+      return query.order("discount_date", { ascending: true }).range(a, b);
     })
   );
   return rows;
@@ -86,4 +83,8 @@ export async function insertProviderDiscount(row: {
   }
   if (error || !data) throw new AppError("No se pudo registrar el descuento");
   return data as ProviderDiscount;
+}
+
+export async function voidProviderDiscount(id: string, reason: string): Promise<ProviderDiscount> {
+  return (await voidRow("provider_discounts", id, reason)) as unknown as ProviderDiscount;
 }

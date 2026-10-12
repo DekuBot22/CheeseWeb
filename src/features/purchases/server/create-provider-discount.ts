@@ -1,6 +1,7 @@
 import "server-only";
 import { remainingForDiscount } from "@/domain/provider-ledger";
 import type { ProviderDiscount } from "@/domain/purchase";
+import { isVoided } from "@/domain/void";
 import { formatCOP } from "@/lib/format";
 import { NotFoundError, ValidationError } from "@/server/errors";
 import type { CreateProviderDiscountInput } from "../schemas";
@@ -12,7 +13,7 @@ import { getPurchase } from "./purchases.repo";
 export async function createProviderDiscount(input: CreateProviderDiscountInput): Promise<ProviderDiscount> {
   if (input.purchase_id) {
     const purchase = await getPurchase(input.purchase_id);
-    if (!purchase) throw new NotFoundError("Compra no encontrada");
+    if (!purchase || isVoided(purchase)) throw new NotFoundError("Compra no encontrada");
 
     const remaining = remainingForDiscount(purchase, await listDiscountsOfPurchase(purchase.id));
     if (input.amount > remaining) {

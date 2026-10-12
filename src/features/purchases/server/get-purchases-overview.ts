@@ -1,5 +1,6 @@
 import "server-only";
 import { buildLedger, providerTotals, remainingForDiscount } from "@/domain/provider-ledger";
+import { activeOnly } from "@/domain/void";
 import type { ProviderDiscount, Purchase } from "@/domain/purchase";
 import { weekDateRange, weekRange } from "@/domain/week";
 import { formatCOP, formatDay } from "@/lib/format";
@@ -39,19 +40,19 @@ export async function getPurchasesOverview(now: Date = new Date()) {
   const week = weekRange(now);
   const { from, to } = weekDateRange(week.start, week.end);
   const inWeek = (date: string) => date >= from && date <= to;
-  const weekPurchases = purchases.filter((p) => inWeek(p.purchase_date));
+  const weekPurchases = activeOnly(purchases).filter((p) => inWeek(p.purchase_date));
   const ledger = buildLedger(purchases, payments, discounts);
 
   return {
     week,
     compradoSemana: weekPurchases.reduce((s, p) => s + Number(p.total_cost), 0),
     kgSemana: weekPurchases.reduce((s, p) => s + Number(p.kg), 0),
-    pagadoSemana: payments.filter((p) => inWeek(p.payment_date)).reduce((s, p) => s + Number(p.amount), 0),
-    descontadoSemana: discounts.filter((d) => inWeek(d.discount_date)).reduce((s, d) => s + Number(d.amount), 0),
+    pagadoSemana: activeOnly(payments).filter((p) => inWeek(p.payment_date)).reduce((s, p) => s + Number(p.amount), 0),
+    descontadoSemana: activeOnly(discounts).filter((d) => inWeek(d.discount_date)).reduce((s, d) => s + Number(d.amount), 0),
     totals: providerTotals(purchases, payments, discounts),
-    purchaseCount: purchases.length,
+    purchaseCount: activeOnly(purchases).length,
     discountsReady: ready,
-    purchaseOptions: purchaseOptions(purchases, discounts),
+    purchaseOptions: purchaseOptions(activeOnly(purchases), discounts),
     ledgerTotalRows: ledger.length,
     ledger: ledger.slice().reverse().slice(0, LEDGER_MAX_ROWS),
   };

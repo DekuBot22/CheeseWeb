@@ -1,23 +1,34 @@
 import "server-only";
-import { db, fetchAll } from "@/server/db";
+import { db, fetchAll, hasVoidColumns } from "@/server/db";
 import { AppError } from "@/server/errors";
 import type { StatOrder } from "@/domain/accounting";
 import type { ClientOrder } from "@/domain/client-balance";
 import type { Order, OrderStatus, PaymentStatus } from "@/domain/order";
 import type { OpenOrder } from "@/domain/receivables";
 
+// Hasta que se corra la migración 005 no existe `voided_at`: ahí no hay nada
+// anulado y las consultas no filtran (ver `hasVoidColumns`).
+
 export interface OrderFilters {
   q?: string;
-  estado?: OrderStatus;
+  // "anulado" muestra solo los anulados; los demás valores solo ven vigentes.
+  estado?: OrderStatus | "anulado";
   pago?: PaymentStatus;
   range?: { start: Date; end: Date };
 }
 
 export async function listOrders(filters: OrderFilters, limit: number): Promise<Order[]> {
+  const voidReady = await hasVoidColumns();
+  if (filters.estado === "anulado" && !voidReady) return [];
+
   let query = db().from("orders").select("*").order("created_at", { ascending: false }).limit(limit);
 
   if (filters.q) query = query.ilike("client_name", `%${filters.q}%`);
-  if (filters.estado) query = query.eq("status", filters.estado);
+  if (filters.estado === "anulado") query = query.not("voided_at", "is", null);
+  else {
+    if (filters.estado) query = query.eq("status", filters.estado);
+    if (voidReady) query = query.is("voided_at", null);
+  }
   if (filters.pago) query = query.eq("payment_status", filters.pago);
   if (filters.range) {
     query = query
@@ -30,6 +41,7 @@ export async function listOrders(filters: OrderFilters, limit: number): Promise<
   return (data as Order[]) ?? [];
 }
 
+// Todos los pedidos de un cliente, también los anulados (se ven marcados en su historial).
 export async function listOrdersByClient(clientId: string): Promise<Order[]> {
   const { data } = await db()
     .from("orders")
@@ -40,43 +52,41 @@ export async function listOrdersByClient(clientId: string): Promise<Order[]> {
 }
 
 export async function listPendingOrders(limit: number): Promise<Order[]> {
-  const { data, error } = await db()
-    .from("orders")
-    .select("*")
-    .eq("status", "pendiente")
-    .order("created_at", { ascending: false })
-    .limit(limit);
+  let query = db().from("orders").select("*").eq("status", "pendiente");
+  if (await hasVoidColumns()) query = query.is("voided_at", null);
+  const { data, error } = await query.order("created_at", { ascending: false }).limit(limit);
   if (error) throw new Error(error.message);
   return (data as Order[]) ?? [];
 }
 
 // Pedidos con saldo pendiente (cuentas por cobrar), de todo el tiempo.
-export function listOpenOrders(): Promise<OpenOrder[]> {
-  return fetchAll<OpenOrder>((from, to) =>
-    db()
+export async function listOpenOrders(): Promise<OpenOrder[]> {
+  const voidReady = await hasVoidColumns();
+  return fetchAll<OpenOrder>((from, to) => {
+    let query = db()
       .from("orders")
       .select("id, client_id, client_name, total, amount_paid, created_at")
-      .neq("payment_status", "pagado")
-      .order("created_at", { ascending: true })
-      .range(from, to)
-  );
+      .neq("payment_status", "pagado");
+    if (voidReady) query = query.is("voided_at", null);
+    return query.order("created_at", { ascending: true }).range(from, to);
+  });
 }
 
 // Solo las columnas de la contabilidad, de un rango (end = null → hasta hoy).
-export function listOrdersForStats(start: Date, end: Date | null): Promise<StatOrder[]> {
+export async function listOrdersForStats(start: Date, end: Date | null): Promise<StatOrder[]> {
+  const voidReady = await hasVoidColumns();
   return fetchAll<StatOrder>((from, to) => {
     let query = db()
       .from("orders")
       .select("quantity, unit, total, amount_paid, cost_per_kg_snapshot, created_at")
-      .gte("created_at", start.toISOString())
-      .order("created_at", { ascending: true })
-      .range(from, to);
+      .gte("created_at", start.toISOString());
+    if (voidReady) query = query.is("voided_at", null);
     if (end) query = query.lte("created_at", end.toISOString());
-    return query;
+    return query.order("created_at", { ascending: true }).range(from, to);
   });
 }
 
-// Pedidos completos de un rango, para el Excel.
+// Pedidos completos de un rango (también los anulados), para el Excel.
 export function listOrdersInRange(start: Date, end: Date): Promise<Order[]> {
   return fetchAll<Order>((from, to) =>
     db()
@@ -89,15 +99,21 @@ export function listOrdersInRange(start: Date, end: Date): Promise<Order[]> {
   );
 }
 
-// Una fila por pedido con lo mínimo para armar la lista de clientes.
-export function listClientOrders(): Promise<ClientOrder[]> {
-  return fetchAll<ClientOrder>((from, to) =>
-    db()
-      .from("orders")
-      .select("client_id, total, amount_paid, payment_status, created_at")
-      .order("created_at", { ascending: true })
-      .range(from, to)
+// Todos los pedidos, anulados incluidos (respaldo).
+export function listAllOrders(): Promise<Order[]> {
+  return fetchAll<Order>((from, to) =>
+    db().from("orders").select("*").order("created_at", { ascending: true }).range(from, to)
   );
+}
+
+// Una fila por pedido con lo mínimo para armar la lista de clientes.
+export async function listClientOrders(): Promise<ClientOrder[]> {
+  const voidReady = await hasVoidColumns();
+  return fetchAll<ClientOrder>((from, to) => {
+    let query = db().from("orders").select("client_id, total, amount_paid, payment_status, created_at");
+    if (voidReady) query = query.is("voided_at", null);
+    return query.order("created_at", { ascending: true }).range(from, to);
+  });
 }
 
 export async function getOrder(id: string): Promise<Order | null> {
@@ -105,14 +121,21 @@ export async function getOrder(id: string): Promise<Order | null> {
   return (data as Order | null) ?? null;
 }
 
-export async function insertOrder(row: Omit<Order, "id" | "created_at">): Promise<Order> {
+export type NewOrder = Omit<Order, "id" | "created_at" | "voided_at" | "void_reason" | "edited_at"> & {
+  // Ventas registradas desde el panel pueden llevar una fecha pasada.
+  created_at?: string;
+};
+
+export async function insertOrder(row: NewOrder): Promise<Order> {
   const { data, error } = await db().from("orders").insert(row).select().single();
   if (error || !data) throw new AppError("No se pudo guardar el pedido");
   return data as Order;
 }
 
 export async function updateOrderStatus(id: string, status: OrderStatus): Promise<Order> {
-  const { data, error } = await db().from("orders").update({ status }).eq("id", id).select().single();
+  let query = db().from("orders").update({ status }).eq("id", id);
+  if (await hasVoidColumns()) query = query.is("voided_at", null);
+  const { data, error } = await query.select().single();
   if (error || !data) throw new AppError("No se pudo actualizar el pedido");
   return data as Order;
 }
