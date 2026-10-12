@@ -2,14 +2,15 @@
 
 import { useId } from "react";
 import { CHEESE_TYPE_LABELS, SALT_LEVEL_LABELS, type CheeseType, type SaltLevel } from "@/domain/catalog";
-import { NOTE_MAX, type Order } from "@/domain/order";
+import type { Order } from "@/domain/order";
 import { toKg, type Unit } from "@/domain/units";
 import { formatCOP } from "@/lib/format";
 import { bogotaDate } from "@/lib/bogota-time";
 import { Button } from "@/ui/Button";
-import { Field, Input, Select, Textarea } from "@/ui/Field";
+import { Field, Input, Select } from "@/ui/Field";
 import { Money } from "@/ui/Money";
 import { ClientPicker } from "./ClientPicker";
+import { SaleExtras } from "./SaleExtras";
 import { useClientNames } from "./use-client-names";
 import { useSaleForm, type SaleMode } from "./use-sale-form";
 
@@ -70,35 +71,7 @@ export function SaleForm({
         </Field>
       </div>
 
-      {/* Lo poco habitual va detrás de casillas para que el formulario no se vea cargado. */}
-      <div className="flex flex-wrap items-center gap-x-5 gap-y-2 text-sm text-tinta">
-        {f.mode === "cantidad" && (
-          <label className="flex items-center gap-2">
-            <input type="checkbox" checked={f.showDiscount} onChange={(e) => f.toggleDiscount(e.target.checked)} />
-            Descuento
-          </label>
-        )}
-        <label className="flex items-center gap-2">
-          <input type="checkbox" checked={f.showNote} onChange={(e) => f.toggleNote(e.target.checked)} />
-          Nota
-        </label>
-      </div>
-
-      {f.mode === "cantidad" && f.showDiscount && (
-        <Field
-          label={`Descuento por ${f.unit === "lb" ? "libra" : "kilo"}`}
-          htmlFor={`${uid}-descuento`}
-          hint="Solo para esta venta: se resta del precio de cada unidad."
-        >
-          <Input id={`${uid}-descuento`} type="number" inputMode="numeric" step="1" min="0" value={f.discount} onChange={(e) => f.setDiscount(e.target.value)} placeholder="Ej. 1000" autoFocus />
-        </Field>
-      )}
-
-      {f.showNote && (
-        <Field label="Nota" htmlFor={`${uid}-nota`} hint="Ej.: 2 kilos, pero 1 y 1 separados.">
-          <Textarea id={`${uid}-nota`} rows={2} maxLength={NOTE_MAX} value={f.note} onChange={(e) => f.setNote(e.target.value)} autoFocus />
-        </Field>
-      )}
+      <SaleExtras f={f} uid={uid} />
 
       <Field label="Fecha (opcional)" htmlFor={`${uid}-fecha`} hint="Si la dejas vacía es de hoy.">
         <Input id={`${uid}-fecha`} type="date" max={bogotaDate()} value={f.date} onChange={(e) => f.setDate(e.target.value)} />
