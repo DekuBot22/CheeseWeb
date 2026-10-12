@@ -3,7 +3,8 @@
 import { useId } from "react";
 import { CHEESE_TYPE_LABELS, SALT_LEVEL_LABELS, type CheeseType, type SaltLevel } from "@/domain/catalog";
 import type { Order } from "@/domain/order";
-import type { Unit } from "@/domain/units";
+import { toKg, type Unit } from "@/domain/units";
+import { formatCOP } from "@/lib/format";
 import { bogotaDate } from "@/lib/bogota-time";
 import { Button } from "@/ui/Button";
 import { Field, Input, Select } from "@/ui/Field";
@@ -35,6 +36,7 @@ export function SaleForm({
       </Field>
 
       {f.mode === "cantidad" ? (
+        <>
         <div className="grid grid-cols-[1fr_7rem] gap-3">
           <Field label="Cantidad" htmlFor={`${uid}-cantidad`}>
             <Input id={`${uid}-cantidad`} type="number" inputMode="decimal" step="0.01" min="0.01" value={f.quantity} onChange={(e) => f.setQuantity(e.target.value)} />
@@ -46,6 +48,14 @@ export function SaleForm({
             </Select>
           </Field>
         </div>
+        <Field
+          label={`Descuento por ${f.unit === "lb" ? "libra" : "kilo"} (opcional)`}
+          htmlFor={`${uid}-descuento`}
+          hint="Solo para esta venta: se resta del precio de cada unidad."
+        >
+          <Input id={`${uid}-descuento`} type="number" inputMode="numeric" step="1" min="0" value={f.discount} onChange={(e) => f.setDiscount(e.target.value)} placeholder="Ej. 1000" />
+        </Field>
+        </>
       ) : (
         <Field label="Valor de la venta" htmlFor={`${uid}-valor`}>
           <Input id={`${uid}-valor`} type="number" inputMode="numeric" step="1" min="1" value={f.amount} onChange={(e) => f.setAmount(e.target.value)} />
@@ -81,6 +91,13 @@ export function SaleForm({
         <Field label="Método (opcional)" htmlFor={`${uid}-metodo`}>
           <Input id={`${uid}-metodo`} value={f.method} onChange={(e) => f.setMethod(e.target.value)} placeholder="Efectivo, Nequi…" />
         </Field>
+      )}
+
+      {f.discountPerUnit > 0 && f.total > 0 && (
+        <p className="aparece text-[0.8125rem] text-tinta-2">
+          Precio con descuento: {formatCOP(Math.round(f.salePricePerKg * toKg(1, f.unit)))} por {f.unit === "lb" ? "libra" : "kilo"}
+          {" · "}el cliente ahorra {formatCOP(f.saved)}
+        </p>
       )}
 
       <div className="flex items-center justify-between border-t border-linea pt-3 text-sm">

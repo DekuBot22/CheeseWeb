@@ -80,6 +80,13 @@ export function priceOrder(
   };
 }
 
+// Precio por kg de UNA venta con descuento: el descuento se pone por la unidad en
+// que se vende (1.000 por libra o 1.000 por kilo) y aquí se pasa a precio por kg.
+// Ejemplo: 26.000/kg con 1.000 por kg → 25.000/kg; con 500 por lb → 25.000/kg.
+export function discountedPricePerKg(pricePerKg: number, discountPerUnit: number, unit: Unit): number {
+  return Math.round((pricePerKg - discountPerUnit / toKg(1, unit)) * 100) / 100;
+}
+
 export interface Settlement {
   amountPaid: number;
   paymentStatus: PaymentStatus;

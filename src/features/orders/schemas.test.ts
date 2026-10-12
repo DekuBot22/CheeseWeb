@@ -52,6 +52,13 @@ describe("createSaleSchema", () => {
     expect(createSaleSchema.safeParse({ client_name: "R", mode: "cantidad", quantity: 1 }).success).toBe(false);
   });
 
+  it("acepta un descuento opcional por unidad y rechaza uno negativo", () => {
+    const base = { client_name: "Rosa", mode: "cantidad", quantity: 5, unit: "kg" };
+    expect(createSaleSchema.parse({ ...base, discount: 1000 }).discount).toBe(1000);
+    expect(createSaleSchema.parse(base).discount).toBeUndefined();
+    expect(createSaleSchema.safeParse({ ...base, discount: -5 }).success).toBe(false);
+  });
+
   it("acepta una fecha pasada", () => {
     expect(createSaleSchema.parse({ client_name: "Rosa", mode: "cantidad", quantity: 1, date: "2026-01-02" }).date).toBe("2026-01-02");
   });

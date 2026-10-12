@@ -1,6 +1,6 @@
 import "server-only";
-import { priceOrder, saleTimestamp, type Order } from "@/domain/order";
-import { AppError } from "@/server/errors";
+import { discountedPricePerKg, priceOrder, saleTimestamp, type Order } from "@/domain/order";
+import { AppError, ValidationError } from "@/server/errors";
 import { findOrCreateClient } from "@/features/clients/server/clients.repo";
 import { getPricing } from "@/features/settings/server/settings.repo";
 import type { CreateSaleInput } from "../schemas";
@@ -16,15 +16,23 @@ export async function createSale(input: CreateSaleInput): Promise<{ order: Order
   const pricing = await getPricing();
   if (!pricing) throw new AppError("No se pudo obtener el precio actual. Intenta más tarde.");
 
+  // El descuento solo existe en ventas por cantidad y queda dentro del precio por kg
+  // congelado en el pedido (así la ganancia de esa venta sale bien sin columnas nuevas).
+  const salePricePerKg =
+    input.mode === "cantidad" && input.discount
+      ? discountedPricePerKg(pricing.pricePerKg, input.discount, input.unit)
+      : pricing.pricePerKg;
+  if (salePricePerKg <= 0) throw new ValidationError("El descuento no puede ser igual o mayor al precio");
+
   const priced =
     input.mode === "valor"
-      ? priceOrder({ amount: input.amount, quantity: 0, unit: "kg" }, pricing.pricePerKg)
-      : priceOrder({ quantity: input.quantity ?? 0, unit: input.unit }, pricing.pricePerKg);
+      ? priceOrder({ amount: input.amount, quantity: 0, unit: "kg" }, salePricePerKg)
+      : priceOrder({ quantity: input.quantity ?? 0, unit: input.unit }, salePricePerKg);
 
   const createdAt = saleTimestamp(input.date, new Date());
   const clientId = await findOrCreateClient(input.client_name);
   const order = await insertOrder(
-    buildOrderRow({ ...input, ...priced }, pricing, clientId, input.date ? createdAt : undefined)
+    buildOrderRow({ ...input, ...priced }, { ...pricing, pricePerKg: salePricePerKg }, clientId, input.date ? createdAt : undefined)
   );
 
   if (!input.paid) return { order };

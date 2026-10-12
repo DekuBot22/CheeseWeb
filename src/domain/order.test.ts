@@ -1,5 +1,5 @@
 import { describe, expect, it } from "vitest";
-import { applyPayment, priceOrder, remainingOf } from "./order";
+import { applyPayment, discountedPricePerKg, priceOrder, remainingOf } from "./order";
 
 describe("remainingOf", () => {
   it("es lo que falta, nunca negativo, y acepta texto numérico", () => {
@@ -69,5 +69,21 @@ describe("applyPayment", () => {
       newAmountPaid: 10000,
       paymentStatus: "pagado",
     });
+  });
+});
+
+describe("discountedPricePerKg", () => {
+  it("1.000 por kilo: de 26.000 a 25.000 por kg; 5 kg suman 125.000", () => {
+    const price = discountedPricePerKg(26000, 1000, "kg");
+    expect(price).toBe(25000);
+    expect(priceOrder({ quantity: 5, unit: "kg" }, price).total).toBe(125000);
+  });
+
+  it("500 por libra equivale a 1.000 por kilo", () => {
+    expect(discountedPricePerKg(26000, 500, "lb")).toBe(25000);
+  });
+
+  it("sin descuento deja el precio igual", () => {
+    expect(discountedPricePerKg(26000, 0, "lb")).toBe(26000);
   });
 });

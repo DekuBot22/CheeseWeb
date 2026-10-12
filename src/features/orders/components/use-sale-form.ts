@@ -2,7 +2,7 @@
 
 import { useState } from "react";
 import type { CheeseType, SaltLevel } from "@/domain/catalog";
-import { priceOrder, type Order } from "@/domain/order";
+import { discountedPricePerKg, priceOrder, type Order } from "@/domain/order";
 import type { Unit } from "@/domain/units";
 
 export type SaleMode = "cantidad" | "valor";
@@ -17,6 +17,7 @@ export function useSaleForm(pricePerKg: number, onDone: (order: Order, paymentEr
   const [amount, setAmount] = useState("");
   const [cheese, setCheese] = useState<CheeseType>("semi");
   const [salt, setSalt] = useState<SaltLevel>("intermedio");
+  const [discount, setDiscount] = useState("");
   const [paid, setPaid] = useState(false);
   const [method, setMethod] = useState("");
   const [date, setDate] = useState("");
@@ -25,10 +26,18 @@ export function useSaleForm(pricePerKg: number, onDone: (order: Order, paymentEr
 
   const qty = Number(quantity);
   const value = Number(amount);
+  const disc = Number(discount);
+  const discountPerUnit = mode === "cantidad" && Number.isFinite(disc) && disc > 0 ? disc : 0;
+  // Precio por kg de esta venta (con el descuento, si hay) y cuánto se ahorra el cliente.
+  const salePricePerKg = discountPerUnit ? discountedPricePerKg(pricePerKg, discountPerUnit, unit) : pricePerKg;
   const total =
     mode === "valor"
       ? Number.isFinite(value) && value > 0 ? Math.round(value) : 0
-      : Number.isFinite(qty) && qty > 0 ? priceOrder({ quantity: qty, unit }, pricePerKg).total : 0;
+      : Number.isFinite(qty) && qty > 0 && salePricePerKg > 0
+        ? priceOrder({ quantity: qty, unit }, salePricePerKg).total
+        : 0;
+  const saved =
+    discountPerUnit && total > 0 ? priceOrder({ quantity: qty, unit }, pricePerKg).total - total : 0;
 
   async function submit(e: React.FormEvent) {
     e.preventDefault();
@@ -41,7 +50,7 @@ export function useSaleForm(pricePerKg: number, onDone: (order: Order, paymentEr
         body: JSON.stringify({
           client_name: clientName,
           mode,
-          ...(mode === "valor" ? { amount: value } : { quantity: qty, unit }),
+          ...(mode === "valor" ? { amount: value } : { quantity: qty, unit, discount: discountPerUnit || undefined }),
           cheese_type: cheese,
           salt_level: salt,
           paid,
@@ -70,6 +79,7 @@ export function useSaleForm(pricePerKg: number, onDone: (order: Order, paymentEr
     amount, setAmount,
     cheese, setCheese,
     salt, setSalt,
+    discount, setDiscount, discountPerUnit, salePricePerKg, saved,
     paid, setPaid,
     method, setMethod,
     date, setDate,

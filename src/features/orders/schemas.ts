@@ -41,6 +41,7 @@ export interface CreateOrderInput {
 
 const MAX_QUANTITY = 1000;
 const MAX_EDIT_TOTAL = 100_000_000;
+const MAX_DISCOUNT = 1_000_000;
 
 function fail(message: string): never {
   throw new ValidationError(message);
@@ -129,6 +130,11 @@ const optionalDate = z
   .optional()
   .transform((v) => (typeof v === "string" && v.trim() ? v.trim() : null));
 
+// El descuento es opcional: vacío vale; si viene, de 0 al tope.
+function isValidDiscount(x: number | undefined): boolean {
+  return x === undefined || (Number.isFinite(x) && x >= 0 && x <= MAX_DISCOUNT);
+}
+
 export const createSaleSchema = z
   .object({
     client_name: z
@@ -142,6 +148,8 @@ export const createSaleSchema = z
     amount: optionalNumber,
     cheese_type: z.enum(["duro", "semi", "blando"], "Elige un tipo de queso válido").default("semi"),
     salt_level: z.enum(["alto", "intermedio", "bajo"], "Elige un nivel de sal válido").default("intermedio"),
+    // Descuento de esta venta, en pesos por la unidad elegida (solo "por cantidad").
+    discount: optionalNumber,
     paid: z.boolean("Opción inválida").default(false),
     method: optionalText(50),
     date: optionalDate,
@@ -151,6 +159,7 @@ export const createSaleSchema = z
     if (d.mode === "cantidad") {
       const q = d.quantity;
       if (q === undefined || !Number.isFinite(q) || q <= 0 || q > MAX_QUANTITY) issue("quantity", "Ingresa una cantidad válida");
+      if (!isValidDiscount(d.discount)) issue("discount", "Ingresa un descuento válido");
     } else {
       const a = d.amount;
       if (a === undefined || !Number.isFinite(a) || a < MIN_ORDER_AMOUNT || a > MAX_ORDER_AMOUNT) {
