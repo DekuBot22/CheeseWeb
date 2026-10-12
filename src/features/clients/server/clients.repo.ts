@@ -44,6 +44,13 @@ export function listClients(): Promise<Client[]> {
   );
 }
 
+// Solo id y nombre, para el selector de la hoja de venta.
+export function listClientNames(): Promise<{ id: string; name: string }[]> {
+  return fetchAll<{ id: string; name: string }>((from, to) =>
+    db().from("clients").select("id, name").order("name", { ascending: true }).range(from, to)
+  );
+}
+
 export async function updateClient(
   id: string,
   fields: { phone?: string | null; notes?: string | null }

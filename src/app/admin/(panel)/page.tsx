@@ -18,7 +18,7 @@ export default async function InicioPage() {
       <PageHeader
         title="Inicio"
         subtitle={`Semana ${formatWeekLabel(d.current.start, d.current.end)}`}
-        actions={<QuickActions payable={d.openOrders} />}
+        actions={<QuickActions payable={d.openOrders} pricePerKg={d.settings ? Number(d.settings.price_per_kg) : 0} />}
       />
 
       <DashboardStats

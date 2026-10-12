@@ -4,6 +4,7 @@ import { AppError } from "@/server/errors";
 import { findOrCreateClient } from "@/features/clients/server/clients.repo";
 import { getPricing } from "@/features/settings/server/settings.repo";
 import type { CreateOrderInput } from "../schemas";
+import { buildOrderRow } from "./build-order-row";
 import { notifyNewOrder } from "./notify-new-order";
 import { insertOrder } from "./orders.repo";
 
@@ -13,26 +14,15 @@ export async function createOrder(input: CreateOrderInput): Promise<Order> {
   const pricing = await getPricing();
   if (!pricing) throw new AppError("No se pudo obtener el precio actual. Intenta más tarde.");
 
-  const { quantity, unit, total } = priceOrder(
+  const priced = priceOrder(
     { amount: input.amount, quantity: input.quantity, unit: input.unit },
     pricing.pricePerKg
   );
   const clientId = await findOrCreateClient(input.client_name);
 
-  const order = await insertOrder({
-    client_id: clientId,
-    client_name: input.client_name.trim(),
-    quantity,
-    unit,
-    cheese_type: input.cheese_type,
-    salt_level: input.salt_level,
-    price_per_kg_snapshot: pricing.pricePerKg,
-    cost_per_kg_snapshot: pricing.costPerKg,
-    total,
-    amount_paid: 0,
-    payment_status: "debe",
-    status: "pendiente",
-  });
+  const order = await insertOrder(
+    buildOrderRow({ ...input, ...priced }, pricing, clientId)
+  );
 
   await notifyNewOrder(order, input.amount !== undefined);
   return order;
