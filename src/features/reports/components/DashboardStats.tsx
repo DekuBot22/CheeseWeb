@@ -6,10 +6,9 @@ import { Money } from "@/ui/Money";
 import { Stat } from "@/ui/Stat";
 
 interface Props {
-  // La semana actual, la serie de semanas y su variación frente a la anterior.
+  // La semana actual y su variación frente a la anterior.
   week: {
     cur: WeekPoint;
-    series: WeekPoint[];
     revenueChange: number | null;
     profitChange: number | null;
     collectedPct: number;
@@ -20,7 +19,7 @@ interface Props {
 
 // Cifra principal del Inicio (ganancia de la semana) y los cuatro indicadores.
 export function DashboardStats({ week, debt, provider }: Props) {
-  const { cur, series } = week;
+  const { cur } = week;
   const stats = cur.stats;
   const perLb = profitPerLb(stats.profit, cur.kgSold);
   const perLbText = perLb === null ? "" : ` · ${formatCOP(Math.round(perLb))} por libra`;
@@ -32,7 +31,6 @@ export function DashboardStats({ week, debt, provider }: Props) {
         emphasis="hero"
         label="Ganancia de la semana"
         value={<Money value={stats.profit} tone="auto" />}
-        spark={series.map((w) => w.stats.profit)}
         delta={<Delta pct={week.profitChange} />}
         hint={
           stats.usingRealCost ? (
@@ -52,7 +50,6 @@ export function DashboardStats({ week, debt, provider }: Props) {
         <Stat
           label="Vendido"
           value={<Money value={stats.revenue} />}
-          spark={series.map((w) => w.stats.revenue)}
           delta={<Delta pct={week.revenueChange} />}
           hint={`${formatKg(cur.kgSold)} kg · ${plural(cur.orderCount, "pedido")}`}
         />

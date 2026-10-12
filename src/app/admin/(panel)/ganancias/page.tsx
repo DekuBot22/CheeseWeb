@@ -1,12 +1,11 @@
 import { formatWeekLabel } from "@/lib/format";
 import { pickParam } from "@/lib/search-params";
-import { ProfitCharts } from "@/features/reports/components/ProfitCharts";
 import { ProfitPeriodControls } from "@/features/reports/components/ProfitPeriodControls";
 import { ProfitStats } from "@/features/reports/components/ProfitStats";
 import { WeeklyLedgerTable } from "@/features/reports/components/WeeklyLedgerTable";
 import { getProfitReport } from "@/features/reports/server/get-profit-report";
 import { PROFIT_VIEWS } from "@/features/reports/profit-views";
-import { buttonClasses } from "@/ui/Button";
+import { ButtonLink, buttonClasses } from "@/ui/Button";
 import { Callout } from "@/ui/Callout";
 import { IconDownload } from "@/ui/icons";
 import { PageHeader } from "@/ui/PageHeader";
@@ -40,9 +39,14 @@ export default async function GananciasPage({
         title="Ganancias"
         subtitle={period}
         actions={
-          <a href={exportHref} className={buttonClasses("secondary", "sm")}>
-            <IconDownload width={16} height={16} /> Excel
-          </a>
+          <>
+            <ButtonLink href="/admin/ganancias/graficas" variant="secondary" size="sm">
+              Gráficas
+            </ButtonLink>
+            <a href={exportHref} className={buttonClasses("secondary", "sm")}>
+              <IconDownload width={16} height={16} /> Excel
+            </a>
+          </>
         }
       />
 
@@ -69,8 +73,6 @@ export default async function GananciasPage({
           cuente en la ganancia (por ahora solo baja lo que le debes).
         </Callout>
       )}
-
-      <ProfitCharts weeks={r.visible} selected={r.selected} />
 
       <section aria-labelledby="libro">
         <h2 id="libro" className="mb-3 font-display text-lg font-semibold text-tinta">

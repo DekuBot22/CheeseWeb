@@ -7,13 +7,13 @@ import { getProviderBalance } from "@/features/purchases/server/get-provider-bal
 import { getSettings } from "@/features/settings/server/settings.repo";
 import { loadPeriod } from "./load-period";
 
-export const DASHBOARD_WEEKS = 8;
+// Con dos semanas alcanza para la variación frente a la anterior; las gráficas largas viven en /admin/ganancias/graficas.
 
-// Todo lo que pinta el Inicio: la semana actual frente a la anterior, las
-// últimas 8 semanas, cuentas por cobrar, saldo con el proveedor y pendientes.
+// Todo lo que pinta el Inicio: la semana actual frente a la anterior, cuentas por
+// cobrar, saldo con el proveedor y pendientes.
 export async function getDashboard(now: Date = new Date()) {
   const current = weekRange(now);
-  const seriesStart = weekRange(shiftWeek(current.start.toISOString(), -(DASHBOARD_WEEKS - 1))).start;
+  const seriesStart = weekRange(shiftWeek(current.start.toISOString(), -1)).start;
 
   const [range, openOrders, provider, settings, pending] = await Promise.all([
     loadPeriod(seriesStart, null),
@@ -23,18 +23,14 @@ export async function getDashboard(now: Date = new Date()) {
     listPendingOrders(6),
   ]);
 
-  const series = weeklySeries(range, DASHBOARD_WEEKS, now);
-  const cur = series[DASHBOARD_WEEKS - 1];
-  const prev = series[DASHBOARD_WEEKS - 2];
+  const [prev, cur] = weeklySeries(range, 2, now);
 
   return {
     current,
-    series,
     cur,
     revenueChange: percentChange(cur.stats.revenue, prev.stats.revenue),
     profitChange: percentChange(cur.stats.profit, prev.stats.profit),
     collectedPct: cur.stats.revenue > 0 ? (cur.stats.collected / cur.stats.revenue) * 100 : 0,
-    anyEstimated: series.some((w) => !w.stats.usingRealCost && w.stats.revenue > 0),
     openOrders,
     debt: receivables(openOrders, now),
     provider,
