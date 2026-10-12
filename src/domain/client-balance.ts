@@ -1,9 +1,10 @@
 import type { Client } from "./client";
-import type { Order } from "./order";
+import { remainingOf, type Order } from "./order";
+import { activeOnly } from "./void";
 
 export type ClientOrder = Pick<
   Order,
-  "client_id" | "total" | "amount_paid" | "payment_status" | "created_at"
+  "client_id" | "total" | "amount_paid" | "payment_status" | "created_at" | "voided_at"
 >;
 
 export interface ClientRow {
@@ -32,7 +33,7 @@ interface Totals {
 // Una fila por cliente con lo que debe, cuántos pedidos tiene y desde cuándo debe.
 export function buildClientRows(clients: Client[], orders: ClientOrder[], now: Date): ClientRow[] {
   const totals = new Map<string, Totals>();
-  for (const o of orders) {
+  for (const o of activeOnly(orders)) {
     if (!o.client_id) continue;
     const t = totals.get(o.client_id) ?? { debe: 0, orders: 0, last: o.created_at, oldestDebt: null };
     t.orders += 1;
@@ -76,4 +77,16 @@ export function sortClientRows(rows: ClientRow[], sort: ClientSort): ClientRow[]
     deuda: (a, b) => b.debe - a.debe || byName(a, b),
   };
   return [...rows].sort(compare[sort]);
+}
+
+// Resumen de los pedidos vigentes de un cliente (los anulados no cuentan).
+export function summarizeClientOrders(
+  orders: Pick<Order, "total" | "amount_paid" | "voided_at">[]
+): { debe: number; comprado: number; count: number } {
+  const active = activeOnly(orders);
+  return {
+    debe: active.reduce((s, o) => s + remainingOf(o), 0),
+    comprado: active.reduce((s, o) => s + Number(o.total), 0),
+    count: active.length,
+  };
 }

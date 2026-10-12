@@ -1,4 +1,6 @@
-export interface Purchase {
+import type { Voidable } from "./void";
+
+export interface Purchase extends Voidable {
   id: string;
   purchase_date: string;
   kg: number;
@@ -7,7 +9,7 @@ export interface Purchase {
   created_at: string;
 }
 
-export interface ProviderPayment {
+export interface ProviderPayment extends Voidable {
   id: string;
   payment_date: string;
   amount: number;
@@ -29,7 +31,7 @@ export const DISCOUNT_REASON_LABELS: Record<DiscountReason, string> = {
 
 // Rebaja que el proveedor le hace al dueño sobre lo que le debe. No edita la
 // compra original: es un movimiento propio, como un pago, para dejar trazabilidad.
-export interface ProviderDiscount {
+export interface ProviderDiscount extends Voidable {
   id: string;
   discount_date: string;
   amount: number;

@@ -1,8 +1,9 @@
 import type { Order } from "./order";
+import { isVoided } from "./void";
 
 export type OpenOrder = Pick<
   Order,
-  "id" | "client_id" | "client_name" | "total" | "amount_paid" | "created_at"
+  "id" | "client_id" | "client_name" | "total" | "amount_paid" | "created_at" | "voided_at"
 >;
 
 export interface Debtor {
@@ -36,6 +37,7 @@ export function receivables(
   let total = 0;
 
   for (const o of openOrders) {
+    if (isVoided(o)) continue;
     const remaining = Math.max(Number(o.total) - Number(o.amount_paid), 0);
     if (remaining <= 0) continue;
     total += remaining;

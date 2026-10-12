@@ -3,16 +3,17 @@ import { shiftWeek, weekDateRange, weekRange } from "./week";
 import { toKg } from "./units";
 import type { Order } from "./order";
 import type { ProviderDiscount, ProviderPayment, Purchase } from "./purchase";
+import { activeOnly } from "./void";
 
 // Solo las columnas que realmente usa la contabilidad: así las consultas
 // pueden traer menos datos y los tipos lo reflejan.
 export type StatOrder = Pick<
   Order,
-  "quantity" | "unit" | "total" | "amount_paid" | "cost_per_kg_snapshot" | "created_at"
+  "quantity" | "unit" | "total" | "amount_paid" | "cost_per_kg_snapshot" | "created_at" | "voided_at"
 >;
-export type StatPurchase = Pick<Purchase, "kg" | "total_cost" | "purchase_date">;
-export type StatPayment = Pick<ProviderPayment, "amount" | "payment_date">;
-export type StatDiscount = Pick<ProviderDiscount, "amount" | "discount_date">;
+export type StatPurchase = Pick<Purchase, "kg" | "total_cost" | "purchase_date" | "voided_at">;
+export type StatPayment = Pick<ProviderPayment, "amount" | "payment_date" | "voided_at">;
+export type StatDiscount = Pick<ProviderDiscount, "amount" | "discount_date" | "voided_at">;
 
 // Los conjuntos de datos que alimentan la contabilidad de un período.
 // `discounts` es opcional: si la tabla aún no existe, simplemente no hay descuentos.
@@ -39,12 +40,17 @@ export interface PeriodStats {
   margin: number;
 }
 
+// Lo anulado (pedidos, compras, pagos y descuentos) no cuenta en nada.
 export function computeStats(
-  orders: StatOrder[],
-  purchases: StatPurchase[],
-  providerPayments: StatPayment[],
-  discounts: StatDiscount[] = []
+  allOrders: StatOrder[],
+  allPurchases: StatPurchase[],
+  allPayments: StatPayment[],
+  allDiscounts: StatDiscount[] = []
 ): PeriodStats {
+  const orders = activeOnly(allOrders);
+  const purchases = activeOnly(allPurchases);
+  const providerPayments = activeOnly(allPayments);
+  const discounts = activeOnly(allDiscounts);
   const revenue = orders.reduce((sum, o) => sum + Number(o.total), 0);
   const collected = orders.reduce((sum, o) => sum + Number(o.amount_paid), 0);
 
@@ -78,8 +84,8 @@ export function computeStats(
   };
 }
 
-export function kgSold(orders: Pick<Order, "quantity" | "unit">[]): number {
-  return orders.reduce((sum, o) => sum + toKg(Number(o.quantity), o.unit), 0);
+export function kgSold(orders: Pick<Order, "quantity" | "unit" | "voided_at">[]): number {
+  return activeOnly(orders).reduce((sum, o) => sum + toKg(Number(o.quantity), o.unit), 0);
 }
 
 // Variación porcentual; null cuando no hay base de comparación.
@@ -121,7 +127,13 @@ function buildWeek(start: Date, end: Date, data: PeriodData): WeekPoint {
 
 // Una fila por semana de negocio (la más antigua primero). Cada semana usa su
 // propio criterio de costo: compras reales si hubo, estimado si no.
-export function weeklySeries(data: PeriodData, weeks: number, now: Date = new Date()): WeekPoint[] {
+export function weeklySeries(raw: PeriodData, weeks: number, now: Date = new Date()): WeekPoint[] {
+  const data: PeriodData = {
+    orders: activeOnly(raw.orders),
+    purchases: activeOnly(raw.purchases),
+    providerPayments: activeOnly(raw.providerPayments),
+    discounts: activeOnly(raw.discounts ?? []),
+  };
   const currentStart = weekRange(now).start.toISOString();
   const points: WeekPoint[] = [];
   for (let i = weeks - 1; i >= 0; i--) {

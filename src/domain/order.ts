@@ -1,5 +1,7 @@
 import type { CheeseType, SaltLevel } from "./catalog";
 import { toKg, type Unit } from "./units";
+import { bogotaDate } from "@/lib/bogota-time";
+import { activeOnly, type Voidable } from "./void";
 
 export type OrderStatus = "pendiente" | "completado";
 export type PaymentStatus = "debe" | "parcial" | "pagado";
@@ -25,9 +27,13 @@ export interface Order {
   payment_status: PaymentStatus;
   status: OrderStatus;
   created_at: string;
+  // Antes de la migración 005 estas columnas no existen: por eso son opcionales.
+  voided_at?: string | null;
+  void_reason?: string | null;
+  edited_at?: string | null;
 }
 
-export interface Payment {
+export interface Payment extends Voidable {
   id: string;
   order_id: string;
   amount: number;
@@ -74,6 +80,54 @@ export function priceOrder(
   };
 }
 
+export interface Settlement {
+  amountPaid: number;
+  paymentStatus: PaymentStatus;
+  // Lo abonado que no cabe en el pedido: pasa a saldo a favor del cliente.
+  excess: number;
+}
+
+// Estado de cobro de un pedido a partir de la suma de sus abonos vigentes.
+// Es el espejo de `sync_order_payment` y `order_credit_excess` en la migración
+// 005: si cambias una regla aquí, cámbiala allá. Un pedido anulado no cobra
+// nada: todo lo abonado que siga vigente queda como excedente.
+export function settleOrder(total: number, paidSum: number, voided = false): Settlement {
+  if (voided) return { amountPaid: 0, paymentStatus: "debe", excess: Math.max(paidSum, 0) };
+  const amountPaid = Math.min(paidSum, total);
+  let paymentStatus: PaymentStatus = "debe";
+  if (amountPaid + PAID_TOLERANCE >= total) paymentStatus = "pagado";
+  else if (amountPaid > 0) paymentStatus = "parcial";
+  return { amountPaid, paymentStatus, excess: Math.max(paidSum - total, 0) };
+}
+
+export function sumActivePayments(payments: Pick<Payment, "amount" | "voided_at">[]): number {
+  return activeOnly(payments).reduce((sum, p) => sum + Number(p.amount), 0);
+}
+
+export interface OrderEditPreview {
+  before: Settlement;
+  after: Settlement;
+  // Cuánto saldo a favor se agrega (+) o se consume (−) del cliente.
+  creditDelta: number;
+}
+
+// Qué pasaría con el cobro y el saldo a favor al cambiar el total de un pedido.
+export function previewOrderEdit(
+  current: { total: number; paidSum: number },
+  nextTotal: number
+): OrderEditPreview {
+  const before = settleOrder(current.total, current.paidSum);
+  const after = settleOrder(nextTotal, current.paidSum);
+  return { before, after, creditDelta: after.excess - before.excess };
+}
+
+// Instante de una venta registrada desde el panel: hoy → ahora; un día pasado
+// → ese día a las 12:00 de Bogotá (así no cae en otra semana por la zona horaria).
+export function saleTimestamp(date: string | null | undefined, now: Date): string {
+  if (!date || date >= bogotaDate(now)) return now.toISOString();
+  return new Date(`${date}T12:00:00-05:00`).toISOString();
+}
+
 export interface AppliedPayment {
   appliedToOrder: number;
   creditToAdd: number;
@@ -87,13 +141,10 @@ export function applyPayment(
   order: Pick<Order, "total" | "amount_paid">,
   amount: number
 ): AppliedPayment {
-  const total = Number(order.total);
   const appliedToOrder = Math.min(amount, remainingOf(order));
-  const newAmountPaid = Number(order.amount_paid) + appliedToOrder;
-
-  let paymentStatus: PaymentStatus = "debe";
-  if (newAmountPaid + PAID_TOLERANCE >= total) paymentStatus = "pagado";
-  else if (newAmountPaid > 0) paymentStatus = "parcial";
-
-  return { appliedToOrder, creditToAdd: amount - appliedToOrder, newAmountPaid, paymentStatus };
+  const { amountPaid, paymentStatus } = settleOrder(
+    Number(order.total),
+    Number(order.amount_paid) + appliedToOrder
+  );
+  return { appliedToOrder, creditToAdd: amount - appliedToOrder, newAmountPaid: amountPaid, paymentStatus };
 }
