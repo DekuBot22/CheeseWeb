@@ -1,9 +1,10 @@
 import type { WeekPoint } from "@/domain/accounting";
 import { profitPerLb } from "@/domain/pricing";
-import { formatCOP, formatKg, plural } from "@/lib/format";
+import { formatCOP, plural } from "@/lib/format";
 import { Delta } from "@/ui/Delta";
 import { Money } from "@/ui/Money";
 import { Stat } from "@/ui/Stat";
+import { WeeklyKgCard } from "./WeeklyKgCard";
 
 interface Props {
   // La semana actual y su variación frente a la anterior.
@@ -17,7 +18,7 @@ interface Props {
   provider: { saldo: number; lastPurchaseDate: string | null };
 }
 
-// Cifra principal del Inicio (ganancia de la semana) y los cuatro indicadores.
+// Cifra principal del Inicio (ganancia de la semana), el queso vendido y los cuatro indicadores.
 export function DashboardStats({ week, debt, provider }: Props) {
   const { cur } = week;
   const stats = cur.stats;
@@ -46,12 +47,14 @@ export function DashboardStats({ week, debt, provider }: Props) {
         }
       />
 
+      <WeeklyKgCard kg={cur.kgSold} orders={cur.orderCount} />
+
       <div className="grid grid-cols-2 gap-3 lg:grid-cols-4 lg:gap-4">
         <Stat
           label="Vendido"
           value={<Money value={stats.revenue} />}
           delta={<Delta pct={week.revenueChange} />}
-          hint={`${formatKg(cur.kgSold)} kg · ${plural(cur.orderCount, "pedido")}`}
+          hint={plural(cur.orderCount, "pedido")}
         />
         <Stat
           label="Cobrado"

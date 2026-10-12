@@ -286,7 +286,8 @@ html:has([data-theme="oscuro"]) body {
   }
 }
 
-/* A1 · Hoja (<dialog>): sube desde abajo en móvil y entra por la derecha en escritorio.
+/* A1 · Hoja (<dialog>): sube desde abajo en móvil y en escritorio es una ventana centrada
+   que entra con un fundido y una escala mínima.
    `allow-discrete` anima display/overlay para poder animar también la SALIDA sin JS ni
    `transitionend`; en navegadores sin soporte simplemente aparece/desaparece. */
 .hoja {
@@ -332,12 +333,24 @@ html:has([data-theme="oscuro"]) body {
 
 @media (min-width: 48rem) {
   .hoja {
-    transform: translateX(100%);
+    opacity: 0;
+    transform: translateY(8px) scale(0.98);
+    transition:
+      transform var(--dur-hoja-sale) var(--ease-salida),
+      opacity var(--dur-rapida) var(--ease-salida),
+      overlay var(--dur-hoja-sale) allow-discrete,
+      display var(--dur-hoja-sale) allow-discrete;
+  }
+
+  .hoja[open] {
+    opacity: 1;
+    transition-duration: var(--dur-media);
   }
 
   @starting-style {
     .hoja[open] {
-      transform: translateX(100%);
+      opacity: 0;
+      transform: translateY(8px) scale(0.98);
     }
   }
 }

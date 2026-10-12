@@ -8,6 +8,7 @@ import {
   type StatOrder,
   type StatPurchase,
 } from "./accounting";
+import { formatWeight } from "./units";
 
 // Atajo: las pruebas arman los tres conjuntos por separado.
 const weekly = (
@@ -115,6 +116,31 @@ describe("weeklySeries", () => {
     );
     expect(series[0].stats.revenue).toBe(1000);
     expect(series[1].stats.revenue).toBe(2000);
+  });
+
+  it("suma kg y pedidos de la semana: por valor, en libras, con descuento; sin anulados ni la semana anterior", () => {
+    const series = weekly(
+      [
+        // Por valor: $40.000 a $26.000/kg → 1,54 kg guardados.
+        order({ quantity: 1.54, unit: "kg", total: 40000, created_at: "2026-10-10T15:00:00Z" }),
+        order({ quantity: 3, unit: "lb", total: 39000, created_at: "2026-10-10T16:00:00Z" }),
+        // Con descuento: 2 kg a $25.000/kg; los kg no cambian.
+        order({ quantity: 2, unit: "kg", total: 50000, created_at: "2026-10-10T17:00:00Z" }),
+        order({ quantity: 10, unit: "kg", voided_at: "2026-10-10T18:00:00Z", created_at: "2026-10-10T17:30:00Z" }),
+        // Viernes 11:30 p. m. de Bogotá: es de la semana anterior.
+        order({ quantity: 7, unit: "kg", created_at: "2026-10-10T04:30:00Z" }),
+      ],
+      [],
+      [],
+      2,
+      now
+    );
+    const current = series[1];
+    expect(current.orderCount).toBe(3);
+    expect(current.kgSold).toBeCloseTo(5.04, 5);
+    expect(formatWeight(current.kgSold, "kg")).toBe("5 kg 40 g");
+    expect(formatWeight(current.kgSold, "lb")).toBe("10 lb 40 g");
+    expect(series[0].orderCount).toBe(1);
   });
 
   it("la compra del sábado de llegada se cuenta en una sola semana", () => {
