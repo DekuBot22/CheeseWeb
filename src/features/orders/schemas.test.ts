@@ -59,6 +59,14 @@ describe("createSaleSchema", () => {
     expect(createSaleSchema.safeParse({ ...base, discount: -5 }).success).toBe(false);
   });
 
+  it("la nota es opcional, se recorta y vacía queda en null", () => {
+    const base = { client_name: "Rosa", mode: "cantidad", quantity: 2, unit: "kg" };
+    expect(createSaleSchema.parse(base).note).toBeNull();
+    expect(createSaleSchema.parse({ ...base, note: "   " }).note).toBeNull();
+    expect(createSaleSchema.parse({ ...base, note: "  1 y 1 separados " }).note).toBe("1 y 1 separados");
+    expect(createSaleSchema.parse({ ...base, note: "x".repeat(500) }).note).toHaveLength(300);
+  });
+
   it("acepta una fecha pasada", () => {
     expect(createSaleSchema.parse({ client_name: "Rosa", mode: "cantidad", quantity: 1, date: "2026-01-02" }).date).toBe("2026-01-02");
   });
@@ -72,6 +80,13 @@ describe("editOrderSchema", () => {
       unit: "kg",
       total: 65000,
     });
+  });
+
+  it("la nota ausente no se toca y la vacía se quita", () => {
+    const base = { client_name: "Ana", quantity: 1, unit: "kg", total: 1000 };
+    expect(editOrderSchema.parse(base).note).toBeUndefined();
+    expect(editOrderSchema.parse({ ...base, note: "" }).note).toBeNull();
+    expect(editOrderSchema.parse({ ...base, note: "separados" }).note).toBe("separados");
   });
 
   it("rechaza total o cantidad no positivos", () => {

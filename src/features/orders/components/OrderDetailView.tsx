@@ -38,6 +38,13 @@ export function OrderDetailView({
         </p>
       </div>
 
+      {order.note && (
+        <div className="rounded-md border border-linea bg-hoja px-3 py-2 text-sm">
+          <p className="text-xs font-medium text-tinta-2">Nota</p>
+          <p className="whitespace-pre-line text-tinta">{order.note}</p>
+        </div>
+      )}
+
       <div className="rounded-md border border-linea px-3 py-2 text-sm">
         <div className="flex justify-between">
           <span className="text-tinta-2">Total</span>

@@ -48,6 +48,7 @@ function ordersSheet(workbook: ExcelJS.Workbook, data: ExportData) {
     { header: "Pagado", key: "pagado", width: 14 },
     { header: "Estado pago", key: "estado_pago", width: 14 },
     { header: "Estado", key: "estado", width: 14 },
+    { header: "Nota", key: "nota", width: 40 },
   ]);
   for (const o of data.orders) {
     sheet.addRow({
@@ -61,6 +62,7 @@ function ordersSheet(workbook: ExcelJS.Workbook, data: ExportData) {
       pagado: Number(o.amount_paid),
       estado_pago: PAYMENT_STATUS_LABELS[o.payment_status],
       estado: o.status,
+      nota: o.note ?? "",
     });
   }
 }

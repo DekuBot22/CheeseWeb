@@ -1,11 +1,11 @@
 "use client";
 
 import { useId } from "react";
-import { PAYMENT_STATUS_LABELS, type Order } from "@/domain/order";
+import { NOTE_MAX, PAYMENT_STATUS_LABELS, type Order } from "@/domain/order";
 import { formatCOP } from "@/lib/format";
 import { Button } from "@/ui/Button";
 import { Callout } from "@/ui/Callout";
-import { Field, Input, Select } from "@/ui/Field";
+import { Field, Input, Select, Textarea } from "@/ui/Field";
 import type { OrderDetail } from "./use-order-detail";
 import { useOrderEdit } from "./use-order-edit";
 
@@ -81,6 +81,10 @@ export function OrderEditForm({
           aria-invalid={f.error ? true : undefined}
           aria-describedby={`${uid}-total-desc`}
         />
+      </Field>
+
+      <Field label="Nota (opcional)" htmlFor={`${uid}-nota`}>
+        <Textarea id={`${uid}-nota`} rows={2} maxLength={NOTE_MAX} value={f.note} onChange={(e) => f.setNote(e.target.value)} />
       </Field>
 
       {f.preview && <Callout tone="info">{previewText(f.preview, f.paidSum, f.clientName)}</Callout>}

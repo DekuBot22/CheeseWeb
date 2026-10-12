@@ -1,6 +1,6 @@
 import { z } from "zod";
 import type { CheeseType, SaltLevel } from "@/domain/catalog";
-import { MAX_ORDER_AMOUNT, MIN_ORDER_AMOUNT } from "@/domain/order";
+import { MAX_ORDER_AMOUNT, MIN_ORDER_AMOUNT, cleanNote } from "@/domain/order";
 import { VOID_REASON_MAX, VOID_REASON_MIN } from "@/domain/void";
 import type { Unit } from "@/domain/units";
 import { bogotaDate } from "@/lib/bogota-time";
@@ -113,6 +113,8 @@ export const editOrderSchema = z.object({
   quantity: numberField((n) => isPositive(n) && n <= MAX_QUANTITY, "Ingresa una cantidad válida"),
   unit: z.enum(["kg", "lb"], "Unidad inválida"),
   total: numberField((n) => isPositive(n) && n <= MAX_EDIT_TOTAL, "Ingresa un total válido"),
+  // Ausente → no se toca la nota; texto vacío → se quita.
+  note: z.unknown().optional().transform((v) => (v === undefined ? undefined : cleanNote(v))),
 });
 
 export type EditOrderInput = z.output<typeof editOrderSchema>;
@@ -150,6 +152,7 @@ export const createSaleSchema = z
     salt_level: z.enum(["alto", "intermedio", "bajo"], "Elige un nivel de sal válido").default("intermedio"),
     // Descuento de esta venta, en pesos por la unidad elegida (solo "por cantidad").
     discount: optionalNumber,
+    note: z.unknown().optional().transform(cleanNote),
     paid: z.boolean("Opción inválida").default(false),
     method: optionalText(50),
     date: optionalDate,

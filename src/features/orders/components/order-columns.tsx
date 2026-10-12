@@ -29,6 +29,7 @@ export function buildOrderColumns({ showClient, updatingId, onToggle, onPay, onM
       cell: (o) => (
         <span className="text-tinta-2">
           {CHEESE_TYPE_LABELS[o.cheese_type]} · {SALT_LEVEL_LABELS[o.salt_level]}
+          {o.note && <span className="block max-w-[16rem] truncate text-[0.8125rem] italic" title={o.note}>{o.note}</span>}
         </span>
       ),
     },

@@ -5,7 +5,7 @@ import { NotFoundError, ValidationError } from "@/server/errors";
 import { findOrCreateClient } from "@/features/clients/server/clients.repo";
 import type { EditOrderInput } from "../schemas";
 import { rpcEditOrder } from "./order-rpc.repo";
-import { getOrder } from "./orders.repo";
+import { getOrder, updateOrderNote } from "./orders.repo";
 
 // Cambia cliente, cantidad y total de un pedido. Los abonos siguen al pedido y
 // la base recalcula el cobro y mueve el saldo a favor de forma atómica.
@@ -25,5 +25,10 @@ export async function editOrder(
     unit: input.unit,
     total: input.total,
   });
-  return { order: result.order, creditDelta: Number(result.credit_delta ?? 0) };
+  const creditDelta = Number(result.credit_delta ?? 0);
+  // La nota va aparte de la función SQL: solo se toca si cambió.
+  if (input.note !== undefined && input.note !== (current.note ?? null)) {
+    return { order: await updateOrderNote(id, input.note), creditDelta };
+  }
+  return { order: result.order, creditDelta };
 }

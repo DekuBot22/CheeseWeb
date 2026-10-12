@@ -31,6 +31,15 @@ export interface Order {
   voided_at?: string | null;
   void_reason?: string | null;
   edited_at?: string | null;
+  // Nota breve del dueño sobre el pedido. Antes de la migración 006 no existe la columna.
+  note?: string | null;
+}
+
+export const NOTE_MAX = 300;
+
+// Texto de una nota listo para guardar: sin espacios sobrantes y null si queda vacío.
+export function cleanNote(value: unknown): string | null {
+  return typeof value === "string" && value.trim() ? value.trim().slice(0, NOTE_MAX) : null;
 }
 
 export interface Payment extends Voidable {

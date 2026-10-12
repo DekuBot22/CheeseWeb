@@ -15,6 +15,7 @@ export function useOrderEdit(detail: OrderDetail, onDone: (order: Order) => void
   const [quantity, setQuantity] = useState(String(order.quantity));
   const [unit, setUnit] = useState<Unit>(order.unit);
   const [total, setTotal] = useState(String(order.total));
+  const [note, setNote] = useState(order.note ?? "");
   const [totalTouched, setTotalTouched] = useState(false);
   const [loading, setLoading] = useState(false);
   const [error, setError] = useState("");
@@ -56,7 +57,7 @@ export function useOrderEdit(detail: OrderDetail, onDone: (order: Order) => void
       const res = await fetch(`/api/admin/orders/${order.id}`, {
         method: "PUT",
         headers: { "Content-Type": "application/json" },
-        body: JSON.stringify({ client_name: clientName, quantity, unit, total }),
+        body: JSON.stringify({ client_name: clientName, quantity, unit, total, note }),
       });
       const data = await res.json();
       if (!res.ok) {
@@ -80,6 +81,8 @@ export function useOrderEdit(detail: OrderDetail, onDone: (order: Order) => void
     changeUnit,
     total,
     changeTotal,
+    note,
+    setNote,
     paidSum,
     preview,
     loading,

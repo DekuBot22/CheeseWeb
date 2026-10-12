@@ -31,6 +31,7 @@ export function OrderMobileCard({
             {SALT_LEVEL_LABELS[order.salt_level]}
           </p>
           <p className="num text-xs text-tinta-3">{formatDateShort(order.created_at)}</p>
+          {order.note && <p className="mt-0.5 line-clamp-2 text-[0.8125rem] italic text-tinta-2">{order.note}</p>}
         </div>
         <Money value={Number(order.total)} className="text-base font-semibold" />
       </div>

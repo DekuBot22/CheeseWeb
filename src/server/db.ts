@@ -67,6 +67,9 @@ export function isMissingFunctionError(err: unknown): boolean {
 export const MIGRATION_005_MESSAGE =
   "Anular y editar aún no están activados: corre la migración 005 en el SQL Editor de Supabase y vuelve a intentar.";
 
+export const MIGRATION_006_MESSAGE =
+  "La nota del pedido aún no está activada: corre la migración 006 en el SQL Editor de Supabase y vuelve a intentar.";
+
 // ¿Ya existe la migración 005 (columnas `voided_at`)? Se prueba con una consulta
 // mínima. Un "sí" se recuerda siempre; un "no" solo 60 s, para que apenas el
 // dueño corra el SQL el código lo note sin reiniciar nada.

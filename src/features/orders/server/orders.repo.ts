@@ -1,5 +1,5 @@
 import "server-only";
-import { db, fetchAll, hasVoidColumns } from "@/server/db";
+import { MIGRATION_006_MESSAGE, db, fetchAll, hasVoidColumns, isMissingColumnError } from "@/server/db";
 import { AppError } from "@/server/errors";
 import type { StatOrder } from "@/domain/accounting";
 import type { ClientOrder } from "@/domain/client-balance";
@@ -128,7 +128,15 @@ export type NewOrder = Omit<Order, "id" | "created_at" | "voided_at" | "void_rea
 
 export async function insertOrder(row: NewOrder): Promise<Order> {
   const { data, error } = await db().from("orders").insert(row).select().single();
+  if (isMissingColumnError(error)) throw new AppError(MIGRATION_006_MESSAGE, 503);
   if (error || !data) throw new AppError("No se pudo guardar el pedido");
+  return data as Order;
+}
+
+export async function updateOrderNote(id: string, note: string | null): Promise<Order> {
+  const { data, error } = await db().from("orders").update({ note }).eq("id", id).select().single();
+  if (isMissingColumnError(error)) throw new AppError(MIGRATION_006_MESSAGE, 503);
+  if (error || !data) throw new AppError("No se pudo guardar la nota");
   return data as Order;
 }
 

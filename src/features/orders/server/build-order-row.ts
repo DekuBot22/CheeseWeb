@@ -11,6 +11,7 @@ export function buildOrderRow(
     total: number;
     cheese_type: CheeseType;
     salt_level: SaltLevel;
+    note?: string | null;
   },
   pricing: { pricePerKg: number; costPerKg: number },
   clientId: string,
@@ -29,6 +30,8 @@ export function buildOrderRow(
     amount_paid: 0,
     payment_status: "debe",
     status: "pendiente",
+    // Solo se manda si hay nota: así guardar sin nota sigue funcionando antes de la migración 006.
+    ...(order.note ? { note: order.note } : {}),
     ...(createdAt ? { created_at: createdAt } : {}),
   };
 }

@@ -2,12 +2,12 @@
 
 import { useId } from "react";
 import { CHEESE_TYPE_LABELS, SALT_LEVEL_LABELS, type CheeseType, type SaltLevel } from "@/domain/catalog";
-import type { Order } from "@/domain/order";
+import { NOTE_MAX, type Order } from "@/domain/order";
 import { toKg, type Unit } from "@/domain/units";
 import { formatCOP } from "@/lib/format";
 import { bogotaDate } from "@/lib/bogota-time";
 import { Button } from "@/ui/Button";
-import { Field, Input, Select } from "@/ui/Field";
+import { Field, Input, Select, Textarea } from "@/ui/Field";
 import { Money } from "@/ui/Money";
 import { ClientPicker } from "./ClientPicker";
 import { useClientNames } from "./use-client-names";
@@ -78,6 +78,10 @@ export function SaleForm({
           </Select>
         </Field>
       </div>
+
+      <Field label="Nota (opcional)" htmlFor={`${uid}-nota`} hint="Ej.: 2 kilos, pero 1 y 1 separados.">
+        <Textarea id={`${uid}-nota`} rows={2} maxLength={NOTE_MAX} value={f.note} onChange={(e) => f.setNote(e.target.value)} />
+      </Field>
 
       <Field label="Fecha (opcional)" htmlFor={`${uid}-fecha`} hint="Si la dejas vacía es de hoy.">
         <Input id={`${uid}-fecha`} type="date" max={bogotaDate()} value={f.date} onChange={(e) => f.setDate(e.target.value)} />

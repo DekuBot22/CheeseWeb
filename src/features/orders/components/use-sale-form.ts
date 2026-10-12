@@ -18,6 +18,7 @@ export function useSaleForm(pricePerKg: number, onDone: (order: Order, paymentEr
   const [cheese, setCheese] = useState<CheeseType>("semi");
   const [salt, setSalt] = useState<SaltLevel>("intermedio");
   const [discount, setDiscount] = useState("");
+  const [note, setNote] = useState("");
   const [paid, setPaid] = useState(false);
   const [method, setMethod] = useState("");
   const [date, setDate] = useState("");
@@ -53,6 +54,7 @@ export function useSaleForm(pricePerKg: number, onDone: (order: Order, paymentEr
           ...(mode === "valor" ? { amount: value } : { quantity: qty, unit, discount: discountPerUnit || undefined }),
           cheese_type: cheese,
           salt_level: salt,
+          note: note.trim() || undefined,
           paid,
           method: paid && method ? method : undefined,
           date: date || undefined,
@@ -80,6 +82,7 @@ export function useSaleForm(pricePerKg: number, onDone: (order: Order, paymentEr
     cheese, setCheese,
     salt, setSalt,
     discount, setDiscount, discountPerUnit, salePricePerKg, saved,
+    note, setNote,
     paid, setPaid,
     method, setMethod,
     date, setDate,

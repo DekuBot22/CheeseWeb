@@ -32,6 +32,7 @@ export function PendingOrdersList({ orders }: { orders: Order[] }) {
                   <p className="num text-[0.8125rem] text-tinta-2">
                     {o.quantity} {o.unit} · {formatDateShort(o.created_at)}
                   </p>
+                  {o.note && <p className="truncate text-[0.8125rem] italic text-tinta-2">{o.note}</p>}
                 </div>
                 <div className="flex shrink-0 flex-col items-end gap-1">
                   <Money value={Number(o.total)} className="text-sm font-semibold" />
