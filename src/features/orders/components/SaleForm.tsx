@@ -36,7 +36,6 @@ export function SaleForm({
       </Field>
 
       {f.mode === "cantidad" ? (
-        <>
         <div className="grid grid-cols-[1fr_7rem] gap-3">
           <Field label="Cantidad" htmlFor={`${uid}-cantidad`}>
             <Input id={`${uid}-cantidad`} type="number" inputMode="decimal" step="0.01" min="0.01" value={f.quantity} onChange={(e) => f.setQuantity(e.target.value)} />
@@ -48,14 +47,6 @@ export function SaleForm({
             </Select>
           </Field>
         </div>
-        <Field
-          label={`Descuento por ${f.unit === "lb" ? "libra" : "kilo"} (opcional)`}
-          htmlFor={`${uid}-descuento`}
-          hint="Solo para esta venta: se resta del precio de cada unidad."
-        >
-          <Input id={`${uid}-descuento`} type="number" inputMode="numeric" step="1" min="0" value={f.discount} onChange={(e) => f.setDiscount(e.target.value)} placeholder="Ej. 1000" />
-        </Field>
-        </>
       ) : (
         <Field label="Valor de la venta" htmlFor={`${uid}-valor`}>
           <Input id={`${uid}-valor`} type="number" inputMode="numeric" step="1" min="1" value={f.amount} onChange={(e) => f.setAmount(e.target.value)} />
@@ -79,9 +70,35 @@ export function SaleForm({
         </Field>
       </div>
 
-      <Field label="Nota (opcional)" htmlFor={`${uid}-nota`} hint="Ej.: 2 kilos, pero 1 y 1 separados.">
-        <Textarea id={`${uid}-nota`} rows={2} maxLength={NOTE_MAX} value={f.note} onChange={(e) => f.setNote(e.target.value)} />
-      </Field>
+      {/* Lo poco habitual va detrás de casillas para que el formulario no se vea cargado. */}
+      <div className="flex flex-wrap items-center gap-x-5 gap-y-2 text-sm text-tinta">
+        {f.mode === "cantidad" && (
+          <label className="flex items-center gap-2">
+            <input type="checkbox" checked={f.showDiscount} onChange={(e) => f.toggleDiscount(e.target.checked)} />
+            Descuento
+          </label>
+        )}
+        <label className="flex items-center gap-2">
+          <input type="checkbox" checked={f.showNote} onChange={(e) => f.toggleNote(e.target.checked)} />
+          Nota
+        </label>
+      </div>
+
+      {f.mode === "cantidad" && f.showDiscount && (
+        <Field
+          label={`Descuento por ${f.unit === "lb" ? "libra" : "kilo"}`}
+          htmlFor={`${uid}-descuento`}
+          hint="Solo para esta venta: se resta del precio de cada unidad."
+        >
+          <Input id={`${uid}-descuento`} type="number" inputMode="numeric" step="1" min="0" value={f.discount} onChange={(e) => f.setDiscount(e.target.value)} placeholder="Ej. 1000" autoFocus />
+        </Field>
+      )}
+
+      {f.showNote && (
+        <Field label="Nota" htmlFor={`${uid}-nota`} hint="Ej.: 2 kilos, pero 1 y 1 separados.">
+          <Textarea id={`${uid}-nota`} rows={2} maxLength={NOTE_MAX} value={f.note} onChange={(e) => f.setNote(e.target.value)} autoFocus />
+        </Field>
+      )}
 
       <Field label="Fecha (opcional)" htmlFor={`${uid}-fecha`} hint="Si la dejas vacía es de hoy.">
         <Input id={`${uid}-fecha`} type="date" max={bogotaDate()} value={f.date} onChange={(e) => f.setDate(e.target.value)} />

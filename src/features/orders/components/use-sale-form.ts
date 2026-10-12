@@ -19,11 +19,25 @@ export function useSaleForm(pricePerKg: number, onDone: (order: Order, paymentEr
   const [salt, setSalt] = useState<SaltLevel>("intermedio");
   const [discount, setDiscount] = useState("");
   const [note, setNote] = useState("");
+  // Descuento y nota son poco habituales: van detrás de una casilla. Al desmarcarla
+  // se borra lo escrito, para que no se mande sin que se vea.
+  const [showDiscount, setShowDiscount] = useState(false);
+  const [showNote, setShowNote] = useState(false);
   const [paid, setPaid] = useState(false);
   const [method, setMethod] = useState("");
   const [date, setDate] = useState("");
   const [loading, setLoading] = useState(false);
   const [error, setError] = useState("");
+
+  function toggleDiscount(on: boolean) {
+    setShowDiscount(on);
+    if (!on) setDiscount("");
+  }
+
+  function toggleNote(on: boolean) {
+    setShowNote(on);
+    if (!on) setNote("");
+  }
 
   const qty = Number(quantity);
   const value = Number(amount);
@@ -83,6 +97,8 @@ export function useSaleForm(pricePerKg: number, onDone: (order: Order, paymentEr
     salt, setSalt,
     discount, setDiscount, discountPerUnit, salePricePerKg, saved,
     note, setNote,
+    showDiscount, toggleDiscount,
+    showNote, toggleNote,
     paid, setPaid,
     method, setMethod,
     date, setDate,
