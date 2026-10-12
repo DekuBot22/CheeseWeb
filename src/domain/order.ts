@@ -1,6 +1,6 @@
+import { bogotaDate } from "@/lib/bogota-time";
 import type { CheeseType, SaltLevel } from "./catalog";
 import { toKg, type Unit } from "./units";
-import { bogotaDate } from "@/lib/bogota-time";
 import { activeOnly, type Voidable } from "./void";
 
 export type OrderStatus = "pendiente" | "completado";
