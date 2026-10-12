@@ -9,11 +9,12 @@ Dos cosas en una sola web:
 - **`/admin`** — "El Cuaderno": el panel privado (con contraseña) para llevar la
   contabilidad del negocio. Seis secciones:
   - **Inicio**: ganancia de la semana, vendido, cobrado, cuánto te deben y cuánto
-    le debes al proveedor, comparación con la semana anterior, quién te debe,
-    pedidos pendientes y las últimas 8 semanas. Accesos rápidos para registrar un
-    abono o una compra.
-  - **Pedidos**: lista con filtros (cliente, estado, pago, período), marcar
-    pedidos como listos y registrar abonos.
+    le debes al proveedor, comparación con la semana anterior, quién te debe y
+    pedidos pendientes. Accesos rápidos para registrar una **venta**, un abono o
+    una compra. Las gráficas están aparte (botón "Ver gráficas").
+  - **Pedidos**: lista con filtros (cliente, estado, pago, período, anulados),
+    marcar pedidos como listos, registrar abonos y ventas, y desde **Más**:
+    ver los abonos, **editar** el pedido o **anularlo**.
   - **Clientes**: se crean solos con cada pedido; deuda, saldo a favor,
     antigüedad de la deuda, historial y datos de contacto.
   - **Compras**: compras, pagos y **descuentos** del proveedor (p. ej. un queso
@@ -21,11 +22,21 @@ Dos cosas en una sola web:
     proveedor" y su saldo acumulado. Un descuento baja lo que le debes y el costo
     de esa semana; la compra original no se modifica.
   - **Ganancias**: por semana (sábado a viernes), 12 semanas o todo el tiempo,
-    con gráficas, ganancia por libra y descarga a Excel. El costo usa las compras
+    con ganancia por libra, libro semanal y descarga a Excel. Sus gráficas viven
+    en **Ganancias → Gráficas** (8, 12 o 26 semanas, kilos y antigüedad de la deuda). El costo usa las compras
     reales de cada semana (menos los descuentos); si no hay, usa el costo
     estimado.
-  - **Ajustes**: precio de venta y costo **por libra**; muestra en vivo cuánto
-    ganas por libra y el kilo como estimado.
+  - **Ajustes**: precio de venta y costo **por libra** (muestra en vivo cuánto
+    ganas por libra), **respaldo** y cómo instalar la app.
+
+**Anular es definitivo:** pedidos, abonos, compras, pagos y descuentos no se
+borran; se anulan con un motivo, dejan de contar en todo y quedan a la vista
+(en el Excel, hoja "Anulados"). Para corregir algo: se anula y se registra de
+nuevo (los pedidos además se pueden editar).
+
+**Respaldo:** cada noche (~11 p. m. hora de Colombia) llega a tu Telegram un JSON
+con todas las tablas (para restaurar) y el Excel de todo el tiempo. En Ajustes
+hay un botón "Enviar respaldo ahora".
 
 Tecnologías: Next.js 16 + TypeScript + Tailwind CSS (gratis en Vercel),
 Supabase (Postgres gratis) y Telegram para los avisos.
@@ -44,8 +55,11 @@ Si vas a tocar el código, lee antes [`docs/ARQUITECTURA.md`](./docs/ARQUITECTUR
    - **Base que ya estaba en marcha:** corre solo las migraciones que te falten
      de [`supabase/migrations/`](./supabase/migrations), en orden
      (`001_base`, `002_compras_proveedor`, `003_indices`,
-     `004_descuentos_proveedor`). Son idempotentes. **Corre la 004 antes de
-     usar los descuentos del proveedor** (sin ella, Compras muestra un aviso).
+     `004_descuentos_proveedor`, `005_anular_editar_limites`). Son idempotentes.
+     **Corre la 004 antes de usar los descuentos del proveedor** y **la 005
+     antes de usar anular/editar** (sin ellas el panel funciona y avisa qué
+     falta). La 005 también hace atómico el abono y activa los límites del
+     formulario público.
 3. En **Project Settings > API** copia:
    - **Project URL** → `SUPABASE_URL`
    - **service_role key** (no la `anon`) → `SUPABASE_SERVICE_ROLE_KEY`
@@ -73,7 +87,8 @@ SUPABASE_URL=...
 SUPABASE_SERVICE_ROLE_KEY=...
 ADMIN_PASSWORD=...        # contraseña para entrar a /admin
 TELEGRAM_BOT_TOKEN=...    # opcional
-TELEGRAM_CHAT_ID=...      # opcional
+TELEGRAM_CHAT_ID=...      # opcional (necesarias para el respaldo diario)
+CRON_SECRET=...           # solo en Vercel: 16+ caracteres al azar, protege el respaldo diario
 ADMIN_AUTH=off            # opcional, SOLO en .env.local: panel sin contraseña en tu PC
 ```
 
@@ -145,7 +160,10 @@ Los íconos se regeneran con `node scripts/generate-icons.mjs`.
    pagos que le hagas al proveedor: así las ganancias usan el costo real. Si un
    queso llegó mal (muy salado, faltante…), registra un **descuento** con su
    motivo para bajar lo que le debes.
-6. **Inicio** y **Ganancias** te dicen cómo va el negocio.
+6. **Inicio** y **Ganancias** te dicen cómo va el negocio; las gráficas están en
+   **Ganancias → Gráficas**.
+7. Una venta por WhatsApp o en persona: **+ Venta** (Inicio o Pedidos). Si te
+   equivocas: **Pedidos → Más → Editar / Anular**.
 
 ## Notas
 

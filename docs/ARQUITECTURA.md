@@ -17,8 +17,8 @@ Si eres una IA: lee esto antes de crear o mover archivos.
 src/
 ├─ app/            Solo rutas: page, layout, loading, error, route. Componen features.
 │  ├─ page.tsx                     /  (pedido público)
-│  ├─ admin/login · admin/(panel)/ Inicio, pedidos, clientes, compras, ganancias, ajustes
-│  └─ api/                         Route handlers finos (≤40 líneas)
+│  ├─ admin/login · admin/(panel)/ Inicio, pedidos, clientes, compras, ganancias (+ ganancias/graficas), ajustes
+│  └─ api/                         Route handlers finos (≤40 líneas); api/cron/backup (cron de Vercel, fuera de /api/admin)
 ├─ features/       Un módulo de negocio por carpeta
 │  └─ <modulo>/
 │     ├─ components/   UI del módulo (props en, JSX out; sin consultar la base)
@@ -33,7 +33,7 @@ src/
 public/            cuaderno.webmanifest · sw.js · offline.html · icons/ (app instalable)
 scripts/           generate-icons.mjs + icons/*.svg (fuente de los íconos)
 └─ instrumentation.ts  Valida las variables de entorno al arrancar el servidor
-supabase/migrations/   001_base · 002_compras_proveedor · 003_indices · 004_descuentos_proveedor (en orden)
+supabase/migrations/   001_base · 002_compras_proveedor · 003_indices · 004_descuentos_proveedor · 005_anular_editar_limites (en orden)
 supabase/schema.sql    Foto consolidada para crear una base nueva
 docs/ARQUITECTURA.md   Este archivo
 ```
@@ -80,12 +80,41 @@ app ──► features ──► domain ──► lib
 - Respuesta de error: `{ error: string }` con 400 (validación), 401 (sin sesión), 404, 500. Éxito: la clave que ya usan los componentes (`{ order }`, `{ purchase }`…).
 - Errores: lanza `AppError` / `ValidationError` / `NotFoundError` (`server/errors.ts`); `handle()` los convierte en respuesta.
 - Variables de entorno: solo con `env()` (`server/env.ts`, validado con zod). Nunca `process.env` suelto.
-- **Abonos no atómicos:** `register-payment.ts` hace 3 escrituras seguidas (pago, pedido, saldo a favor). Si falla a la mitad o llegan dos abonos a la vez, el saldo puede quedar mal. Mejora pendiente: una función SQL llamada por RPC.
+- **Abonos atómicos (migración 005):** `register-payment.ts` llama a la función SQL `register_payment` (`order-rpc.repo.ts`): bloquea el pedido, inserta el abono, recalcula `amount_paid`/`payment_status` y mueve el saldo a favor del cliente en UNA transacción. Si la función no existe (005 sin correr), cae al camino viejo de 3 escrituras sueltas.
 - Fechas y semanas: siempre hora de Colombia (`lib/bogota-time.ts`, `domain/week.ts`). La semana de negocio va de sábado a viernes.
 - **Campos opcionales con zod 4:** `z.unknown().transform(...)` rechaza la clave si FALTA en el JSON ("expected nonoptional"). Escribe `z.unknown().optional().transform(...)` (o usa `optionalText`); los formularios omiten los campos vacíos. Hay pruebas de regresión en `features/purchases/schemas.regression.test.ts`.
+- **Excel y respaldo:** `getExportData` separa lo vigente (hojas de siempre más Abonos y Clientes) de lo anulado (hoja "Anulados", `voided-rows.ts`).
 - **Tabla que puede no existir (`provider_discounts`, migración 004):** sus lecturas pasan por `orEmptyIfMissing` (`provider-discounts.repo.ts`), que usa `isMissingTableError` (`server/db.ts`) y devuelve vacío en vez de romper la pantalla; guardar responde 503 con el mensaje de "corre la migración 004". Úsalo como patrón al desplegar código antes que el SQL.
 - **Descuentos del proveedor:** `domain/accounting.ts` (`computeStats` recibe `discounts` como 4.º parámetro: costo neto = compras − descuentos, nunca negativo; sin compras no se resta del estimado) y `domain/provider-ledger.ts` (saldo = comprado − descontado − pagado; `remainingForDiscount` da el tope por compra).
 - **Precios por libra:** la base guarda por kg; la pantalla de Ajustes edita por libra y convierte con `perLbToPerKg`/`perKgToPerLb` (`domain/units.ts`) antes de enviar. `domain/pricing.ts`: `unitProfit` (ganancia y margen por unidad) y `profitPerLb` (ganancia real ÷ libras vendidas).
+
+## Anular y editar (migración 005)
+
+- **Nunca se borra una fila.** `orders`, `payments`, `purchases`, `provider_payments` y `provider_discounts` tienen `voided_at` y `void_reason` (null = vigente; una restricción exige motivo de 3 a 300 letras cuando está anulada); `orders` suma `edited_at`. **Anular es definitivo** (no hay "restaurar"): para corregir se anula y se registra de nuevo; los pedidos además se editan.
+- **Dominio:** `domain/void.ts` (`isVoided`, `activeOnly`). Toda suma pasa por `activeOnly` (`computeStats`, `weeklySeries`, `kgSold`, `receivables`, `buildClientRows`, `providerTotals`, `remainingForDiscount`); `buildLedger` incluye lo anulado marcado pero no mueve el saldo. `settleOrder`/`previewOrderEdit`/`saleTimestamp` en `domain/order.ts`. **`settleOrder` es el espejo en TypeScript de `sync_order_payment`/`order_credit_excess` en SQL: si cambias una regla, cambia las dos.**
+- **Saldo a favor:** solo nace del excedente de abonos vigentes sobre el total (un pedido anulado cuenta como total 0). Cada operación (abonar, anular abono, anular pedido, editar) mide el excedente antes y después y mueve al cliente solo la diferencia. Si algún día se implementa "usar el saldo a favor", regístralo como un abono con método "saldo a favor", o este modelo se rompe.
+- **Funciones SQL** (`register_payment`, `void_payment`, `void_order`, `edit_order`, `hit_limit`…): solo `service_role` puede ejecutarlas (se revocan a `public`/`anon`/`authenticated`). Errores de negocio con `raise exception 'codigo'`; `order-rpc.repo.ts` los traduce a mensajes en español. Compras, pagos y descuentos del proveedor se anulan con un `update … where voided_at is null` (`voidRow` en `server/db.ts`), que ya es atómico.
+- **Código antes que SQL:** `hasVoidColumns()` (`server/db.ts`) prueba `select voided_at` y recuerda el "sí" siempre y el "no" 60 s. Mientras sea no, los repos no filtran y anular/editar responden 503 con "corre la migración 005". Mismo patrón que `orEmptyIfMissing` de la 004. Las consultas "ForStats" filtran en SQL (`voided_at is null`); las listas completas (`*InRange`, `list*`, historial del cliente, libro del proveedor) traen todo y el dominio separa.
+- **Anular una compra** exige anular antes sus descuentos vigentes (`void-purchase.ts`). **Anular un pedido con abonos:** "devolví el dinero" (también se anulan sus abonos) o "dejarlo como saldo a favor".
+- **UI:** `ui/ReasonForm.tsx` (motivo + sugerencias, genérico), `OrderDetailSheet` (ver abonos / editar / anular, un solo contenido que cambia de vista), `VoidMovementButton` en el libro del proveedor (la hoja solo se monta tras el primer clic).
+
+## Respaldo diario
+
+- `vercel.json` programa `GET /api/cron/backup` a las `0 4 * * *` UTC (≈ 11 p. m. en Colombia; en Hobby la hora es imprecisa y no hay reintentos). La ruta está fuera de `/api/admin` (no hay cookie): se protege con `Authorization: Bearer ${CRON_SECRET}` comparado en tiempo constante (`server/cron-auth.ts`); sin `CRON_SECRET` responde 401 siempre. `POST /api/admin/backup` (botón de Ajustes) hace lo mismo con la sesión del panel.
+- `sendDailyBackup` (`features/reports/server/send-backup.ts`) manda por Telegram **dos archivos en silencio**: `respaldo-AAAA-MM-DD.json` (todas las tablas completas con ids y filas anuladas; es lo que sirve para restaurar; se comprime a `.json.gz` si pasa de 45 MB) y el Excel de todo el tiempo. Si algo falla, manda un aviso **con sonido** y responde 500. Telegram admite archivos de hasta 50 MB (`backup-file.ts`).
+- Efecto lateral útil: un cron diario evita que Supabase Free pause el proyecto por inactividad.
+
+## Formulario público protegido
+
+`POST /api/orders` → `submitPublicOrder`: (1) campo trampa `website` (escondido; si viene lleno responde 201 `{ order: null }` sin guardar), (2) validación, (3) límites por ventana fija en la tabla `request_limits` vía la función `hit_limit` (`domain/order-limits.ts`: IP 6 por 10 min y 30 por día, nombre 3 por hora; la IP se guarda solo como HMAC con `ADMIN_PASSWORD`). Si la función o la tabla faltan, **deja pasar** (mejor un pedido de más que rechazar uno real). Si un cliente real pide para varias personas desde la misma conexión (o hay CGNAT), sube los números en `order-limits.ts`.
+
+## Venta desde el panel
+
+`POST /api/admin/orders` → `create-sale.ts`: mismo cálculo que el pedido público (`priceOrder`, precio vigente) más cliente existente o nuevo (`findOrCreateClient`), fecha opcional (mediodía de Bogotá si es pasada, `saleTimestamp`), "ya pagó" (llama a `registerPayment`; si el abono falla devuelve `paymentError` y la venta queda guardada) y **sin aviso por Telegram**. `GET /api/admin/clients` da los nombres para sugerir (se piden al abrir la hoja).
+
+## Gráficas
+
+Las gráficas viven en `/admin/ganancias/graficas` (`?semanas=12|8|26`, `get-charts-report.ts`, sin entrada en la barra inferior: cuelga de Ganancias y la deja resaltada). Inicio solo muestra lo accionable y carga 2 semanas (`getDashboard`); Ganancias conserva cifras, libro semanal y Excel.
 
 ## Tema oscuro del panel ("Bodega de curado")
 

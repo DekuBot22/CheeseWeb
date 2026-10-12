@@ -4,7 +4,7 @@
 > "lee CONTEXTO.md" y Claude tenga todo el panorama sin volver a preguntar.
 > Cómo está organizado el código: `docs/ARQUITECTURA.md`.
 
-**Última actualización: 2026-10-11.**
+**Última actualización: 2026-10-12.**
 
 ## 📍 Dónde quedamos (retomar desde aquí)
 
@@ -14,7 +14,19 @@
 - **Rediseño del panel `/admin` ("El Cuaderno")**, reestructura de carpetas por
   funcionalidad y correcciones de contabilidad (ver abajo): ya está en `main` y
   desplegado.
-- **Rama `animaciones` (2026-10-11, sin commitear ni desplegar):** 7 animaciones
+- **Rama `mejoras-anular-respaldo` (2026-10-12, sin desplegar; falta la luz verde
+  del dueño y que corra la migración 005):** (1) **respaldo diario** a Telegram
+  (JSON + Excel, cron de Vercel, botón en Ajustes); (2) **anular y editar**
+  pedidos, abonos, compras, pagos y descuentos (nunca se borra; anular es
+  definitivo; motivo obligatorio) con abono atómico por función SQL; (3)
+  **protección del formulario público** (campo trampa y límites 6/10 min y 30/día
+  por IP, 3/hora por nombre); (4) **"+ Venta" desde el panel** (Inicio y Pedidos);
+  (5) **gráficas aparte** en `/admin/ganancias/graficas` (Inicio queda solo con lo
+  accionable). El límite de intentos del login NO se implementó (decisión del
+  dueño). **Pasos manuales:** correr `supabase/migrations/005_anular_editar_limites.sql`
+  en el SQL Editor (antes de desplegar) y poner `CRON_SECRET` en Vercel (ver README
+  y `docs/ARQUITECTURA.md`: "Anular y editar", "Respaldo diario").
+- **Rama `animaciones` (2026-10-11, ya en `main`):** 7 animaciones
   del panel, sutiles y baratas (hoja que sube/entra, aviso de "guardado" tras
   abono/compra en hojas, respuesta al pulsar, barrita de carga en filtros y
   pestañas, fundido esqueleto→contenido, mensajes en línea, color suave en
@@ -39,10 +51,9 @@
      raya de total) y favicon simplificado; service worker en `cuaderno-v2`.
   4. Se corrigió un error de validación de campos opcionales que ya estaba en
      producción (ver abajo).
-- Pendientes del dueño: borrar los datos de prueba de Supabase (cliente "Prueba
-  Claude" con un pedido, una compra de $900.000 y un pago de $500.000) y poner
-  el precio real en `/admin/ajustes` (la web pública dice "El precio aún no ha
-  sido configurado" hasta entonces).
+- Datos de prueba de Supabase ya borrados el 2026-10-12 (quedó `settings` con
+  precio 13.000/lb y costo 0). El dueño empieza a meter datos reales: poner el
+  costo real por libra en `/admin/ajustes`.
 - Se canceló la automatización de pedidos por chat con n8n. No retomarla.
 - **Tema oscuro, auth local y app instalable (2026-10-11, también sin commitear):**
   tema "Bodega de curado" (negro cálido + oro ámbar) solo para `/admin`; el
@@ -135,9 +146,10 @@ proyecto hermano de **QueseriaApp** (escritorio, Python/Tkinter, en
 ## Modelo de datos
 
 `supabase/migrations/` (001 base, 002 compras al proveedor, 003 índices, 004
-descuentos del proveedor) y `supabase/schema.sql` consolidado. Tablas:
-`settings` (fila única), `clients`, `orders`, `payments`, `purchases`,
-`provider_payments`, `provider_discounts`. RLS activado sin
+descuentos del proveedor, 005 anular/editar + límites) y `supabase/schema.sql`
+consolidado. Tablas: `settings` (fila única), `clients`, `orders`, `payments`,
+`purchases`, `provider_payments`, `provider_discounts`, `request_limits`. Las
+cinco tablas de movimientos tienen `voided_at`/`void_reason` (005). RLS activado sin
 políticas públicas (todo pasa por la service role desde el servidor).
 **Regla:** cada cambio de esquema = migración nueva + `schema.sql` actualizado.
 
@@ -145,14 +157,20 @@ políticas públicas (todo pasa por la service role desde el servidor).
 
 - **Pública `/`:** formulario por cantidad o por valor, botón de WhatsApp
   (número en `src/features/storefront/constants.ts`).
-- **Panel:** Inicio (resumen), Pedidos (filtros en la URL), Clientes, Compras
-  (libro del proveedor con compras, pagos y descuentos), Ganancias (semana / 12
-  semanas / todo, gráficas, ganancia por libra, Excel), Ajustes (precio y costo
-  por libra, instalación en el teléfono).
+- **Panel:** Inicio (cifras, deudores, pendientes, "+ Venta/Abono/Compra"), Pedidos
+  (filtros en la URL, incluye anulados; "Más" = ver abonos, editar, anular),
+  Clientes, Compras (libro del proveedor con compras, pagos y descuentos, cada
+  uno anulable), Ganancias (semana / 12 semanas / todo, ganancia por libra,
+  Excel) con su página de Gráficas, Ajustes (precio y costo por libra, respaldo,
+  instalación en el teléfono).
 
 ## Mejoras pendientes / ideas
 
-- Abono atómico (función SQL por RPC): hoy son 3 escrituras seguidas.
+- Con la 005 el abono ya es atómico; antes de correrla sigue el camino viejo.
+- Gastos (transporte, bolsas, hielo), inventario simple, "cobrar por WhatsApp",
+  resumen semanal por Telegram, atajos del ícono (ideas de Opus, sin hacer).
+- Editar/anular es definitivo (sin "restaurar"); si hiciera falta, requiere lógica
+  de saldos nueva.
 - Fusionar clientes duplicados; descontar el saldo a favor en el siguiente pedido.
 - Foto real del negocio en vez del dibujo SVG de `CheeseWedge.tsx`.
 - Tipos generados de Supabase (`supabase gen types`).
