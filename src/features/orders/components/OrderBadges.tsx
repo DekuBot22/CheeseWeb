@@ -12,6 +12,11 @@ export function PaymentBadge({ status, children }: { status: PaymentStatus; chil
   return <Badge tone={status}>{children ?? PAYMENT_LABEL[status]}</Badge>;
 }
 
+// Pedido anulado: ya no cuenta en nada, pero queda en el historial.
+export function VoidedBadge() {
+  return <Badge tone="neutral">Anulado</Badge>;
+}
+
 export function OrderStatusBadge({ status }: { status: OrderStatus }) {
   return status === "pendiente" ? (
     <Badge tone="pendiente">Pendiente</Badge>

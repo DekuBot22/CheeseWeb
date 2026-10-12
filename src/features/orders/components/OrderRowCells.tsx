@@ -1,7 +1,8 @@
 import Link from "next/link";
 import type { Order } from "@/domain/order";
 import { Button } from "@/ui/Button";
-import { OrderStatusBadge } from "./OrderBadges";
+import { isVoided } from "@/domain/void";
+import { OrderStatusBadge, VoidedBadge } from "./OrderBadges";
 
 // Piezas pequeñas que comparten la tabla (escritorio) y la tarjeta (móvil).
 
@@ -41,10 +42,32 @@ export function StatusToggle({
 }
 
 export function PayButton({ order, onPay }: { order: Order; onPay: (order: Order) => void }) {
-  if (order.payment_status === "pagado") return null;
+  if (order.payment_status === "pagado" || isVoided(order)) return null;
   return (
     <Button size="sm" variant="secondary" onClick={() => onPay(order)}>
       Abonar
     </Button>
   );
+}
+
+// Abre el detalle: ver abonos, editar o anular.
+export function MoreButton({ order, onMore }: { order: Order; onMore: (order: Order) => void }) {
+  return (
+    <Button size="sm" variant="ghost" onClick={() => onMore(order)} aria-label={`Más acciones del pedido de ${order.client_name}`}>
+      Más
+    </Button>
+  );
+}
+
+// El estado de entrega o, si el pedido está anulado, la insignia "Anulado".
+export function OrderStateCell({
+  order,
+  disabled,
+  onToggle,
+}: {
+  order: Order;
+  disabled: boolean;
+  onToggle: (order: Order) => void;
+}) {
+  return isVoided(order) ? <VoidedBadge /> : <StatusToggle order={order} disabled={disabled} onToggle={onToggle} />;
 }

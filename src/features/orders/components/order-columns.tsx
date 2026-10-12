@@ -3,18 +3,20 @@ import { remainingOf, type Order } from "@/domain/order";
 import { formatDateShort } from "@/lib/format";
 import { Money } from "@/ui/Money";
 import type { Column } from "@/ui/DataTable";
+import { isVoided } from "@/domain/void";
 import { PaymentBadge } from "./OrderBadges";
-import { ClientLink, PayButton, StatusToggle } from "./OrderRowCells";
+import { ClientLink, MoreButton, OrderStateCell, PayButton } from "./OrderRowCells";
 
 interface Options {
   showClient: boolean;
   updatingId: string | null;
   onToggle: (order: Order) => void;
   onPay: (order: Order) => void;
+  onMore: (order: Order) => void;
 }
 
 // Columnas de la tabla de pedidos en escritorio.
-export function buildOrderColumns({ showClient, updatingId, onToggle, onPay }: Options): Column<Order>[] {
+export function buildOrderColumns({ showClient, updatingId, onToggle, onPay, onMore }: Options): Column<Order>[] {
   const client: Column<Order> = { key: "cliente", header: "Cliente", cell: (o) => <ClientLink order={o} /> };
 
   return [
@@ -46,9 +48,22 @@ export function buildOrderColumns({ showClient, updatingId, onToggle, onPay }: O
     {
       key: "estado",
       header: "Estado",
-      cell: (o) => <StatusToggle order={o} disabled={updatingId === o.id} onToggle={onToggle} />,
+      cell: (o) => <OrderStateCell order={o} disabled={updatingId === o.id} onToggle={onToggle} />,
     },
-    { key: "pago", header: "Pago", cell: (o) => <PaymentBadge status={o.payment_status} /> },
-    { key: "acc", header: "", cell: (o) => <PayButton order={o} onPay={onPay} /> },
+    {
+      key: "pago",
+      header: "Pago",
+      cell: (o) => (isVoided(o) ? <span className="text-tinta-3">—</span> : <PaymentBadge status={o.payment_status} />),
+    },
+    {
+      key: "acc",
+      header: "",
+      cell: (o) => (
+        <span className="flex items-center justify-end gap-1">
+          <PayButton order={o} onPay={onPay} />
+          <MoreButton order={o} onMore={onMore} />
+        </span>
+      ),
+    },
   ];
 }

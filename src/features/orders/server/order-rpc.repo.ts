@@ -7,7 +7,7 @@ import { AppError, NotFoundError, ValidationError } from "@/server/errors";
 // Cada una bloquea el pedido, recalcula sus saldos y mueve el saldo a favor del
 // cliente dentro de una sola transacción.
 
-interface RpcOrderResult {
+export interface RpcOrderResult {
   order: Order;
   credit_added?: number;
   credit_delta?: number;

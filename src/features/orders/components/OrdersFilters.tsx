@@ -2,7 +2,7 @@ import { Suspense } from "react";
 import { SearchInput } from "@/ui/SearchInput";
 import { SegmentedControl } from "@/ui/SegmentedControl";
 
-export const ORDER_STATES = ["todos", "pendiente", "completado"] as const;
+export const ORDER_STATES = ["todos", "pendiente", "completado", "anulado"] as const;
 export const PAYMENT_FILTERS = ["todos", "debe", "parcial", "pagado"] as const;
 export const ORDER_PERIODS = ["todos", "semana", "anterior"] as const;
 
@@ -51,6 +51,7 @@ export function OrdersFilters({ values }: { values: OrdersFilterValues }) {
             { value: "todos", label: "Todos", href: link({ estado: "todos" }) },
             { value: "pendiente", label: "Pendientes", href: link({ estado: "pendiente" }) },
             { value: "completado", label: "Listos", href: link({ estado: "completado" }) },
+            { value: "anulado", label: "Anulados", href: link({ estado: "anulado" }) },
           ]}
         />
         <SegmentedControl

@@ -1,6 +1,7 @@
 import { z } from "zod";
 import type { CheeseType, SaltLevel } from "@/domain/catalog";
 import { MAX_ORDER_AMOUNT, MIN_ORDER_AMOUNT } from "@/domain/order";
+import { VOID_REASON_MAX, VOID_REASON_MIN } from "@/domain/void";
 import type { Unit } from "@/domain/units";
 import { formatCOP } from "@/lib/format";
 import { isPositive, numberField } from "@/lib/zod-helpers";
@@ -30,6 +31,7 @@ export interface CreateOrderInput {
 }
 
 const MAX_QUANTITY = 1000;
+const MAX_EDIT_TOTAL = 100_000_000;
 
 function fail(message: string): never {
   throw new ValidationError(message);
@@ -78,3 +80,29 @@ export function parseCreateOrder(body: unknown): CreateOrderInput {
 
   return { client_name, amount, quantity, unit: raw.unit as Unit, cheese_type, salt_level };
 }
+
+// ── Anular y editar ─────────────────────────────────────────────────────────
+
+const REASON_MESSAGE = `Escribe el motivo (mínimo ${VOID_REASON_MIN} letras)`;
+
+export const voidSchema = z.object({
+  reason: z.string(REASON_MESSAGE).trim().min(VOID_REASON_MIN, REASON_MESSAGE).max(VOID_REASON_MAX, "El motivo es muy largo"),
+});
+
+export const voidOrderSchema = voidSchema.extend({
+  // true: también se anulan sus abonos ("devolví el dinero"); false: quedan como saldo a favor.
+  void_payments: z.boolean("Opción inválida").default(true),
+});
+
+export const editOrderSchema = z.object({
+  client_name: z
+    .string("Ingresa un nombre válido")
+    .trim()
+    .min(2, "Ingresa un nombre válido")
+    .max(100, "Ingresa un nombre válido"),
+  quantity: numberField((n) => isPositive(n) && n <= MAX_QUANTITY, "Ingresa una cantidad válida"),
+  unit: z.enum(["kg", "lb"], "Unidad inválida"),
+  total: numberField((n) => isPositive(n) && n <= MAX_EDIT_TOTAL, "Ingresa un total válido"),
+});
+
+export type EditOrderInput = z.output<typeof editOrderSchema>;
