@@ -41,7 +41,8 @@ export async function getPurchasesOverview(now: Date = new Date()) {
   const { from, to } = weekDateRange(week.start, week.end);
   const inWeek = (date: string) => date >= from && date <= to;
   const weekPurchases = activeOnly(purchases).filter((p) => inWeek(p.purchase_date));
-  const ledger = buildLedger(purchases, payments, discounts);
+  // Lo anulado fue un error: desaparece del libro (en la base queda guardado, no se borra).
+  const ledger = buildLedger(activeOnly(purchases), activeOnly(payments), activeOnly(discounts));
 
   return {
     week,

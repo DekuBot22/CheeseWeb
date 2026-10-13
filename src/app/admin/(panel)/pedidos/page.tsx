@@ -31,6 +31,9 @@ function periodRange(periodo: (typeof ORDER_PERIODS)[number]) {
   return undefined;
 }
 
+// "todos" no filtra: se manda como ausente.
+const orUndefined = <T extends string>(value: T) => (value === "todos" ? undefined : (value as Exclude<T, "todos">));
+
 export default async function PedidosPage({ searchParams }: { searchParams: Promise<Params> }) {
   const params = await searchParams;
   const q = params.q?.trim() ?? "";
@@ -42,9 +45,9 @@ export default async function PedidosPage({ searchParams }: { searchParams: Prom
   const [settings, orders] = await Promise.all([getSettings(), listOrders(
     {
       q: q || undefined,
-      estado: estado === "todos" ? undefined : estado,
-      pago: pago === "todos" ? undefined : pago,
-      tipo: tipo === "todos" ? undefined : tipo,
+      estado: orUndefined(estado),
+      pago: orUndefined(pago),
+      tipo: orUndefined(tipo),
       range: periodRange(periodo),
     },
     LIMIT
@@ -53,7 +56,7 @@ export default async function PedidosPage({ searchParams }: { searchParams: Prom
   const active = activeOnly(orders);
   const total = active.reduce((s, o) => s + Number(o.total), 0);
   const pendiente = active.reduce((s, o) => s + remainingOf(o), 0);
-  const filtered = Boolean(q) || estado !== "todos" || pago !== "todos" || tipo !== "todos" || periodo !== "todos";
+  const filtered = Boolean(q) || [estado, pago, tipo, periodo].some((v) => v !== "todos");
 
   return (
     <div>

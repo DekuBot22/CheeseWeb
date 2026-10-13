@@ -123,7 +123,7 @@ export function ProviderLedgerTable({ rows, totals, purchaseCount }: { rows: Led
         empty={
           <EmptyState
             title="Aún no hay movimientos"
-            description="Registra la primera compra y el costo de tus ganancias pasará de estimado a real."
+            description="Registra la primera compra para llevar la cuenta con tu proveedor."
           />
         }
         mobileCard={(r) => (
