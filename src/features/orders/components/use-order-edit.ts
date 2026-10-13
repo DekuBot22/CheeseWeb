@@ -1,8 +1,10 @@
 "use client";
 
 import { useState } from "react";
-import { previewOrderEdit, sumActivePayments, type Order } from "@/domain/order";
+import type { CheeseType, SaltLevel } from "@/domain/catalog";
+import { previewOrderEdit, sumActivePayments, type Order, type OrderStatus } from "@/domain/order";
 import { toKg, type Unit } from "@/domain/units";
+import { bogotaDate } from "@/lib/bogota-time";
 import type { OrderDetail } from "./use-order-detail";
 
 // Formulario de edición: al cambiar cantidad o unidad el total se recalcula con
@@ -16,6 +18,10 @@ export function useOrderEdit(detail: OrderDetail, onDone: (order: Order) => void
   const [unit, setUnit] = useState<Unit>(order.unit);
   const [total, setTotal] = useState(String(order.total));
   const [note, setNote] = useState(order.note ?? "");
+  const [cheese, setCheese] = useState<CheeseType>(order.cheese_type);
+  const [salt, setSalt] = useState<SaltLevel>(order.salt_level);
+  const [status, setStatus] = useState<OrderStatus>(order.status);
+  const [date, setDate] = useState(bogotaDate(new Date(order.created_at)));
   const [totalTouched, setTotalTouched] = useState(false);
   const [loading, setLoading] = useState(false);
   const [error, setError] = useState("");
@@ -57,7 +63,17 @@ export function useOrderEdit(detail: OrderDetail, onDone: (order: Order) => void
       const res = await fetch(`/api/admin/orders/${order.id}`, {
         method: "PUT",
         headers: { "Content-Type": "application/json" },
-        body: JSON.stringify({ client_name: clientName, quantity, unit, total, note }),
+        body: JSON.stringify({
+          client_name: clientName,
+          quantity,
+          unit,
+          total,
+          note,
+          cheese_type: cheese,
+          salt_level: salt,
+          status,
+          date,
+        }),
       });
       const data = await res.json();
       if (!res.ok) {
@@ -83,6 +99,14 @@ export function useOrderEdit(detail: OrderDetail, onDone: (order: Order) => void
     changeTotal,
     note,
     setNote,
+    cheese,
+    setCheese,
+    salt,
+    setSalt,
+    status,
+    setStatus,
+    date,
+    setDate,
     paidSum,
     preview,
     loading,

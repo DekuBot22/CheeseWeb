@@ -89,6 +89,16 @@ describe("editOrderSchema", () => {
     expect(editOrderSchema.parse({ ...base, note: "separados" }).note).toBe("separados");
   });
 
+  it("queso, sal, estado y fecha son opcionales y se validan", () => {
+    const base = { client_name: "Ana", quantity: 1, unit: "kg", total: 1000 };
+    const ok = editOrderSchema.parse({ ...base, cheese_type: "duro", salt_level: "bajo", status: "completado", date: "2026-01-05" });
+    expect(ok).toMatchObject({ cheese_type: "duro", salt_level: "bajo", status: "completado", date: "2026-01-05" });
+    expect(editOrderSchema.safeParse({ ...base, cheese_type: "raro" }).success).toBe(false);
+    expect(editOrderSchema.safeParse({ ...base, status: "x" }).success).toBe(false);
+    expect(editOrderSchema.safeParse({ ...base, date: "2999-01-01" }).success).toBe(false);
+    expect(editOrderSchema.safeParse({ ...base, date: "ayer" }).success).toBe(false);
+  });
+
   it("rechaza total o cantidad no positivos", () => {
     expect(editOrderSchema.safeParse({ client_name: "Ana", quantity: 0, unit: "kg", total: 1000 }).success).toBe(false);
     expect(editOrderSchema.safeParse({ client_name: "Ana", quantity: 1, unit: "kg", total: 0 }).success).toBe(false);

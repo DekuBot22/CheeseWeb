@@ -115,6 +115,15 @@ export const editOrderSchema = z.object({
   total: numberField((n) => isPositive(n) && n <= MAX_EDIT_TOTAL, "Ingresa un total válido"),
   // Ausente → no se toca la nota; texto vacío → se quita.
   note: z.unknown().optional().transform((v) => (v === undefined ? undefined : cleanNote(v))),
+  // Ausentes → no se tocan.
+  cheese_type: z.enum(["duro", "semi", "blando"], "Elige un tipo de queso válido").optional(),
+  salt_level: z.enum(["alto", "intermedio", "bajo"], "Elige un nivel de sal válido").optional(),
+  status: z.enum(["pendiente", "completado"], "Estado inválido").optional(),
+  date: z
+    .string("Fecha inválida")
+    .regex(/^\d{4}-\d{2}-\d{2}$/, "Fecha inválida")
+    .refine((d) => d <= bogotaDate(), "La fecha no puede ser futura")
+    .optional(),
 });
 
 export type EditOrderInput = z.output<typeof editOrderSchema>;

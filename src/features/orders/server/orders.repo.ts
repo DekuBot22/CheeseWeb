@@ -2,7 +2,7 @@ import "server-only";
 import { MIGRATION_006_MESSAGE, db, fetchAll, hasVoidColumns, isMissingColumnError } from "@/server/db";
 import { AppError } from "@/server/errors";
 import type { StatOrder } from "@/domain/accounting";
-import type { CheeseType } from "@/domain/catalog";
+import type { CheeseType, SaltLevel } from "@/domain/catalog";
 import type { ClientOrder } from "@/domain/client-balance";
 import type { Order, OrderStatus, PaymentStatus } from "@/domain/order";
 import type { OpenOrder } from "@/domain/receivables";
@@ -136,10 +136,19 @@ export async function insertOrder(row: NewOrder): Promise<Order> {
   return data as Order;
 }
 
-export async function updateOrderNote(id: string, note: string | null): Promise<Order> {
-  const { data, error } = await db().from("orders").update({ note }).eq("id", id).select().single();
-  if (isMissingColumnError(error)) throw new AppError(MIGRATION_006_MESSAGE, 503);
-  if (error || !data) throw new AppError("No se pudo guardar la nota");
+// Campos del pedido que se corrigen sin tocar dinero (el total y la cantidad van por `edit_order`).
+export interface OrderFieldsPatch {
+  note?: string | null;
+  cheese_type?: CheeseType;
+  salt_level?: SaltLevel;
+  status?: OrderStatus;
+  created_at?: string;
+}
+
+export async function updateOrderFields(id: string, patch: OrderFieldsPatch): Promise<Order> {
+  const { data, error } = await db().from("orders").update(patch).eq("id", id).select().single();
+  if (patch.note !== undefined && isMissingColumnError(error)) throw new AppError(MIGRATION_006_MESSAGE, 503);
+  if (error || !data) throw new AppError("No se pudo guardar el pedido");
   return data as Order;
 }
 

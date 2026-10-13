@@ -1,7 +1,9 @@
 "use client";
 
 import { useId } from "react";
-import { NOTE_MAX, PAYMENT_STATUS_LABELS, type Order } from "@/domain/order";
+import { CHEESE_TYPE_LABELS, SALT_LEVEL_LABELS, type CheeseType, type SaltLevel } from "@/domain/catalog";
+import { NOTE_MAX, PAYMENT_STATUS_LABELS, type Order, type OrderStatus } from "@/domain/order";
+import { bogotaDate } from "@/lib/bogota-time";
 import { formatCOP } from "@/lib/format";
 import { Button } from "@/ui/Button";
 import { Callout } from "@/ui/Callout";
@@ -82,6 +84,35 @@ export function OrderEditForm({
           aria-describedby={`${uid}-total-desc`}
         />
       </Field>
+
+      <div className="grid grid-cols-2 gap-3">
+        <Field label="Queso" htmlFor={`${uid}-queso`}>
+          <Select id={`${uid}-queso`} value={f.cheese} onChange={(e) => f.setCheese(e.target.value as CheeseType)}>
+            {Object.entries(CHEESE_TYPE_LABELS).map(([value, label]) => (
+              <option key={value} value={value}>{label}</option>
+            ))}
+          </Select>
+        </Field>
+        <Field label="Sal" htmlFor={`${uid}-sal`}>
+          <Select id={`${uid}-sal`} value={f.salt} onChange={(e) => f.setSalt(e.target.value as SaltLevel)}>
+            {Object.entries(SALT_LEVEL_LABELS).map(([value, label]) => (
+              <option key={value} value={value}>{label}</option>
+            ))}
+          </Select>
+        </Field>
+      </div>
+
+      <div className="grid grid-cols-2 gap-3">
+        <Field label="Estado" htmlFor={`${uid}-estado`}>
+          <Select id={`${uid}-estado`} value={f.status} onChange={(e) => f.setStatus(e.target.value as OrderStatus)}>
+            <option value="pendiente">Pendiente</option>
+            <option value="completado">Listo</option>
+          </Select>
+        </Field>
+        <Field label="Fecha" htmlFor={`${uid}-fecha`}>
+          <Input id={`${uid}-fecha`} type="date" max={bogotaDate()} value={f.date} onChange={(e) => f.setDate(e.target.value)} />
+        </Field>
+      </div>
 
       <Field label="Nota (opcional)" htmlFor={`${uid}-nota`}>
         <Textarea id={`${uid}-nota`} rows={2} maxLength={NOTE_MAX} value={f.note} onChange={(e) => f.setNote(e.target.value)} />
