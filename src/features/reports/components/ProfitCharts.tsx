@@ -18,9 +18,9 @@ export function ProfitCharts({ weeks, selected }: { weeks: WeekPoint[]; selected
     <>
       <RevenueCostChart
         weeks={weeks}
-        title="Ingresos y costo por semana"
+        title="Cobrado y costo por semana"
         subtitle={`Últimas ${weeks.length} semanas, de sábado a viernes`}
-        ariaLabel={`Ingresos y costo de las últimas ${weeks.length} semanas. Semana del ${selected.label}: ingresos ${formatCOP(selected.stats.revenue)}, costo ${formatCOP(selected.stats.cost)}.`}
+        ariaLabel={`Cobrado y costo de las últimas ${weeks.length} semanas. Semana del ${selected.label}: cobrado ${formatCOP(selected.stats.collected)}, costo ${formatCOP(selected.stats.cost)}.`}
       />
 
       <div className="grid gap-4 lg:grid-cols-2 lg:gap-6">

@@ -59,7 +59,6 @@ export async function getProfitReport(view: ProfitView, weekParam: string | unde
     stats: single ? selected.stats : sumWeeks(series),
     kg: single ? selected.kgSold : series.reduce((s, w) => s + w.kgSold, 0),
     orderCount: single ? selected.orderCount : series.reduce((s, w) => s + w.orderCount, 0),
-    estimatedWeeks: visible.filter((w) => !w.stats.usingRealCost && w.stats.revenue > 0),
     export: exportRange(view, week, rangeStart, now),
   };
 }

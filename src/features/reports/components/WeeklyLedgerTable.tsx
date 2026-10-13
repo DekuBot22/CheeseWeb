@@ -1,11 +1,8 @@
 import { sumWeeks, type WeekPoint } from "@/domain/accounting";
 import { profitPerLb } from "@/domain/pricing";
 import { formatCOP, formatKg, formatWeekLabel, plural } from "@/lib/format";
-import { Badge } from "@/ui/Badge";
 import { DataTable, type Column } from "@/ui/DataTable";
 import { Money } from "@/ui/Money";
-
-const isEstimated = (w: WeekPoint) => !w.stats.usingRealCost && w.stats.revenue > 0;
 
 // Ganancia por libra de una semana; "—" si no se vendió nada.
 const perLbText = (profit: number, kg: number) => {
@@ -25,18 +22,9 @@ const COLUMNS: Column<WeekPoint>[] = [
     ),
   },
   { key: "kg", header: "Kg", align: "right", cell: (w) => formatKg(w.kgSold) },
-  { key: "ing", header: "Ingresos", align: "right", cell: (w) => <Money value={w.stats.revenue} /> },
-  {
-    key: "costo",
-    header: "Costo",
-    align: "right",
-    cell: (w) => (
-      <span className="inline-flex items-center justify-end gap-2">
-        {isEstimated(w) && <Badge tone="aviso">est.</Badge>}
-        <Money value={w.stats.cost} />
-      </span>
-    ),
-  },
+  { key: "ing", header: "Vendido", align: "right", cell: (w) => <Money value={w.stats.revenue} /> },
+  { key: "cob", header: "Cobrado", align: "right", cell: (w) => <Money value={w.stats.collected} tone="cobrado" /> },
+  { key: "costo", header: "Costo", align: "right", cell: (w) => <Money value={w.stats.cost} /> },
   {
     key: "gan",
     header: "Ganancia",
@@ -44,8 +32,7 @@ const COLUMNS: Column<WeekPoint>[] = [
     cell: (w) => <Money value={w.stats.profit} tone="auto" className="font-semibold" />,
   },
   { key: "mar", header: "Margen", align: "right", cell: (w) => `${w.stats.margin.toFixed(0)} %` },
-  { key: "lb", header: "Por lb", align: "right", cell: (w) => perLbText(w.stats.profit, w.kgSold) },
-  { key: "cob", header: "Cobrado", align: "right", cell: (w) => <Money value={w.stats.collected} tone="cobrado" /> },
+  { key: "lb", header: "Por lb", align: "right", cell: (w) => perLbText(w.stats.profit, w.stats.kgPaid) },
 ];
 
 // Una fila por semana (la más reciente arriba) y el total del período mostrado.
@@ -67,15 +54,14 @@ export function WeeklyLedgerTable({ weeks }: { weeks: WeekPoint[] }) {
               {formatKg(w.kgSold)} kg · {plural(w.orderCount, "pedido")}
             </p>
             <p className="num text-xs text-tinta-3">
-              Ingresos {formatCOP(w.stats.revenue)} · costo {formatCOP(w.stats.cost)}
-              {isEstimated(w) ? " (est.)" : ""}
-              {w.stats.descontado > 0 ? ` · desc. ${formatCOP(w.stats.descontado)}` : ""}
+              Vendido {formatCOP(w.stats.revenue)} · cobrado {formatCOP(w.stats.collected)} · costo{" "}
+              {formatCOP(w.stats.cost)}
             </p>
           </div>
           <div className="text-right">
             <Money value={w.stats.profit} tone="auto" className="text-base font-semibold" />
             <p className="num text-xs text-tinta-3">
-              {w.stats.margin.toFixed(0)} % · {perLbText(w.stats.profit, w.kgSold)}/lb
+              {w.stats.margin.toFixed(0)} % · {perLbText(w.stats.profit, w.stats.kgPaid)}/lb
             </p>
           </div>
         </div>
@@ -88,16 +74,16 @@ export function WeeklyLedgerTable({ weeks }: { weeks: WeekPoint[] }) {
             <Money value={total.revenue} />
           </td>
           <td className="px-3 py-2.5 text-right">
+            <Money value={total.collected} tone="cobrado" />
+          </td>
+          <td className="px-3 py-2.5 text-right">
             <Money value={total.cost} />
           </td>
           <td className="total-doble px-3 py-2.5 text-right">
             <Money value={total.profit} tone="auto" />
           </td>
           <td className="num px-3 py-2.5 text-right">{total.margin.toFixed(0)} %</td>
-          <td className="num px-3 py-2.5 text-right">{perLbText(total.profit, totalKg)}</td>
-          <td className="px-3 py-2.5 text-right">
-            <Money value={total.collected} tone="cobrado" />
-          </td>
+          <td className="num px-3 py-2.5 text-right">{perLbText(total.profit, total.kgPaid)}</td>
         </tr>
       }
     />

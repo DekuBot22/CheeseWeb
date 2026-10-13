@@ -18,16 +18,15 @@ const order = (over: Partial<StatOrder> = {}): StatOrder => ({
 });
 
 describe("computeStats con anulados", () => {
-  it("un pedido anulado no suma a ingresos, cobrado ni costo estimado", () => {
+  it("un pedido anulado no suma a ingresos, cobrado ni costo", () => {
     const s = computeStats([order(), order({ voided_at: VOID, total: 9999, amount_paid: 9999 })], [], []);
     expect(s.revenue).toBe(1000);
     expect(s.collected).toBe(400);
-    expect(s.cost).toBe(200);
+    expect(s.cost).toBe(80); // 2 kg × 100 × 40 % cobrado
   });
 
-  it("una compra anulada no activa el costo real", () => {
+  it("una compra anulada no suma a lo comprado", () => {
     const s = computeStats([order()], [{ kg: 10, total_cost: 600, purchase_date: "2026-10-05", voided_at: VOID }], []);
-    expect(s.usingRealCost).toBe(false);
     expect(s.comprado).toBe(0);
   });
 

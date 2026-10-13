@@ -6,7 +6,6 @@ import { WeeklyLedgerTable } from "@/features/reports/components/WeeklyLedgerTab
 import { getProfitReport } from "@/features/reports/server/get-profit-report";
 import { PROFIT_VIEWS } from "@/features/reports/profit-views";
 import { ButtonLink, buttonClasses } from "@/ui/Button";
-import { Callout } from "@/ui/Callout";
 import { IconDownload } from "@/ui/icons";
 import { PageHeader } from "@/ui/PageHeader";
 
@@ -58,21 +57,6 @@ export default async function GananciasPage({
         orderCount={r.orderCount}
         previous={view === "semana" ? r.previous?.stats : undefined}
       />
-
-      {r.estimatedWeeks.length > 0 && (
-        <Callout tone="aviso">
-          {r.estimatedWeeks.length === 1 ? "Una semana usa" : `${r.estimatedWeeks.length} semanas usan`} el costo{" "}
-          <strong>estimado</strong> por kg porque no tienen compras registradas. Regístralas en Compras para ver la
-          ganancia real.
-        </Callout>
-      )}
-
-      {r.stats.descuentoSinCompra && (
-        <Callout tone="aviso">
-          Hay un descuento del proveedor en una semana sin compra registrada. Registra la compra para que el descuento
-          cuente en la ganancia (por ahora solo baja lo que le debes).
-        </Callout>
-      )}
 
       <section aria-labelledby="libro">
         <h2 id="libro" className="mb-3 font-display text-lg font-semibold text-tinta">

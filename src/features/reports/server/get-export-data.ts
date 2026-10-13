@@ -1,5 +1,5 @@
 import "server-only";
-import { computeStats } from "@/domain/accounting";
+import { computeStats, withCostFallback } from "@/domain/accounting";
 import { receivables } from "@/domain/receivables";
 import { activeOnly } from "@/domain/void";
 import { bogotaDate } from "@/lib/bogota-time";
@@ -9,6 +9,7 @@ import { listPaymentsInRange } from "@/features/orders/server/payments.repo";
 import { listProviderDiscountsInRange } from "@/features/purchases/server/provider-discounts.repo";
 import { listProviderPaymentsInRange } from "@/features/purchases/server/provider-payments.repo";
 import { listPurchasesInRange } from "@/features/purchases/server/purchases.repo";
+import { getPricing } from "@/features/settings/server/settings.repo";
 import { buildVoidedRows } from "../voided-rows";
 
 // Datos del Excel: todo lo vigente del rango pedido, la deuda actual por cliente
@@ -18,7 +19,7 @@ export async function getExportData(start: Date, end: Date) {
   const startDate = bogotaDate(start);
   const endDate = bogotaDate(end);
 
-  const [allOrders, allPurchases, allPayments, allDiscounts, openOrders, clientPayments, clients] =
+  const [allOrders, allPurchases, allPayments, allDiscounts, openOrders, clientPayments, clients, pricing] =
     await Promise.all([
       listOrdersInRange(start, end),
       listPurchasesInRange(startDate, endDate),
@@ -27,6 +28,7 @@ export async function getExportData(start: Date, end: Date) {
       listOpenOrders(),
       listPaymentsInRange(start, end),
       listClients(),
+      getPricing(),
     ]);
 
   const orders = activeOnly(allOrders);
@@ -50,7 +52,7 @@ export async function getExportData(start: Date, end: Date) {
       providerPayments: allPayments,
       discounts: allDiscounts,
     }),
-    stats: computeStats(orders, purchases, payments, discounts),
+    stats: computeStats(withCostFallback(orders, pricing?.costPerKg ?? 0), purchases, payments, discounts),
     debtors: receivables(openOrders).debtors,
   };
 }

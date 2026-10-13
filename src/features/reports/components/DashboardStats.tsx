@@ -22,9 +22,8 @@ interface Props {
 export function DashboardStats({ week, debt, provider }: Props) {
   const { cur } = week;
   const stats = cur.stats;
-  const perLb = profitPerLb(stats.profit, cur.kgSold);
+  const perLb = profitPerLb(stats.profit, stats.kgPaid);
   const perLbText = perLb === null ? "" : ` · ${formatCOP(Math.round(perLb))} por libra`;
-  const discountText = stats.descontado > 0 ? ` · descuentos −${formatCOP(stats.descontado)}` : "";
 
   return (
     <>
@@ -34,16 +33,9 @@ export function DashboardStats({ week, debt, provider }: Props) {
         value={<Money value={stats.profit} tone="auto" />}
         delta={<Delta pct={week.profitChange} />}
         hint={
-          stats.usingRealCost ? (
-            <>
-              Margen {stats.margin.toFixed(0)} %{perLbText} · costo real de las compras ✓{discountText}
-            </>
-          ) : (
-            <>
-              Margen {stats.margin.toFixed(0)} %{perLbText} · costo <strong>estimado</strong>. Registra la compra de
-              la semana para ver la ganancia real.
-            </>
-          )
+          <>
+            Margen {stats.margin.toFixed(0)} %{perLbText} · solo lo que ya te pagaron los clientes
+          </>
         }
       />
 

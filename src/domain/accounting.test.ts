@@ -5,6 +5,7 @@ import {
   percentChange,
   sumWeeks,
   weeklySeries,
+  withCostFallback,
   type StatOrder,
   type StatPurchase,
 } from "./accounting";
@@ -37,28 +38,47 @@ const purchase = (over: Partial<StatPurchase> = {}): StatPurchase => ({
 });
 
 describe("computeStats", () => {
-  it("sin compras estima el costo con kg × costo por kg del pedido", () => {
+  it("la ganancia es lo cobrado menos el costo de esa parte; lo no cobrado no cuenta", () => {
     const s = computeStats(
-      [order({ quantity: 2, unit: "kg", total: 1000, cost_per_kg_snapshot: 300 }), order({ quantity: 3, unit: "lb", total: 500, cost_per_kg_snapshot: 400 })],
+      [
+        order({ quantity: 2, unit: "kg", total: 1000, amount_paid: 1000, cost_per_kg_snapshot: 300 }),
+        order({ quantity: 3, unit: "lb", total: 500, amount_paid: 250, cost_per_kg_snapshot: 400 }),
+        order({ quantity: 1, unit: "kg", total: 800, amount_paid: 0, cost_per_kg_snapshot: 300 }),
+      ],
       [],
       []
     );
-    expect(s.usingRealCost).toBe(false);
-    expect(s.cost).toBe(2 * 300 + 1.5 * 400);
-    expect(s.revenue).toBe(1500);
-    expect(s.profit).toBe(1500 - 1200);
+    expect(s.revenue).toBe(2300);
+    expect(s.collected).toBe(1250);
+    // 2 kg completos + la mitad de 1,5 kg; el pedido sin pagar no pone costo.
+    expect(s.cost).toBe(2 * 300 + 1.5 * 400 * 0.5);
+    expect(s.kgPaid).toBe(2 + 0.75);
+    expect(s.profit).toBe(1250 - 900);
   });
 
-  it("con compras el costo es lo comprado, no lo estimado", () => {
-    const s = computeStats([order({ cost_per_kg_snapshot: 999 })], [purchase({ total_cost: 600 })], []);
-    expect(s.usingRealCost).toBe(true);
-    expect(s.cost).toBe(600);
-    expect(s.profit).toBe(400);
-    expect(s.margin).toBe(40);
+  it("las compras, descuentos y pagos del proveedor no cambian la ganancia", () => {
+    const orders = [order({ total: 1000, amount_paid: 1000, cost_per_kg_snapshot: 300 })];
+    const sin = computeStats(orders, [], []);
+    const con = computeStats(
+      orders,
+      [purchase({ total_cost: 9000 })],
+      [{ amount: 500, payment_date: "2026-10-06" }],
+      [{ amount: 200, discount_date: "2026-10-06" }]
+    );
+    expect(con.profit).toBe(sin.profit);
+    expect(con.cost).toBe(sin.cost);
+    expect(con.profit).toBe(700);
+    expect(con.margin).toBe(70);
   });
 
-  it("sin ingresos el margen es 0", () => {
-    expect(computeStats([], [purchase()], []).margin).toBe(0);
+  it("si el pedido quedó con costo 0 usa el costo por kg de Ajustes", () => {
+    const orders = [order({ total: 1000, amount_paid: 1000, cost_per_kg_snapshot: 0 })];
+    expect(computeStats(orders, [], []).profit).toBe(1000);
+    expect(computeStats(withCostFallback(orders, 400), [], []).profit).toBe(600);
+  });
+
+  it("sin nada cobrado el margen es 0", () => {
+    expect(computeStats([order()], [purchase()], []).margin).toBe(0);
   });
 
   it("acepta números que llegan como texto desde la base", () => {
@@ -164,19 +184,19 @@ describe("weeklySeries", () => {
     expect(series[1].stats.pagadoProveedor).toBe(200);
   });
 
-  it("cada semana usa su propio criterio de costo (real o estimado)", () => {
+  it("el costo de cada semana sale de sus propios pedidos", () => {
     const series = weekly(
       [
-        order({ total: 1000, created_at: "2026-10-05T15:00:00Z", cost_per_kg_snapshot: 300 }),
-        order({ total: 1000, created_at: "2026-10-12T15:00:00Z", cost_per_kg_snapshot: 300 }),
+        order({ total: 1000, amount_paid: 1000, created_at: "2026-10-05T15:00:00Z", cost_per_kg_snapshot: 300 }),
+        order({ total: 1000, amount_paid: 500, created_at: "2026-10-12T15:00:00Z", cost_per_kg_snapshot: 300 }),
       ],
       [purchase({ purchase_date: "2026-10-05", total_cost: 600 })],
       [],
       2,
       new Date("2026-10-13T15:00:00Z")
     );
-    expect(series[0].stats.usingRealCost).toBe(true);
-    expect(series[1].stats.usingRealCost).toBe(false);
+    expect(series[0].stats.cost).toBe(300);
+    expect(series[1].stats.cost).toBe(150);
   });
 });
 
@@ -184,8 +204,8 @@ describe("sumWeeks", () => {
   const now = new Date("2026-10-13T15:00:00Z");
   const series = weekly(
     [
-      order({ total: 1000, created_at: "2026-10-05T15:00:00Z", cost_per_kg_snapshot: 300 }),
-      order({ total: 1000, created_at: "2026-10-12T15:00:00Z", cost_per_kg_snapshot: 300 }),
+      order({ total: 1000, amount_paid: 500, created_at: "2026-10-05T15:00:00Z", cost_per_kg_snapshot: 600 }),
+      order({ total: 1000, amount_paid: 500, created_at: "2026-10-12T15:00:00Z", cost_per_kg_snapshot: 600 }),
     ],
     [purchase({ purchase_date: "2026-10-05", total_cost: 600 })],
     [],
@@ -193,33 +213,26 @@ describe("sumWeeks", () => {
     now
   );
 
-  it("suma el costo de cada semana sin recalcular el período de un golpe", () => {
+  it("suma costo y ganancia de cada semana", () => {
     const total = sumWeeks(series);
-    expect(total.cost).toBe(600 + 300);
+    expect(total.cost).toBe(300 + 300);
     expect(total.revenue).toBe(2000);
-    expect(total.profit).toBe(1100);
-  });
-
-  it("basta una semana con ventas y costo estimado para marcar el total como estimado", () => {
-    expect(sumWeeks(series).usingRealCost).toBe(false);
-  });
-
-  it("las semanas sin ingresos no cambian si el costo es real", () => {
-    const onlyReal = weekly([order({ total: 1000, created_at: "2026-10-05T15:00:00Z" })], [purchase()], [], 3, now);
-    expect(sumWeeks(onlyReal).usingRealCost).toBe(true);
+    expect(total.collected).toBe(1000);
+    expect(total.profit).toBe(400);
+    expect(total.margin).toBe(40);
   });
 });
 
 describe("descuentos del proveedor", () => {
   const discount = (amount: number, discount_date = "2026-10-06") => ({ amount, discount_date });
 
-  it("el descuento baja el costo neto y sube la ganancia", () => {
-    const orders = [order({ total: 1300 })];
+  it("el descuento baja lo descontado y el saldo, pero no la ganancia", () => {
+    const orders = [order({ total: 1300, amount_paid: 1300 })];
     const sin = computeStats(orders, [purchase({ total_cost: 900 })], []);
     const con = computeStats(orders, [purchase({ total_cost: 900 })], [], [discount(150)]);
-    expect(con.cost).toBe(750);
     expect(con.descontado).toBe(150);
-    expect(con.profit - sin.profit).toBe(150);
+    expect(con.saldoProveedor).toBe(sin.saldoProveedor - 150);
+    expect(con.profit).toBe(sin.profit);
   });
 
   it("el saldo con el proveedor es comprado − descontado − pagado", () => {
@@ -232,18 +245,9 @@ describe("descuentos del proveedor", () => {
     expect(s.saldoProveedor).toBe(350);
   });
 
-  it("semana con descuento pero sin compras: no resta del costo estimado, solo del saldo", () => {
+  it("semana con descuento pero sin compras: solo baja el saldo", () => {
     const s = computeStats([order({ total: 1000, cost_per_kg_snapshot: 300 })], [], [], [discount(100)]);
-    expect(s.usingRealCost).toBe(false);
-    expect(s.cost).toBe(300);
-    expect(s.descuentoSinCompra).toBe(true);
     expect(s.saldoProveedor).toBe(-100);
-  });
-
-  it("un descuento mayor que la compra deja el costo en 0 y el saldo negativo", () => {
-    const s = computeStats([], [purchase({ total_cost: 500 })], [], [discount(800)]);
-    expect(s.cost).toBe(0);
-    expect(s.saldoProveedor).toBe(-300);
   });
 
   it("weeklySeries: el descuento del viernes va a la semana anterior y el del sábado a la nueva", () => {
@@ -262,7 +266,7 @@ describe("descuentos del proveedor", () => {
     expect(series[1].stats.descontado).toBe(200);
   });
 
-  it("sumWeeks suma los descuentos y propaga descuentoSinCompra", () => {
+  it("sumWeeks suma los descuentos", () => {
     const now = new Date("2026-10-13T15:00:00Z");
     const series = weeklySeries(
       {
@@ -277,13 +281,11 @@ describe("descuentos del proveedor", () => {
     const total = sumWeeks(series);
     expect(total.descontado).toBe(150);
     expect(total.saldoProveedor).toBe(450);
-    expect(total.descuentoSinCompra).toBe(true);
   });
 
-  it("sin descuentos todo queda como antes (retrocompatible)", () => {
+  it("sin descuentos lo descontado es 0", () => {
     const s = computeStats([order()], [purchase({ total_cost: 600 })], []);
     expect(s.descontado).toBe(0);
-    expect(s.descuentoSinCompra).toBe(false);
-    expect(s.cost).toBe(600);
+    expect(s.saldoProveedor).toBe(600);
   });
 });

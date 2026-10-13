@@ -22,6 +22,9 @@ export interface PeriodData {
   purchases: StatPurchase[];
   providerPayments: StatPayment[];
   discounts?: StatDiscount[];
+  // Costo por kg de Ajustes: se usa en los pedidos que se guardaron con costo 0
+  // (antes de que el dueño lo configurara).
+  fallbackCostPerKg?: number;
 }
 
 export interface PeriodStats {
@@ -31,16 +34,32 @@ export interface PeriodStats {
   descontado: number;
   pagadoProveedor: number;
   saldoProveedor: number;
+  // Costo de lo que ya se cobró (kg × costo por kg × fracción pagada).
   cost: number;
-  usingRealCost: boolean;
-  // Hay descuentos pero ninguna compra registrada: no se restan del costo
-  // estimado (sería restarle un crédito real a una suposición), solo del saldo.
-  descuentoSinCompra: boolean;
+  // Kilos que corresponden a lo ya cobrado (para la ganancia por libra).
+  kgPaid: number;
+  // Ganancia = cobrado − cost. El proveedor (compras, descuentos, pagos) no entra.
   profit: number;
+  // Ganancia sobre lo cobrado.
   margin: number;
 }
 
+// Fracción de un pedido que ya se pagó (0 a 1).
+function paidFraction(o: Pick<Order, "total" | "amount_paid">): number {
+  const total = Number(o.total);
+  return total > 0 ? Math.min(Number(o.amount_paid) / total, 1) : 0;
+}
+
+// Los pedidos guardados con costo 0 (antes de configurarlo en Ajustes) toman el
+// costo por kg vigente.
+export function withCostFallback(orders: StatOrder[], costPerKg: number): StatOrder[] {
+  if (costPerKg <= 0) return orders;
+  return orders.map((o) => (Number(o.cost_per_kg_snapshot) > 0 ? o : { ...o, cost_per_kg_snapshot: costPerKg }));
+}
+
 // Lo anulado (pedidos, compras, pagos y descuentos) no cuenta en nada.
+// La ganancia solo mira a los clientes: lo cobrado menos el costo de esa parte.
+// Lo del proveedor se calcula aparte y no la afecta.
 export function computeStats(
   allOrders: StatOrder[],
   allPurchases: StatPurchase[],
@@ -58,16 +77,12 @@ export function computeStats(
   const descontado = discounts.reduce((sum, d) => sum + Number(d.amount), 0);
   const pagadoProveedor = providerPayments.reduce((sum, p) => sum + Number(p.amount), 0);
 
-  const estimatedCost = orders.reduce(
-    (sum, o) => sum + toKg(Number(o.quantity), o.unit) * Number(o.cost_per_kg_snapshot),
-    0
-  );
-
-  const usingRealCost = purchases.length > 0;
-  // Costo neto: lo comprado menos lo que el proveedor rebajó (nunca negativo).
-  const cost = usingRealCost ? Math.max(comprado - descontado, 0) : estimatedCost;
-  const profit = revenue - cost;
-  const margin = revenue > 0 ? (profit / revenue) * 100 : 0;
+  const cost = orders.reduce((sum, o) => {
+    return sum + toKg(Number(o.quantity), o.unit) * Number(o.cost_per_kg_snapshot) * paidFraction(o);
+  }, 0);
+  const kgPaid = orders.reduce((sum, o) => sum + toKg(Number(o.quantity), o.unit) * paidFraction(o), 0);
+  const profit = collected - cost;
+  const margin = collected > 0 ? (profit / collected) * 100 : 0;
 
   return {
     revenue,
@@ -77,8 +92,7 @@ export function computeStats(
     pagadoProveedor,
     saldoProveedor: comprado - descontado - pagadoProveedor,
     cost,
-    usingRealCost,
-    descuentoSinCompra: !usingRealCost && descontado > 0,
+    kgPaid,
     profit,
     margin,
   };
@@ -106,10 +120,13 @@ export interface WeekPoint {
 
 function buildWeek(start: Date, end: Date, data: PeriodData): WeekPoint {
   const { from, to } = weekDateRange(start, end);
-  const weekOrders = data.orders.filter((o) => {
-    const t = new Date(o.created_at).getTime();
-    return t >= start.getTime() && t <= end.getTime();
-  });
+  const weekOrders = withCostFallback(
+    data.orders.filter((o) => {
+      const t = new Date(o.created_at).getTime();
+      return t >= start.getTime() && t <= end.getTime();
+    }),
+    data.fallbackCostPerKg ?? 0
+  );
   const weekPurchases = data.purchases.filter((p) => p.purchase_date >= from && p.purchase_date <= to);
   const weekPayments = data.providerPayments.filter((p) => p.payment_date >= from && p.payment_date <= to);
   const weekDiscounts = (data.discounts ?? []).filter((d) => d.discount_date >= from && d.discount_date <= to);
@@ -125,14 +142,14 @@ function buildWeek(start: Date, end: Date, data: PeriodData): WeekPoint {
   };
 }
 
-// Una fila por semana de negocio (la más antigua primero). Cada semana usa su
-// propio criterio de costo: compras reales si hubo, estimado si no.
+// Una fila por semana de negocio (la más antigua primero).
 export function weeklySeries(raw: PeriodData, weeks: number, now: Date = new Date()): WeekPoint[] {
   const data: PeriodData = {
     orders: activeOnly(raw.orders),
     purchases: activeOnly(raw.purchases),
     providerPayments: activeOnly(raw.providerPayments),
     discounts: activeOnly(raw.discounts ?? []),
+    fallbackCostPerKg: raw.fallbackCostPerKg,
   };
   const currentStart = weekRange(now).start.toISOString();
   const points: WeekPoint[] = [];
@@ -143,9 +160,7 @@ export function weeklySeries(raw: PeriodData, weeks: number, now: Date = new Dat
   return points;
 }
 
-// Totales de varias semanas sumando cada semana con su propio criterio de
-// costo. Calcular el período completo de un golpe mezclaría semanas con
-// compras reales y semanas estimadas, y el costo saldría subestimado.
+// Totales de varias semanas: suma lo que ya calculó cada una.
 export function sumWeeks(points: WeekPoint[]): PeriodStats {
   const sum = (pick: (s: PeriodStats) => number) => points.reduce((total, p) => total + pick(p.stats), 0);
   const revenue = sum((s) => s.revenue);
@@ -153,18 +168,18 @@ export function sumWeeks(points: WeekPoint[]): PeriodStats {
   const comprado = sum((s) => s.comprado);
   const descontado = sum((s) => s.descontado);
   const pagadoProveedor = sum((s) => s.pagadoProveedor);
-  const profit = revenue - cost;
+  const collected = sum((s) => s.collected);
+  const profit = collected - cost;
   return {
     revenue,
-    collected: sum((s) => s.collected),
+    collected,
     comprado,
     descontado,
     pagadoProveedor,
     saldoProveedor: comprado - descontado - pagadoProveedor,
     cost,
-    usingRealCost: points.every((p) => p.stats.revenue === 0 || p.stats.usingRealCost),
-    descuentoSinCompra: points.some((p) => p.stats.descuentoSinCompra),
+    kgPaid: sum((s) => s.kgPaid),
     profit,
-    margin: revenue > 0 ? (profit / revenue) * 100 : 0,
+    margin: collected > 0 ? (profit / collected) * 100 : 0,
   };
 }

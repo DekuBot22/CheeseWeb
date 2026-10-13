@@ -4,13 +4,11 @@ import { BarChart } from "@/ui/charts/BarChart";
 import { ChartFrame } from "@/ui/charts/ChartFrame";
 
 const SERIES = [
-  { key: "ingresos", label: "Ingresos", color: "var(--serie-1)" },
+  { key: "cobrado", label: "Cobrado", color: "var(--serie-1)" },
   { key: "costo", label: "Costo", color: "var(--serie-2)" },
 ];
 
-const isEstimated = (w: WeekPoint) => !w.stats.usingRealCost && w.stats.revenue > 0;
-
-// Ingresos frente a costo por semana. Las barras de costo estimado van rayadas.
+// Lo cobrado frente a su costo por semana (la diferencia es la ganancia).
 export function RevenueCostChart({
   weeks,
   title,
@@ -27,14 +25,9 @@ export function RevenueCostChart({
       title={title}
       subtitle={subtitle}
       legend={SERIES}
-      note={
-        weeks.some(isEstimated)
-          ? "Las barras de costo rayadas son estimadas (sin compras registradas esa semana)."
-          : undefined
-      }
       table={{
-        headers: ["Semana", "Ingresos", "Costo", "Ganancia"],
-        rows: weeks.map((w) => [w.label, formatCOP(w.stats.revenue), formatCOP(w.stats.cost), formatCOP(w.stats.profit)]),
+        headers: ["Semana", "Cobrado", "Costo", "Ganancia"],
+        rows: weeks.map((w) => [w.label, formatCOP(w.stats.collected), formatCOP(w.stats.cost), formatCOP(w.stats.profit)]),
       }}
     >
       <BarChart
@@ -42,8 +35,7 @@ export function RevenueCostChart({
         series={SERIES}
         data={weeks.map((w) => ({
           label: w.label,
-          values: { ingresos: w.stats.revenue, costo: w.stats.cost },
-          estimated: isEstimated(w) ? ["costo"] : [],
+          values: { cobrado: w.stats.collected, costo: w.stats.cost },
         }))}
       />
     </ChartFrame>

@@ -25,13 +25,10 @@ function summarySheet(workbook: ExcelJS.Workbook, data: ExportData) {
     { concepto: "Cobrado", valor: stats.collected },
     { concepto: "Comprado al proveedor", valor: stats.comprado },
     { concepto: "Descuentos del proveedor", valor: stats.descontado },
-    {
-      concepto: stats.usingRealCost ? "Costo neto (compras − descuentos)" : "Costo (estimado por kg)",
-      valor: stats.cost,
-    },
+    { concepto: "Costo de lo cobrado", valor: stats.cost },
     { concepto: "Pagado al proveedor", valor: stats.pagadoProveedor },
     { concepto: "Saldo con proveedor", valor: stats.saldoProveedor },
-    { concepto: "Ganancia neta", valor: stats.profit },
+    { concepto: "Ganancia (cobrado − costo)", valor: stats.profit },
     { concepto: "Margen (%)", valor: Number(stats.margin.toFixed(1)) },
   ]);
 }

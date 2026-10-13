@@ -13,6 +13,7 @@ export const dynamic = "force-dynamic";
 export default async function InicioPage() {
   const d = await getDashboard();
   const pricePerKg = d.settings ? Number(d.settings.price_per_kg) : 0;
+  const costPerKg = d.settings ? Number(d.settings.cost_per_kg) : 0;
 
   return (
     <div className="space-y-6 md:space-y-8">
@@ -26,6 +27,13 @@ export default async function InicioPage() {
         <Callout tone="aviso">
           Aún no has puesto el precio de venta. <Link href="/admin/ajustes" className="font-semibold underline">Configúralo en Ajustes</Link>{" "}
           para que la página pública pueda recibir pedidos.
+        </Callout>
+      )}
+
+      {pricePerKg > 0 && costPerKg <= 0 && (
+        <Callout tone="aviso">
+          No has puesto lo que te cuesta cada libra, así que la ganancia sale igual a lo cobrado.{" "}
+          <Link href="/admin/ajustes" className="font-semibold underline">Ponlo en Ajustes</Link>.
         </Callout>
       )}
 
