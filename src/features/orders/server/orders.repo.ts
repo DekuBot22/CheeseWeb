@@ -2,6 +2,7 @@ import "server-only";
 import { MIGRATION_006_MESSAGE, db, fetchAll, hasVoidColumns, isMissingColumnError } from "@/server/db";
 import { AppError } from "@/server/errors";
 import type { StatOrder } from "@/domain/accounting";
+import type { CheeseType } from "@/domain/catalog";
 import type { ClientOrder } from "@/domain/client-balance";
 import type { Order, OrderStatus, PaymentStatus } from "@/domain/order";
 import type { OpenOrder } from "@/domain/receivables";
@@ -14,6 +15,7 @@ export interface OrderFilters {
   // "anulado" muestra solo los anulados; los demás valores solo ven vigentes.
   estado?: OrderStatus | "anulado";
   pago?: PaymentStatus;
+  tipo?: CheeseType;
   range?: { start: Date; end: Date };
 }
 
@@ -30,6 +32,7 @@ export async function listOrders(filters: OrderFilters, limit: number): Promise<
     if (voidReady) query = query.is("voided_at", null);
   }
   if (filters.pago) query = query.eq("payment_status", filters.pago);
+  if (filters.tipo) query = query.eq("cheese_type", filters.tipo);
   if (filters.range) {
     query = query
       .gte("created_at", filters.range.start.toISOString())

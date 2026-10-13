@@ -3,7 +3,13 @@ import { activeOnly } from "@/domain/void";
 import { shiftWeek, weekRange } from "@/domain/week";
 import { formatCOP, plural } from "@/lib/format";
 import { pickParam } from "@/lib/search-params";
-import { OrdersFilters, ORDER_PERIODS, ORDER_STATES, PAYMENT_FILTERS } from "@/features/orders/components/OrdersFilters";
+import {
+  CHEESE_FILTERS,
+  OrdersFilters,
+  ORDER_PERIODS,
+  ORDER_STATES,
+  PAYMENT_FILTERS,
+} from "@/features/orders/components/OrdersFilters";
 import { OrdersTable } from "@/features/orders/components/OrdersTable";
 import { listOrders } from "@/features/orders/server/orders.repo";
 import { NewSaleButton } from "@/features/orders/components/NewSaleButton";
@@ -15,7 +21,7 @@ export const dynamic = "force-dynamic";
 
 const LIMIT = 200;
 
-type Params = { q?: string; estado?: string; pago?: string; periodo?: string };
+type Params = { q?: string; estado?: string; pago?: string; tipo?: string; periodo?: string };
 
 // Rango de fechas del filtro de período (undefined = todos).
 function periodRange(periodo: (typeof ORDER_PERIODS)[number]) {
@@ -30,6 +36,7 @@ export default async function PedidosPage({ searchParams }: { searchParams: Prom
   const q = params.q?.trim() ?? "";
   const estado = pickParam(params.estado, ORDER_STATES);
   const pago = pickParam(params.pago, PAYMENT_FILTERS);
+  const tipo = pickParam(params.tipo, CHEESE_FILTERS);
   const periodo = pickParam(params.periodo, ORDER_PERIODS);
 
   const [settings, orders] = await Promise.all([getSettings(), listOrders(
@@ -37,6 +44,7 @@ export default async function PedidosPage({ searchParams }: { searchParams: Prom
       q: q || undefined,
       estado: estado === "todos" ? undefined : estado,
       pago: pago === "todos" ? undefined : pago,
+      tipo: tipo === "todos" ? undefined : tipo,
       range: periodRange(periodo),
     },
     LIMIT
@@ -45,7 +53,7 @@ export default async function PedidosPage({ searchParams }: { searchParams: Prom
   const active = activeOnly(orders);
   const total = active.reduce((s, o) => s + Number(o.total), 0);
   const pendiente = active.reduce((s, o) => s + remainingOf(o), 0);
-  const filtered = Boolean(q) || estado !== "todos" || pago !== "todos" || periodo !== "todos";
+  const filtered = Boolean(q) || estado !== "todos" || pago !== "todos" || tipo !== "todos" || periodo !== "todos";
 
   return (
     <div>
@@ -62,7 +70,7 @@ export default async function PedidosPage({ searchParams }: { searchParams: Prom
         }
       />
 
-      <OrdersFilters values={{ q, estado, pago, periodo }} />
+      <OrdersFilters values={{ q, estado, pago, tipo, periodo }} />
 
       <p className="num mb-3 text-sm text-tinta-2" aria-live="polite">
         {plural(orders.length, "pedido")} · vendido <strong className="text-tinta">{formatCOP(total)}</strong> · por

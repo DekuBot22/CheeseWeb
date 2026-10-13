@@ -4,12 +4,14 @@ import { SegmentedControl } from "@/ui/SegmentedControl";
 
 export const ORDER_STATES = ["todos", "pendiente", "completado", "anulado"] as const;
 export const PAYMENT_FILTERS = ["todos", "debe", "parcial", "pagado"] as const;
+export const CHEESE_FILTERS = ["todos", "duro", "semi", "blando"] as const;
 export const ORDER_PERIODS = ["todos", "semana", "anterior"] as const;
 
 export interface OrdersFilterValues {
   q: string;
   estado: (typeof ORDER_STATES)[number];
   pago: (typeof PAYMENT_FILTERS)[number];
+  tipo: (typeof CHEESE_FILTERS)[number];
   periodo: (typeof ORDER_PERIODS)[number];
 }
 
@@ -52,6 +54,16 @@ export function OrdersFilters({ values }: { values: OrdersFilterValues }) {
             { value: "pendiente", label: "Pendientes", href: link({ estado: "pendiente" }) },
             { value: "completado", label: "Listos", href: link({ estado: "completado" }) },
             { value: "anulado", label: "Anulados", href: link({ estado: "anulado" }) },
+          ]}
+        />
+        <SegmentedControl
+          label="Tipo de queso"
+          value={values.tipo}
+          options={[
+            { value: "todos", label: "Todos", href: link({ tipo: "todos" }) },
+            { value: "duro", label: "Duros", href: link({ tipo: "duro" }) },
+            { value: "semi", label: "Semi-duros", href: link({ tipo: "semi" }) },
+            { value: "blando", label: "Blandos", href: link({ tipo: "blando" }) },
           ]}
         />
         <SegmentedControl
