@@ -28,6 +28,7 @@ export function QuantityInput(props: {
           max="5000000"
           value={props.amount}
           onChange={(e) => props.onAmount(e.target.value)}
+          onWheel={(e) => e.currentTarget.blur()}
           placeholder="Ej. 15000"
           className={INPUT}
         />
@@ -51,6 +52,7 @@ export function QuantityInput(props: {
         max="1000"
         value={props.quantity}
         onChange={(e) => props.onQuantity(e.target.value)}
+        onWheel={(e) => e.currentTarget.blur()}
         placeholder="Ej. 2"
         className={INPUT}
       />

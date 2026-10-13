@@ -38,8 +38,20 @@ export function Field({
   );
 }
 
-export function Input({ className, ...props }: InputHTMLAttributes<HTMLInputElement>) {
-  return <input className={cx(CONTROL, "h-11", className)} {...props} />;
+// En campos numéricos la rueda del mouse cambia el valor si el campo está enfocado:
+// al desplazar la hoja se alteraban cantidades y totales sin querer. Se suelta el
+// foco para que la rueda solo desplace la página.
+export function Input({ className, onWheel, ...props }: InputHTMLAttributes<HTMLInputElement>) {
+  return (
+    <input
+      className={cx(CONTROL, "h-11", className)}
+      onWheel={(e) => {
+        if (e.currentTarget.type === "number") e.currentTarget.blur();
+        onWheel?.(e);
+      }}
+      {...props}
+    />
+  );
 }
 
 export function Select({ className, ...props }: SelectHTMLAttributes<HTMLSelectElement>) {
