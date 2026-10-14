@@ -71,6 +71,17 @@ describe("computeStats", () => {
     expect(con.margin).toBe(70);
   });
 
+  it("un abono a medias da pesos enteros: el costo sube al peso siguiente", () => {
+    // 3.000 de 26.000 con costo 22.000/kg: costo 2.538,46 → 2.539; ganancia 461.
+    const gladys = order({ quantity: 1, unit: "kg", total: 26000, amount_paid: 3000, cost_per_kg_snapshot: 22000 });
+    const s = computeStats([gladys], [], []);
+    expect(s.cost).toBe(2539);
+    expect(s.profit).toBe(461);
+    // Pagados completos no cambian: 2 kg a 22.000 cuestan exactamente 44.000.
+    const full = order({ quantity: 2, unit: "kg", total: 52000, amount_paid: 52000, cost_per_kg_snapshot: 22000 });
+    expect(computeStats([full], [], []).profit).toBe(8000);
+  });
+
   it("si el pedido quedó con costo 0 usa el costo por kg de Ajustes", () => {
     const orders = [order({ total: 1000, amount_paid: 1000, cost_per_kg_snapshot: 0 })];
     expect(computeStats(orders, [], []).profit).toBe(1000);

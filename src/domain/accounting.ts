@@ -50,6 +50,16 @@ function paidFraction(o: Pick<Order, "total" | "amount_paid">): number {
   return total > 0 ? Math.min(Number(o.amount_paid) / total, 1) : 0;
 }
 
+// Costo de la parte ya cobrada de un pedido, en pesos enteros: se redondea hacia
+// arriba para no inflar la ganancia (abono de 3.000 sobre 26.000 con costo 22.000
+// → costo 2.539, ganancia 461 y no 461,54). Los pedidos pagados completos o con
+// libras exactas ya dan pesos enteros y no cambian.
+export function costOfPaid(o: Pick<Order, "quantity" | "unit" | "total" | "amount_paid" | "cost_per_kg_snapshot">): number {
+  const raw = toKg(Number(o.quantity), o.unit) * Number(o.cost_per_kg_snapshot) * paidFraction(o);
+  // toFixed quita el ruido de coma flotante (44000.0000000001 no debe subir a 44001).
+  return Math.ceil(Number(raw.toFixed(6)));
+}
+
 // Los pedidos guardados con costo 0 (antes de configurarlo en Ajustes) toman el
 // costo por kg vigente.
 export function withCostFallback(orders: StatOrder[], costPerKg: number): StatOrder[] {
@@ -77,9 +87,7 @@ export function computeStats(
   const descontado = discounts.reduce((sum, d) => sum + Number(d.amount), 0);
   const pagadoProveedor = providerPayments.reduce((sum, p) => sum + Number(p.amount), 0);
 
-  const cost = orders.reduce((sum, o) => {
-    return sum + toKg(Number(o.quantity), o.unit) * Number(o.cost_per_kg_snapshot) * paidFraction(o);
-  }, 0);
+  const cost = orders.reduce((sum, o) => sum + costOfPaid(o), 0);
   const kgPaid = orders.reduce((sum, o) => sum + toKg(Number(o.quantity), o.unit) * paidFraction(o), 0);
   const profit = collected - cost;
   const margin = collected > 0 ? (profit / collected) * 100 : 0;
