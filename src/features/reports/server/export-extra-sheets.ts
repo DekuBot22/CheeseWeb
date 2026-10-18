@@ -38,6 +38,23 @@ export function addExtraSheets(workbook: ExcelJS.Workbook, data: ExportData) {
     clientes.addRow({ cliente: c.name, telefono: c.phone ?? "", saldo: Number(c.credit_balance), notas: c.notes ?? "" });
   }
 
+  const semanas = addSheet(workbook, "Semanas", [
+    { header: "Primer día", key: "inicio", width: 14 },
+    { header: "Último día", key: "fin", width: 14 },
+    { header: "Días", key: "dias", width: 8 },
+    { header: "Origen", key: "origen", width: 18 },
+    { header: "Nota", key: "nota", width: 36 },
+  ]);
+  for (const w of data.weeks) {
+    semanas.addRow({
+      inicio: w.from,
+      fin: w.to,
+      dias: w.days,
+      origen: w.manual ? "Abierta a mano" : "Automática",
+      nota: data.weekNotes.get(w.from) ?? "",
+    });
+  }
+
   const anulados = addSheet(workbook, "Anulados", [
     { header: "Tipo", key: "tipo", width: 20 },
     { header: "Fecha", key: "fecha", width: 20 },

@@ -1,5 +1,5 @@
 import type { WeekPoint } from "@/domain/accounting";
-import { formatKg } from "@/lib/format";
+import { formatKg, weekTitle } from "@/lib/format";
 import { BarChart } from "@/ui/charts/BarChart";
 import { ChartFrame } from "@/ui/charts/ChartFrame";
 
@@ -17,7 +17,7 @@ export function KgFlowChart({ weeks }: { weeks: WeekPoint[] }) {
       legend={SERIES}
       table={{
         headers: ["Semana", "Vendidos", "Comprados"],
-        rows: weeks.map((w) => [w.label, `${formatKg(w.kgSold)} kg`, `${formatKg(w.kgBought)} kg`]),
+        rows: weeks.map((w) => [weekTitle(w.label, w.days), `${formatKg(w.kgSold)} kg`, `${formatKg(w.kgBought)} kg`]),
       }}
     >
       <BarChart

@@ -1,5 +1,5 @@
 import type { WeekPoint } from "@/domain/accounting";
-import { formatCOP } from "@/lib/format";
+import { formatCOP, weekTitle } from "@/lib/format";
 import { ChartFrame } from "@/ui/charts/ChartFrame";
 import { LineChart } from "@/ui/charts/LineChart";
 
@@ -12,14 +12,14 @@ export function ProfitTrendChart({ weeks }: { weeks: WeekPoint[] }) {
       subtitle={`Últimas ${weeks.length} semanas, de sábado a viernes`}
       table={{
         headers: ["Semana", "Ganancia"],
-        rows: weeks.map((w) => [w.label, formatCOP(w.stats.profit)]),
+        rows: weeks.map((w) => [weekTitle(w.label, w.days), formatCOP(w.stats.profit)]),
       }}
     >
       <LineChart
         height={220}
         label="Ganancia"
         format="cop"
-        ariaLabel={`Ganancia de las últimas ${weeks.length} semanas. Semana del ${last.label}: ${formatCOP(last.stats.profit)}.`}
+        ariaLabel={`Ganancia de las últimas ${weeks.length} semanas. Semana del ${weekTitle(last.label, last.days)}: ${formatCOP(last.stats.profit)}.`}
         data={weeks.map((w) => ({ label: w.label, value: Math.round(w.stats.profit) }))}
       />
     </ChartFrame>

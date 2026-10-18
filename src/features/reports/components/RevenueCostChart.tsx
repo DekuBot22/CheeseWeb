@@ -1,5 +1,5 @@
 import type { WeekPoint } from "@/domain/accounting";
-import { formatCOP } from "@/lib/format";
+import { formatCOP, weekTitle } from "@/lib/format";
 import { BarChart } from "@/ui/charts/BarChart";
 import { ChartFrame } from "@/ui/charts/ChartFrame";
 
@@ -27,7 +27,7 @@ export function RevenueCostChart({
       legend={SERIES}
       table={{
         headers: ["Semana", "Cobrado", "Costo", "Ganancia"],
-        rows: weeks.map((w) => [w.label, formatCOP(w.stats.collected), formatCOP(w.stats.cost), formatCOP(w.stats.profit)]),
+        rows: weeks.map((w) => [weekTitle(w.label, w.days), formatCOP(w.stats.collected), formatCOP(w.stats.cost), formatCOP(w.stats.profit)]),
       }}
     >
       <BarChart

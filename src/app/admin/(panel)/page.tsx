@@ -3,6 +3,7 @@ import { formatWeekLabel } from "@/lib/format";
 import { PendingOrdersList } from "@/features/orders/components/PendingOrdersList";
 import { DashboardStats } from "@/features/reports/components/DashboardStats";
 import { DebtorsCard } from "@/features/reports/components/DebtorsCard";
+import { PerDayNote } from "@/features/reports/components/PerDayNote";
 import { QuickActions } from "@/features/reports/components/QuickActions";
 import { getDashboard } from "@/features/reports/server/get-dashboard";
 import { WeekPrompt } from "@/features/weeks/components/WeekPrompt";
@@ -56,6 +57,8 @@ export default async function InicioPage() {
           Ver gráficas →
         </Link>
       </div>
+
+      <PerDayNote cur={d.cur} prev={d.prev} elapsed={d.weekElapsed} />
 
       <div className="grid gap-4 lg:grid-cols-[1.2fr_1fr] lg:gap-6">
         <DebtorsCard debtors={d.debt.debtors} />

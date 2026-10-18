@@ -1,5 +1,5 @@
 import type { WeekPoint } from "@/domain/accounting";
-import { formatCOP } from "@/lib/format";
+import { formatCOP, weekTitle } from "@/lib/format";
 import { BarChart } from "@/ui/charts/BarChart";
 import { ChartFrame } from "@/ui/charts/ChartFrame";
 import { LineChart } from "@/ui/charts/LineChart";
@@ -20,7 +20,7 @@ export function ProfitCharts({ weeks, selected }: { weeks: WeekPoint[]; selected
         weeks={weeks}
         title="Cobrado y costo por semana"
         subtitle={`Últimas ${weeks.length} semanas, de sábado a viernes`}
-        ariaLabel={`Cobrado y costo de las últimas ${weeks.length} semanas. Semana del ${selected.label}: cobrado ${formatCOP(selected.stats.collected)}, costo ${formatCOP(selected.stats.cost)}.`}
+        ariaLabel={`Cobrado y costo de las últimas ${weeks.length} semanas. Semana del ${weekTitle(selected.label, selected.days)}: cobrado ${formatCOP(selected.stats.collected)}, costo ${formatCOP(selected.stats.cost)}.`}
       />
 
       <div className="grid gap-4 lg:grid-cols-2 lg:gap-6">
@@ -30,7 +30,7 @@ export function ProfitCharts({ weeks, selected }: { weeks: WeekPoint[]; selected
           legend={COLLECTED_SERIES}
           table={{
             headers: ["Semana", "Cobrado", "Por cobrar"],
-            rows: weeks.map((w) => [w.label, formatCOP(w.stats.collected), formatCOP(unpaid(w))]),
+            rows: weeks.map((w) => [weekTitle(w.label, w.days), formatCOP(w.stats.collected), formatCOP(unpaid(w))]),
           }}
         >
           <BarChart
@@ -50,14 +50,14 @@ export function ProfitCharts({ weeks, selected }: { weeks: WeekPoint[]; selected
           subtitle="Ganancia como porcentaje de lo vendido"
           table={{
             headers: ["Semana", "Margen"],
-            rows: weeks.map((w) => [w.label, `${w.stats.margin.toFixed(0)} %`]),
+            rows: weeks.map((w) => [weekTitle(w.label, w.days), `${w.stats.margin.toFixed(0)} %`]),
           }}
         >
           <LineChart
             height={200}
             label="Margen"
             format="pct"
-            ariaLabel={`Margen de ganancia de las últimas ${weeks.length} semanas. Semana del ${selected.label}: ${selected.stats.margin.toFixed(0)} %.`}
+            ariaLabel={`Margen de ganancia de las últimas ${weeks.length} semanas. Semana del ${weekTitle(selected.label, selected.days)}: ${selected.stats.margin.toFixed(0)} %.`}
             data={weeks.map((w) => ({ label: w.label, value: Number(w.stats.margin.toFixed(1)) }))}
           />
         </ChartFrame>

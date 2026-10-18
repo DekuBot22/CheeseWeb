@@ -31,6 +31,23 @@ describe("buildVoidedRows", () => {
     ]);
   });
 
+  it("incluye las aperturas de semana anuladas, sin monto", () => {
+    const rows = buildVoidedRows({
+      orders: [],
+      payments: [],
+      purchases: [],
+      providerPayments: [],
+      discounts: [],
+      weekOpenings: [
+        { id: "w1", start_date: "2026-10-12", note: null, created_at: "2026-10-12T10:00:00Z", voided_at: VOID, void_reason: "Me equivoqué de día" },
+        { id: "w2", start_date: "2026-10-19", note: "Llegó el lote", created_at: "2026-10-19T10:00:00Z" },
+      ],
+    });
+    expect(rows.map((r) => [r.tipo, r.fecha, r.monto, r.motivo])).toEqual([
+      ["Apertura de semana", "2026-10-12", null, "Me equivoqué de día"],
+    ]);
+  });
+
   it("sin nada anulado devuelve una lista vacía", () => {
     expect(buildVoidedRows({ orders: [], payments: [], purchases: [], providerPayments: [], discounts: [] })).toEqual([]);
   });

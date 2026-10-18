@@ -86,6 +86,11 @@ export function formatWeekLabel(start: Date, end: Date): string {
   return `${startLabel} – ${endLabel}, ${e.getUTCFullYear()}`;
 }
 
+// Etiqueta de una semana con su duración cuando no dura 7 días: "4 oct · 9 días".
+export function weekTitle(label: string, days: number): string {
+  return days === 7 ? label : `${label} · ${plural(days, "día")}`;
+}
+
 // Etiqueta corta para el eje de una gráfica: "4 oct".
 export function formatWeekShort(start: Date): string {
   const s = toBogotaWall(start);

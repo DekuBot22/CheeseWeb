@@ -1,6 +1,6 @@
 import { sumWeeks, type WeekPoint } from "@/domain/accounting";
 import { profitPerLb } from "@/domain/pricing";
-import { formatCOP, formatKg, formatWeekLabel, plural } from "@/lib/format";
+import { formatCOP, formatKg, formatWeekLabel, plural, weekTitle } from "@/lib/format";
 import { DataTable, type Column } from "@/ui/DataTable";
 import { Money } from "@/ui/Money";
 
@@ -18,6 +18,7 @@ const COLUMNS: Column<WeekPoint>[] = [
       <span className="num">
         {w.label}
         <span className="text-tinta-3"> – {formatWeekLabel(w.start, w.end).split(" – ")[1].split(",")[0]}</span>
+        {w.days !== 7 && <span className="text-aviso"> · {plural(w.days, "día")}</span>}
       </span>
     ),
   },
@@ -49,7 +50,7 @@ export function WeeklyLedgerTable({ weeks }: { weeks: WeekPoint[] }) {
       mobileCard={(w) => (
         <div className="flex items-start justify-between gap-3">
           <div>
-            <p className="num font-semibold text-tinta">{w.label}</p>
+            <p className="num font-semibold text-tinta">{weekTitle(w.label, w.days)}</p>
             <p className="num text-[0.8125rem] text-tinta-2">
               {formatKg(w.kgSold)} kg · {plural(w.orderCount, "pedido")}
             </p>

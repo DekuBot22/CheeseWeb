@@ -1,5 +1,6 @@
 import type { Order, Payment } from "@/domain/order";
 import type { ProviderDiscount, ProviderPayment, Purchase } from "@/domain/purchase";
+import type { WeekOpening } from "@/domain/week-opening";
 import { DISCOUNT_REASON_LABELS } from "@/domain/purchase";
 import { isVoided } from "@/domain/void";
 
@@ -8,7 +9,8 @@ export interface VoidedRow {
   tipo: string;
   fecha: string;
   detalle: string;
-  monto: number;
+  // null en lo que no tiene monto (apertura de semana).
+  monto: number | null;
   anuladoEl: string;
   motivo: string;
 }
@@ -19,6 +21,7 @@ export interface VoidableSources {
   purchases: Purchase[];
   providerPayments: ProviderPayment[];
   discounts: ProviderDiscount[];
+  weekOpenings?: WeekOpening[];
 }
 
 const bogota = (iso: string) => new Date(iso).toLocaleString("es-CO", { timeZone: "America/Bogota" });
@@ -43,6 +46,10 @@ export function buildVoidedRows(src: VoidableSources): VoidedRow[] {
   }
   for (const d of src.discounts.filter(isVoided)) {
     push({ tipo: "Descuento proveedor", fecha: d.discount_date, detalle: DISCOUNT_REASON_LABELS[d.reason], monto: Number(d.amount) }, d.voided_at!, d.void_reason);
+  }
+
+  for (const w of (src.weekOpenings ?? []).filter(isVoided)) {
+    push({ tipo: "Apertura de semana", fecha: w.start_date, detalle: w.note ?? "", monto: null }, w.voided_at!, w.void_reason);
   }
 
   return rows.sort((a, b) => b.at.localeCompare(a.at)).map((r) => r.row);
