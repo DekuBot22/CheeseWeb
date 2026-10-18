@@ -7,6 +7,7 @@ import { formatDay, plural } from "@/lib/format";
 import { Button } from "@/ui/Button";
 import { Callout } from "@/ui/Callout";
 import { Field, Input } from "@/ui/Field";
+import { EffectNotice } from "./EffectNotice";
 import { useOpenWeek } from "./use-open-week";
 
 // Formulario de "Abrir semana nueva": fecha (después de la última apertura, hasta hoy) y nota opcional.
@@ -61,6 +62,10 @@ export function OpenWeekForm({
           placeholder="Ej. El queso llegó el domingo"
         />
       </Field>
+
+      {date && date <= today && (!lastOpening || date > lastOpening) && (
+        <EffectNotice params={{ action: "abrir", date }} />
+      )}
 
       {cut !== null && (
         <Callout tone="info">
