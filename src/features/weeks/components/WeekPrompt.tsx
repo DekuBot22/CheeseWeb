@@ -1,7 +1,7 @@
 "use client";
 
 import { useState } from "react";
-import { shortenedPreviousWeek, type OpenWeekHint } from "@/domain/week-hint";
+import { shortenedPreviousWeek, type OpenWeekHint, type WeekContext } from "@/domain/week-hint";
 import { cx } from "@/lib/cx";
 import { formatDay, plural } from "@/lib/format";
 import { Button } from "@/ui/Button";
@@ -9,24 +9,16 @@ import { Sheet } from "@/ui/Sheet";
 import { OpenWeekForm } from "./OpenWeekForm";
 import { useOpenWeek } from "./use-open-week";
 
-export interface WeekPromptState {
-  hint: OpenWeekHint;
-  elapsed: number;
-  from: string;
-  today: string;
-  lastOpening: string | null;
-}
-
 const MESSAGES = {
   compra: "Hoy registraste una compra. ¿Llegó el queso? Abre la semana nueva.",
   largo: "Esta semana ya lleva muchos días. ¿Llegó el queso? Abre la semana nueva.",
 } as const;
 
 // Estado de la semana en curso en Inicio, con el aviso "¿Llegó el queso?" cuando toca abrir otra.
-export function WeekPrompt({ week }: { week: WeekPromptState }) {
+export function WeekPrompt({ week, hint, elapsed }: { week: WeekContext; hint: OpenWeekHint; elapsed: number }) {
   const [open, setOpen] = useState(false);
   const { openWeek, loading } = useOpenWeek();
-  const { hint, today, lastOpening } = week;
+  const { today, lastOpening } = week;
   // "Abrir hoy" abre directo, salvo que corte una semana automática: ahí se confirma en la hoja.
   const needsConfirm = !lastOpening && shortenedPreviousWeek(today, today) !== null;
 
@@ -39,7 +31,7 @@ export function WeekPrompt({ week }: { week: WeekPromptState }) {
         )}
       >
         <p>
-          {hint ? MESSAGES[hint] : `Semana en curso · ${plural(week.elapsed, "día")} · desde el ${formatDay(week.from)}`}
+          {hint ? MESSAGES[hint] : `Semana en curso · ${plural(elapsed, "día")} · desde el ${formatDay(week.from)}`}
         </p>
         <div className="flex gap-2">
           {hint && (

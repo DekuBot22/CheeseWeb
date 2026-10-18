@@ -7,7 +7,11 @@ export const createPurchaseSchema = z.object({
   kg: numberField(isPositive, "Cantidad (kg) inválida"),
   total_cost: numberField(isNonNegative, "Costo total inválido"),
   description: optionalText(300),
+  // "Llegó el lote": además de la compra, abre una semana nueva en la fecha de la compra.
+  open_week: z.boolean().optional(),
 });
+
+export type CreatePurchaseInput = z.output<typeof createPurchaseSchema>;
 
 export const createProviderPaymentSchema = z.object({
   payment_date: dateField("Fecha inválida"),

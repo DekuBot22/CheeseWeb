@@ -26,7 +26,7 @@ export default async function ComprasPage() {
         <Card>
           <CardHeader title="Nueva compra" subtitle="Queso que le compraste al proveedor." />
           <CardBody>
-            <PurchaseForm />
+            <PurchaseForm week={o.weekContext} />
           </CardBody>
         </Card>
         <Card>

@@ -1,60 +1,20 @@
 "use client";
 
-import { useRouter } from "next/navigation";
-import { useId, useState } from "react";
+import { useId } from "react";
+import type { WeekContext } from "@/domain/week-hint";
 import { Button } from "@/ui/Button";
 import { Field, Input } from "@/ui/Field";
-import { bogotaDate } from "@/lib/bogota-time";
+import { usePurchaseForm, type PurchaseDone } from "./use-purchase-form";
 
-export function PurchaseForm({ onDone }: { onDone?: () => void }) {
-  const router = useRouter();
+// `week` activa la casilla "Llegó el lote" (abrir semana nueva el día de la compra).
+export function PurchaseForm({ onDone, week }: { onDone?: (info: PurchaseDone) => void; week?: WeekContext }) {
   const uid = useId();
-  const [date, setDate] = useState(bogotaDate());
-  const [kg, setKg] = useState("");
-  const [totalCost, setTotalCost] = useState("");
-  const [description, setDescription] = useState("");
-  const [loading, setLoading] = useState(false);
-  const [error, setError] = useState("");
-  const [saved, setSaved] = useState(false);
-
-  async function handleSubmit(e: React.FormEvent) {
-    e.preventDefault();
-    setLoading(true);
-    setError("");
-    setSaved(false);
-    try {
-      const res = await fetch("/api/admin/purchases", {
-        method: "POST",
-        headers: { "Content-Type": "application/json" },
-        body: JSON.stringify({
-          purchase_date: date,
-          kg: Number(kg),
-          total_cost: Number(totalCost),
-          description: description || undefined,
-        }),
-      });
-      const data = await res.json();
-      if (!res.ok) {
-        setError(data.error ?? "No se pudo registrar la compra");
-        return;
-      }
-      setKg("");
-      setTotalCost("");
-      setDescription("");
-      setSaved(true);
-      if (onDone) onDone();
-      else router.refresh();
-    } catch {
-      setError("No se pudo conectar. Intenta de nuevo.");
-    } finally {
-      setLoading(false);
-    }
-  }
+  const { values, set, lot, status, submit } = usePurchaseForm(onDone, week);
 
   return (
-    <form onSubmit={handleSubmit} className="flex flex-col gap-4">
+    <form onSubmit={submit} className="flex flex-col gap-4">
       <Field label="Fecha" htmlFor={`${uid}-fecha`}>
-        <Input id={`${uid}-fecha`} type="date" required value={date} onChange={(e) => setDate(e.target.value)} />
+        <Input id={`${uid}-fecha`} type="date" required value={values.date} onChange={(e) => set.date(e.target.value)} />
       </Field>
 
       <div className="grid grid-cols-2 gap-3">
@@ -66,8 +26,8 @@ export function PurchaseForm({ onDone }: { onDone?: () => void }) {
             step="0.01"
             min="0.01"
             required
-            value={kg}
-            onChange={(e) => setKg(e.target.value)}
+            value={values.kg}
+            onChange={(e) => set.kg(e.target.value)}
             placeholder="Ej. 50"
           />
         </Field>
@@ -79,8 +39,8 @@ export function PurchaseForm({ onDone }: { onDone?: () => void }) {
             step="0.01"
             min="0"
             required
-            value={totalCost}
-            onChange={(e) => setTotalCost(e.target.value)}
+            value={values.totalCost}
+            onChange={(e) => set.totalCost(e.target.value)}
             placeholder="Ej. 900000"
           />
         </Field>
@@ -91,18 +51,29 @@ export function PurchaseForm({ onDone }: { onDone?: () => void }) {
           id={`${uid}-desc`}
           type="text"
           maxLength={300}
-          value={description}
-          onChange={(e) => setDescription(e.target.value)}
+          value={values.description}
+          onChange={(e) => set.description(e.target.value)}
           placeholder="Ej. Lote del sábado"
         />
       </Field>
 
-      <Button type="submit" loading={loading}>
+      {lot.show && (
+        <label className="flex items-start gap-2 text-sm text-tinta">
+          <input type="checkbox" className="mt-0.5" checked={lot.checked} onChange={(e) => lot.onChange(e.target.checked)} />
+          <span>
+            Llegó el lote: abrir semana nueva desde esta fecha
+            <span className="block text-[0.8125rem] text-tinta-2">Lo que vendas desde ese día cuenta en la semana nueva.</span>
+          </span>
+        </label>
+      )}
+
+      <Button type="submit" loading={status.loading}>
         Registrar compra
       </Button>
       <div aria-live="polite">
-        {error && <p role="alert" className="aparece text-sm font-medium text-debe">{error}</p>}
-        {saved && !error && <p className="aparece text-sm font-medium text-cobrado">✓ Compra registrada</p>}
+        {status.error && <p role="alert" className="aparece text-sm font-medium text-debe">{status.error}</p>}
+        {status.weekWarning && <p role="alert" className="aparece text-sm font-medium text-aviso">{status.weekWarning}</p>}
+        {status.saved && !status.error && <p className="aparece text-sm font-medium text-cobrado">✓ Compra registrada</p>}
       </div>
     </form>
   );

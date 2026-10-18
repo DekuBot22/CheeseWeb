@@ -1,6 +1,6 @@
 import { describe, expect, it } from "vitest";
 import { buildCalendar, currentWeek } from "./week-calendar";
-import { openWeekHint, shortenedPreviousWeek, weekElapsed } from "./week-hint";
+import { canOpenOn, openWeekHint, shortenedPreviousWeek, suggestOpenOnPurchase, weekElapsed } from "./week-hint";
 
 const at = (isoLocal: string) => new Date(`${isoLocal}-05:00`);
 const weekAt = (openings: string[], now: string) => currentWeek(buildCalendar(openings, at(now)));
@@ -44,5 +44,22 @@ describe("shortenedPreviousWeek", () => {
 
   it("no avisa si la apertura cae en sábado", () => {
     expect(shortenedPreviousWeek("2026-10-10", "2026-10-14")).toBeNull();
+  });
+});
+
+describe("compra que abre semana", () => {
+  const week = { today: "2026-10-16", from: "2026-10-12", lastOpening: "2026-10-12" };
+
+  it("solo se puede abrir después de la última apertura y no en el futuro", () => {
+    expect(canOpenOn(week, "2026-10-16")).toBe(true);
+    expect(canOpenOn(week, "2026-10-13")).toBe(true);
+    expect(canOpenOn(week, "2026-10-12")).toBe(false);
+    expect(canOpenOn(week, "2026-10-17")).toBe(false);
+    expect(canOpenOn({ ...week, lastOpening: null }, "2026-10-01")).toBe(true);
+  });
+
+  it("sugiere la casilla cuando la semana lleva 5 días o más", () => {
+    expect(suggestOpenOnPurchase(week)).toBe(true); // 12 → 16 = 5 días
+    expect(suggestOpenOnPurchase({ ...week, today: "2026-10-15" })).toBe(false);
   });
 });

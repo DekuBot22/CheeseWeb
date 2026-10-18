@@ -1,4 +1,26 @@
-import { buildCalendar, dayStart, daysBetween, weekOf, type Week } from "./week-calendar";
+import { buildCalendar, dayStart, daysBetween, weekOf, type Week, type WeekCalendar } from "./week-calendar";
+
+// Lo mínimo que necesitan las pantallas para ofrecer "abrir semana nueva":
+// hoy, el primer día de la semana en curso y la última apertura marcada a mano (null si no hay).
+export interface WeekContext {
+  today: string;
+  from: string;
+  lastOpening: string | null;
+}
+
+export function weekContext(cal: WeekCalendar, week: Week): WeekContext {
+  return { today: cal.today, from: week.from, lastOpening: cal.openings[cal.openings.length - 1] ?? null };
+}
+
+// ¿Se puede abrir una semana nueva ese día? Después de la última apertura y no en el futuro.
+export function canOpenOn(week: WeekContext, date: string): boolean {
+  return date <= week.today && (!week.lastOpening || date > week.lastOpening);
+}
+
+// En una compra, la casilla "Llegó el lote" viene marcada si la semana en curso ya lleva 5 días o más.
+export function suggestOpenOnPurchase(week: WeekContext): boolean {
+  return daysBetween(week.from, week.today) >= 5;
+}
 
 // Días que lleva la semana hasta hoy (1 el primer día).
 export function weekElapsed(week: Week, today: string): number {

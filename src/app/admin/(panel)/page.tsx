@@ -21,10 +21,10 @@ export default async function InicioPage() {
       <PageHeader
         title="Inicio"
         subtitle={`Semana ${formatWeekLabel(d.current.start, d.current.end)}`}
-        actions={<QuickActions payable={d.openOrders} pricePerKg={pricePerKg} />}
+        actions={<QuickActions payable={d.openOrders} pricePerKg={pricePerKg} week={d.weekContext} />}
       />
 
-      <WeekPrompt week={{ ...d.weekPrompt, from: d.current.from }} />
+      <WeekPrompt week={d.weekContext} hint={d.weekHint} elapsed={d.weekElapsed} />
 
       {pricePerKg <= 0 && (
         <Callout tone="aviso">

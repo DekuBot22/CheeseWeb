@@ -3,6 +3,7 @@ import { buildLedger, providerTotals, remainingForDiscount } from "@/domain/prov
 import { activeOnly } from "@/domain/void";
 import type { ProviderDiscount, Purchase } from "@/domain/purchase";
 import { currentWeek } from "@/domain/week-calendar";
+import { weekContext } from "@/domain/week-hint";
 import { getWeekCalendar } from "@/features/weeks/server/get-week-calendar";
 import { formatCOP, formatDay } from "@/lib/format";
 import type { PurchaseOption } from "../types";
@@ -38,7 +39,8 @@ export async function getPurchasesOverview(now: Date = new Date()) {
     listProviderDiscounts(),
   ]);
 
-  const week = currentWeek(await getWeekCalendar(now));
+  const cal = await getWeekCalendar(now);
+  const week = currentWeek(cal);
   const { from, to } = week;
   const inWeek = (date: string) => date >= from && date <= to;
   const weekPurchases = activeOnly(purchases).filter((p) => inWeek(p.purchase_date));
@@ -47,6 +49,7 @@ export async function getPurchasesOverview(now: Date = new Date()) {
 
   return {
     week,
+    weekContext: weekContext(cal, week),
     compradoSemana: weekPurchases.reduce((s, p) => s + Number(p.total_cost), 0),
     kgSemana: weekPurchases.reduce((s, p) => s + Number(p.kg), 0),
     pagadoSemana: activeOnly(payments).filter((p) => inWeek(p.payment_date)).reduce((s, p) => s + Number(p.amount), 0),
