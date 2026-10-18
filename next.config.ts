@@ -8,6 +8,8 @@ const PRIVATE_HEADERS = [
 ];
 
 const nextConfig: NextConfig = {
+  // Sin el globo "N / Issues" de Next en la esquina durante el desarrollo local.
+  devIndicators: false,
   async headers() {
     return [
       {

@@ -94,8 +94,7 @@ ADMIN_AUTH=off            # opcional, SOLO en .env.local: panel sin contraseña 
 
 **`ADMIN_AUTH=off` es solo para trabajar en tu computador.** Se ignora en
 producción, en Vercel y si entras desde otro aparato (por la IP de tu red): ahí
-siempre pide contraseña. **No la pongas en Vercel.** Mientras está activa verás
-la franja "Sin contraseña (modo local)".
+siempre pide contraseña. **No la pongas en Vercel.** Mientras está activa no verás cierre de sesión (no hay sesión).
 
 Si falta alguna obligatoria, el servidor lo dice al arrancar (con el nombre de
 la variable, nunca su valor).

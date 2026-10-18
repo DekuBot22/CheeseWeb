@@ -1,6 +1,5 @@
 import { headers } from "next/headers";
 import Link from "next/link";
-import { LocalModeBanner } from "@/features/auth/components/LocalModeBanner";
 import { LogoutButton } from "@/features/auth/components/LogoutButton";
 import { BottomNav } from "@/features/shell/components/BottomNav";
 import { SettingsLink } from "@/features/shell/components/SettingsLink";
@@ -12,12 +11,11 @@ import { Toast } from "@/ui/Toast";
 
 export default async function AdminPanelLayout({ children }: { children: React.ReactNode }) {
   const { start, end } = currentWeek(await getWeekCalendar());
-  // El proxy marca esta cabecera cuando la auth está apagada (modo local).
+  // El proxy marca esta cabecera cuando la auth está apagada (modo local): sin sesión, no hay "Salir".
   const localMode = (await headers()).get("x-admin-auth") === "off";
 
   return (
     <>
-      {localMode && <LocalModeBanner />}
       <div className="min-h-dvh lg:grid lg:grid-cols-[15rem_1fr]">
         <a
           href="#contenido"
