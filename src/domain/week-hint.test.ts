@@ -1,6 +1,6 @@
 import { describe, expect, it } from "vitest";
 import { buildCalendar, currentWeek } from "./week-calendar";
-import { openWeekHint, weekElapsed } from "./week-hint";
+import { openWeekHint, shortenedPreviousWeek, weekElapsed } from "./week-hint";
 
 const at = (isoLocal: string) => new Date(`${isoLocal}-05:00`);
 const weekAt = (openings: string[], now: string) => currentWeek(buildCalendar(openings, at(now)));
@@ -33,5 +33,16 @@ describe("openWeekHint", () => {
 
   it("en semanas automáticas no insiste cada semana", () => {
     expect(openWeekHint(weekAt([], "2026-10-15T10:00:00"), "2026-10-15", [])).toBeNull();
+  });
+});
+
+describe("shortenedPreviousWeek", () => {
+  it("avisa cuántos días le quedan a la semana anterior si la apertura cae a mitad de semana", () => {
+    // 2026-10-12 es lunes: la semana del sábado 10 queda con sábado y domingo.
+    expect(shortenedPreviousWeek("2026-10-12", "2026-10-14")).toBe(2);
+  });
+
+  it("no avisa si la apertura cae en sábado", () => {
+    expect(shortenedPreviousWeek("2026-10-10", "2026-10-14")).toBeNull();
   });
 });

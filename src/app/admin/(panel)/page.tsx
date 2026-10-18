@@ -5,6 +5,7 @@ import { DashboardStats } from "@/features/reports/components/DashboardStats";
 import { DebtorsCard } from "@/features/reports/components/DebtorsCard";
 import { QuickActions } from "@/features/reports/components/QuickActions";
 import { getDashboard } from "@/features/reports/server/get-dashboard";
+import { WeekPrompt } from "@/features/weeks/components/WeekPrompt";
 import { Callout } from "@/ui/Callout";
 import { PageHeader } from "@/ui/PageHeader";
 
@@ -22,6 +23,8 @@ export default async function InicioPage() {
         subtitle={`Semana ${formatWeekLabel(d.current.start, d.current.end)}`}
         actions={<QuickActions payable={d.openOrders} pricePerKg={pricePerKg} />}
       />
+
+      <WeekPrompt week={{ ...d.weekPrompt, from: d.current.from }} />
 
       {pricePerKg <= 0 && (
         <Callout tone="aviso">

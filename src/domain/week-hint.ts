@@ -1,5 +1,4 @@
-import type { Week } from "./week-calendar";
-import { daysBetween } from "./week-calendar";
+import { buildCalendar, dayStart, daysBetween, weekOf, type Week } from "./week-calendar";
 
 // Días que lleva la semana hasta hoy (1 el primer día).
 export function weekElapsed(week: Week, today: string): number {
@@ -19,4 +18,14 @@ export function openWeekHint(week: Week, today: string, purchaseDatesInWeek: str
   if (boughtToday && !boughtBefore && week.from !== today) return "compra";
   if (week.manual && weekElapsed(week, today) >= 6) return "largo";
   return null;
+}
+
+// Al marcar la PRIMERA apertura a mano, la semana automática anterior (sábado a viernes)
+// se corta ese día. Devuelve cuántos días le quedan si queda más corta que 7; null si
+// queda completa (por ejemplo, si la apertura cae en sábado).
+export function shortenedPreviousWeek(date: string, today: string): number | null {
+  const now = new Date(`${today}T12:00:00-05:00`);
+  const cal = buildCalendar([date], now);
+  const previous = weekOf(cal, new Date(dayStart(date).getTime() - 1));
+  return previous.days < 7 ? previous.days : null;
 }
