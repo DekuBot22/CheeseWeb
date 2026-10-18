@@ -105,19 +105,24 @@ proyecto hermano de **QueseriaApp** (escritorio, Python/Tkinter, en
 1. **Telegram** para avisos: gratis e instantáneo (opcional: sin token el pedido se guarda igual).
 2. **Un solo precio por kg**; tipo de queso y sal son informativos. Todo se guarda con precio por kg.
 3. **1 kg = 2 lb** (no 0.4536): así se maneja en la región (`src/domain/units.ts`).
-4. **Semana de negocio = sábado 00:00 a viernes 23:59, hora de Colombia**
-   (`src/domain/week.ts`): el queso llega los sábados.
+4. **Semana de negocio:** por defecto sábado 00:00 a viernes 23:59, hora de Colombia
+   (`src/domain/week.ts`): el queso llega los sábados. Desde la migración 007 el
+   dueño puede **abrir la semana a mano** el día que llegue el queso (domingo,
+   lunes…): cada semana va de su apertura al día antes de la siguiente
+   (`src/domain/week-calendar.ts`). Antes de la primera apertura rige el sábado,
+   así que sin aperturas las cifras son las de siempre. Detalle en la sección
+   "Semanas abiertas a mano" de `docs/ARQUITECTURA.md`.
 5. **Clientes se crean solos** al llegar un pedido (nombre normalizado). Riesgo
    aceptado: variaciones del nombre duplican clientes; no hay UI para fusionar.
 6. **Saldo a favor:** el excedente de un abono queda en `credit_balance`; no se
    descuenta solo del siguiente pedido.
 7. **Pedido por valor:** el cliente puede pedir "$15.000 de queso"; se guardan
    los kg equivalentes (2 decimales) pero el total queda exacto. Límites $1.000 a $5.000.000.
-8. **Costo real vs estimado:** si una semana tiene compras registradas, el costo
-   es lo comprado **menos los descuentos del proveedor** (costo neto, nunca
-   negativo); si no, kg × costo por kg estimado. Un descuento en una semana SIN
-   compras no se resta del estimado (solo baja el saldo, con aviso en Ganancias).
-   Saldo con el proveedor = comprado − descontado − pagado.
+8. **Ganancia = cobrado − costo de lo cobrado** (kg × costo por kg × fracción
+   pagada de cada pedido, en pesos enteros). El proveedor (compras, descuentos y
+   pagos) **no influye en la ganancia**: solo en el saldo con el proveedor
+   = comprado − descontado − pagado. El fiado a un mes es la forma normal de
+   vender: un pedido sin pagar no es una pérdida, solo ganancia 0 hasta que paga.
 10. **El dueño piensa por libra:** Ajustes edita precio y costo por libra; se
     guarda por kg (`perLbToPerKg`, exacto con 1 kg = 2 lb).
 9. **Route handlers, no Server Actions**, y el dominio puro con pruebas
@@ -148,8 +153,9 @@ proyecto hermano de **QueseriaApp** (escritorio, Python/Tkinter, en
 `supabase/migrations/` (001 base, 002 compras al proveedor, 003 índices, 004
 descuentos del proveedor, 005 anular/editar + límites) y `supabase/schema.sql`
 consolidado. Tablas: `settings` (fila única), `clients`, `orders`, `payments`,
-`purchases`, `provider_payments`, `provider_discounts`, `request_limits`. Las
-cinco tablas de movimientos tienen `voided_at`/`void_reason` (005). RLS activado sin
+`purchases`, `provider_payments`, `provider_discounts`, `request_limits`,
+`week_openings` (007, aperturas de semana; sin ella todo sigue en sábado a viernes).
+Las cinco tablas de movimientos y `week_openings` tienen `voided_at`/`void_reason` (005/007). RLS activado sin
 políticas públicas (todo pasa por la service role desde el servidor).
 **Regla:** cada cambio de esquema = migración nueva + `schema.sql` actualizado.
 
@@ -161,8 +167,10 @@ políticas públicas (todo pasa por la service role desde el servidor).
   (filtros en la URL, incluye anulados; "Más" = ver abonos, editar, anular),
   Clientes, Compras (libro del proveedor con compras, pagos y descuentos, cada
   uno anulable), Ganancias (semana / 12 semanas / todo, ganancia por libra,
-  Excel) con su página de Gráficas, Ajustes (precio y costo por libra, respaldo,
-  instalación en el teléfono).
+  Excel) con su página de Gráficas, Ajustes (precio y costo por libra, lista de
+  semanas con mover/anular apertura, respaldo, instalación en el teléfono).
+  Abrir semana nueva: tarjeta "¿Llegó el queso?" en Inicio, casilla "Llegó el lote"
+  en Nueva compra y botón en Ajustes → Semanas.
 
 ## Mejoras pendientes / ideas
 

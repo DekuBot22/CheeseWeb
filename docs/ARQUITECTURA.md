@@ -24,7 +24,7 @@ src/
 │     ├─ components/   UI del módulo (props en, JSX out; sin consultar la base)
 │     ├─ server/       repos, casos de uso (get-*, create-*), todo con `import "server-only"`
 │     └─ schemas.ts    validación con zod (segura en el cliente)
-│     auth · shell · storefront · orders · clients · purchases · settings · reports · pwa
+│     auth · shell · storefront · orders · clients · purchases · settings · reports · weeks · pwa
 ├─ domain/         Reglas puras + tipos de entidad. Las pruebas (*.test.ts) van al lado.
 ├─ server/         Infraestructura solo-servidor: env, db, http, errors, telegram
 ├─ ui/             Sistema de diseño "El Cuaderno" (sin negocio): Button, Card, DataTable, charts/…
@@ -33,7 +33,7 @@ src/
 public/            cuaderno.webmanifest · sw.js · offline.html · icons/ (app instalable)
 scripts/           generate-icons.mjs + icons/*.svg (fuente de los íconos)
 └─ instrumentation.ts  Valida las variables de entorno al arrancar el servidor
-supabase/migrations/   001_base · 002_compras_proveedor · 003_indices · 004_descuentos_proveedor · 005_anular_editar_limites (en orden)
+supabase/migrations/   001_base · 002_compras_proveedor · 003_indices · 004_descuentos_proveedor · 005_anular_editar_limites · 006_nota_en_pedido · 007_aperturas_de_semana (en orden)
 supabase/schema.sql    Foto consolidada para crear una base nueva
 docs/ARQUITECTURA.md   Este archivo
 ```
@@ -81,11 +81,11 @@ app ──► features ──► domain ──► lib
 - Errores: lanza `AppError` / `ValidationError` / `NotFoundError` (`server/errors.ts`); `handle()` los convierte en respuesta.
 - Variables de entorno: solo con `env()` (`server/env.ts`, validado con zod). Nunca `process.env` suelto.
 - **Abonos atómicos (migración 005):** `register-payment.ts` llama a la función SQL `register_payment` (`order-rpc.repo.ts`): bloquea el pedido, inserta el abono, recalcula `amount_paid`/`payment_status` y mueve el saldo a favor del cliente en UNA transacción. Si la función no existe (005 sin correr), cae al camino viejo de 3 escrituras sueltas.
-- Fechas y semanas: siempre hora de Colombia (`lib/bogota-time.ts`, `domain/week.ts`). La semana de negocio va de sábado a viernes.
+- Fechas y semanas: siempre hora de Colombia (`lib/bogota-time.ts`). La regla base (`domain/week.ts`) es sábado a viernes; las semanas que se muestran salen del calendario con aperturas a mano (`domain/week-calendar.ts`, ver "Semanas abiertas a mano").
 - **Campos opcionales con zod 4:** `z.unknown().transform(...)` rechaza la clave si FALTA en el JSON ("expected nonoptional"). Escribe `z.unknown().optional().transform(...)` (o usa `optionalText`); los formularios omiten los campos vacíos. Hay pruebas de regresión en `features/purchases/schemas.regression.test.ts`.
 - **Excel y respaldo:** `getExportData` separa lo vigente (hojas de siempre más Abonos y Clientes) de lo anulado (hoja "Anulados", `voided-rows.ts`).
 - **Tabla que puede no existir (`provider_discounts`, migración 004):** sus lecturas pasan por `orEmptyIfMissing` (`provider-discounts.repo.ts`), que usa `isMissingTableError` (`server/db.ts`) y devuelve vacío en vez de romper la pantalla; guardar responde 503 con el mensaje de "corre la migración 004". Úsalo como patrón al desplegar código antes que el SQL.
-- **Descuentos del proveedor:** `domain/accounting.ts` (`computeStats` recibe `discounts` como 4.º parámetro: costo neto = compras − descuentos, nunca negativo; sin compras no se resta del estimado) y `domain/provider-ledger.ts` (saldo = comprado − descontado − pagado; `remainingForDiscount` da el tope por compra).
+- **Ganancia y proveedor:** `domain/accounting.ts` (`computeStats`): ganancia = cobrado − costo de lo cobrado (`costOfPaid`: kg × costo por kg × fracción pagada, en pesos enteros). Compras, descuentos y pagos del proveedor **no entran en la ganancia**; solo mueven el saldo en `domain/provider-ledger.ts` (saldo = comprado − descontado − pagado; `remainingForDiscount` da el tope por compra).
 - **Precios por libra:** la base guarda por kg; la pantalla de Ajustes edita por libra y convierte con `perLbToPerKg`/`perKgToPerLb` (`domain/units.ts`) antes de enviar. `domain/pricing.ts`: `unitProfit` (ganancia y margen por unidad) y `profitPerLb` (ganancia real ÷ libras vendidas).
 
 ## Anular y editar (migración 005)
@@ -97,6 +97,17 @@ app ──► features ──► domain ──► lib
 - **Código antes que SQL:** `hasVoidColumns()` (`server/db.ts`) prueba `select voided_at` y recuerda el "sí" siempre y el "no" 60 s. Mientras sea no, los repos no filtran y anular/editar responden 503 con "corre la migración 005". Mismo patrón que `orEmptyIfMissing` de la 004. Las consultas "ForStats" filtran en SQL (`voided_at is null`); las listas completas (`*InRange`, `list*`, historial del cliente, libro del proveedor) traen todo y el dominio separa.
 - **Anular una compra** exige anular antes sus descuentos vigentes (`void-purchase.ts`). **Anular un pedido con abonos:** "devolví el dinero" (también se anulan sus abonos) o "dejarlo como saldo a favor".
 - **UI:** `ui/ReasonForm.tsx` (motivo + sugerencias, genérico), `OrderDetailSheet` (ver abonos / editar / anular, un solo contenido que cambia de vista), `VoidMovementButton` en el libro del proveedor (la hoja solo se monta tras el primer clic).
+
+## Semanas abiertas a mano (migración 007)
+
+El queso no siempre llega el sábado, así que el dueño marca el día en que empieza cada semana.
+
+- **Datos:** tabla `week_openings` (`start_date`, `note`, `voided_at`/`void_reason`; una apertura vigente por día) y la función SQL `move_week_opening` (anula la vieja y crea la nueva en una transacción). Nunca se borra: anular es definitivo.
+- **Regla (`domain/week-calendar.ts`, pura):** cada semana va del día de su apertura al día antes de la siguiente, por DÍA en hora de Bogotá (pedidos por `created_at`; compras, pagos y descuentos por su fecha, sin traslapes). **Antes de la primera apertura vigente rige sábado→viernes**, recortada si la primera apertura cae a mitad de semana. Desde la primera apertura solo cuentan las manuales: si se olvida abrir una, la semana en curso se alarga (mínimo 7 días). No se abre con fecha futura ni antes de la última apertura.
+- **Un solo calendario por página:** `getWeekCalendar` (`features/weeks/server`) lee las aperturas (cache de React) y arma `buildCalendar(fechas, ahora)`; todo consumidor usa `weekOf`, `currentWeek`, `previousWeek`, `lastWeeks`, `weeksSince`. `weeklySeries` recibe las semanas ya calculadas. `WeekPoint.days` lleva la duración. **Si la tabla no existe, la lista llega vacía y todo da lo de siempre** (`orEmptyIfMissing`); guardar responde 503 con el mensaje de la 007. La prueba `week-calendar.test.ts` compara el calendario sin aperturas contra el `weekRange` viejo durante años.
+- **Avisos y atajos (`domain/week-hint.ts`, `domain/week-effect.ts`):** `openWeekHint` decide el aviso de Inicio ("¿Llegó el queso?": primera compra del día en una semana que no empezó hoy, o semana a mano de 6 días o más); la casilla "Llegó el lote" de Nueva compra manda `open_week` y `createPurchase` abre la semana tras guardar la compra (si la apertura falla, la compra queda y se devuelve `weekError`). `week-effect` calcula qué día-rango cambia de semana al abrir, mover o anular; `GET /api/admin/week-openings/effect` devuelve cuántos pedidos y compras pasan de una semana a otra y la hoja lo muestra antes de confirmar.
+- **Pantallas:** Inicio (`WeekPrompt`, `PerDayNote`: comparación por día solo cuando la semana actual y la anterior duran distinto), Ajustes → Semanas (`WeeksCard`: últimas 12 con mover/anular), duración (`weekTitle`) en libro semanal y gráficas. Excel: hoja "Semanas" y aperturas anuladas en "Anulados"; respaldo JSON: tabla `week_openings`.
+- **No cambia la ganancia ni se normalizan montos por duración:** es plata real; una semana de 9 días muestra su duración y, en Inicio, la cifra por día.
 
 ## Respaldo diario
 
