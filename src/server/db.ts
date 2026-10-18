@@ -107,3 +107,6 @@ export async function voidRow(table: string, id: string, reason: string): Promis
   if (!data) throw new NotFoundError("No existe o ya estaba anulado");
   return data as Record<string, unknown>;
 }
+
+export const MIGRATION_007_MESSAGE =
+  "Abrir semanas aún no está activado: corre la migración 007 en el SQL Editor de Supabase y vuelve a intentar.";

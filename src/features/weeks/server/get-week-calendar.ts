@@ -1,8 +1,9 @@
 import "server-only";
 import { buildCalendar, type WeekCalendar } from "@/domain/week-calendar";
+import { listActiveOpeningDates } from "./week-openings.repo";
 
-// Calendario de semanas de negocio para la página que se está armando.
-// (Las aperturas marcadas por el dueño se leerán de la base en el paso siguiente.)
+// Calendario de semanas de negocio con las aperturas marcadas por el dueño.
+// Sin la migración 007 (o sin aperturas) da la regla de siempre: sábado a viernes.
 export async function getWeekCalendar(now: Date = new Date()): Promise<WeekCalendar> {
-  return buildCalendar([], now);
+  return buildCalendar(await listActiveOpeningDates(), now);
 }
