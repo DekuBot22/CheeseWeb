@@ -49,7 +49,12 @@ export default async function GananciasPage({
         }
       />
 
-      <ProfitPeriodControls view={view} week={r.week} isCurrent={r.isCurrent} />
+      <ProfitPeriodControls
+        view={view}
+        week={r.week}
+        isCurrent={r.isCurrent}
+        neighbors={{ prev: r.prevWeek, next: r.nextWeek }}
+      />
 
       <ProfitStats
         stats={r.stats}

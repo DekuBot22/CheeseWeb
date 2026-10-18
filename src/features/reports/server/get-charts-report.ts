@@ -1,17 +1,18 @@
 import "server-only";
 import { weeklySeries } from "@/domain/accounting";
 import { receivables } from "@/domain/receivables";
-import { shiftWeek, weekRange } from "@/domain/week";
+import { currentWeek, lastWeeks } from "@/domain/week-calendar";
+import { getWeekCalendar } from "@/features/weeks/server/get-week-calendar";
 import { listOpenOrders } from "@/features/orders/server/orders.repo";
 import { loadPeriod } from "./load-period";
 
 // Datos de la página de gráficas: las últimas N semanas y la deuda de hoy por antigüedad.
 export async function getChartsReport(weeks: number, now: Date = new Date()) {
-  const current = weekRange(now);
-  const start = weekRange(shiftWeek(current.start.toISOString(), -(weeks - 1))).start;
+  const cal = await getWeekCalendar(now);
+  const list = lastWeeks(cal, weeks, currentWeek(cal));
 
-  const [period, openOrders] = await Promise.all([loadPeriod(start, null), listOpenOrders()]);
-  const series = weeklySeries(period, weeks, now);
+  const [period, openOrders] = await Promise.all([loadPeriod(list[0].start, null), listOpenOrders()]);
+  const series = weeklySeries(period, list);
 
   return {
     series,

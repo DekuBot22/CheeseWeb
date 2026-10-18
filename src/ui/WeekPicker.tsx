@@ -6,14 +6,17 @@ const ARROW =
 
 export function WeekPicker({
   label,
+  caption,
   isCurrent,
   prevHref,
   nextHref,
 }: {
   label: string;
+  // Texto bajo la fecha cuando no es la semana actual (p. ej. "Sáb a vie" o "9 días").
+  caption: string;
   isCurrent: boolean;
   prevHref: string;
-  nextHref: string;
+  nextHref?: string;
 }) {
   return (
     <div className="flex items-center gap-2">
@@ -22,9 +25,9 @@ export function WeekPicker({
       </Link>
       <div className="min-w-40 text-center">
         <p className="num text-sm font-semibold text-tinta">{label}</p>
-        <p className="text-xs text-tinta-3">{isCurrent ? "Semana actual" : "Sáb a vie"}</p>
+        <p className="text-xs text-tinta-3">{isCurrent ? "Semana actual" : caption}</p>
       </div>
-      {isCurrent ? (
+      {isCurrent || !nextHref ? (
         <span aria-hidden="true" className={`${ARROW} opacity-40`}>
           <IconChevronRight />
         </span>

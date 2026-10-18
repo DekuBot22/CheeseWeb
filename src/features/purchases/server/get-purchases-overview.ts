@@ -2,7 +2,8 @@ import "server-only";
 import { buildLedger, providerTotals, remainingForDiscount } from "@/domain/provider-ledger";
 import { activeOnly } from "@/domain/void";
 import type { ProviderDiscount, Purchase } from "@/domain/purchase";
-import { weekDateRange, weekRange } from "@/domain/week";
+import { currentWeek } from "@/domain/week-calendar";
+import { getWeekCalendar } from "@/features/weeks/server/get-week-calendar";
 import { formatCOP, formatDay } from "@/lib/format";
 import type { PurchaseOption } from "../types";
 import { listProviderDiscounts } from "./provider-discounts.repo";
@@ -37,8 +38,8 @@ export async function getPurchasesOverview(now: Date = new Date()) {
     listProviderDiscounts(),
   ]);
 
-  const week = weekRange(now);
-  const { from, to } = weekDateRange(week.start, week.end);
+  const week = currentWeek(await getWeekCalendar(now));
+  const { from, to } = week;
   const inWeek = (date: string) => date >= from && date <= to;
   const weekPurchases = activeOnly(purchases).filter((p) => inWeek(p.purchase_date));
   // Lo anulado fue un error: desaparece del libro (en la base queda guardado, no se borra).

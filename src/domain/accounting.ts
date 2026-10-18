@@ -1,5 +1,5 @@
 import { formatWeekShort } from "@/lib/format";
-import { shiftWeek, weekDateRange, weekRange } from "./week";
+import { buildCalendar, currentWeek, lastWeeks, type Week } from "./week-calendar";
 import { toKg } from "./units";
 import type { Order } from "./order";
 import type { ProviderDiscount, ProviderPayment, Purchase } from "./purchase";
@@ -119,6 +119,9 @@ export function percentChange(curr: number, prev: number): number | null {
 export interface WeekPoint {
   start: Date;
   end: Date;
+  // Días que abarca la semana (7 con la regla sábado→viernes; distinto si se abrió a mano).
+  days: number;
+  manual: boolean;
   label: string;
   stats: PeriodStats;
   orderCount: number;
@@ -126,8 +129,7 @@ export interface WeekPoint {
   kgBought: number;
 }
 
-function buildWeek(start: Date, end: Date, data: PeriodData): WeekPoint {
-  const { from, to } = weekDateRange(start, end);
+function buildWeek({ start, end, from, to, days, manual }: Week, data: PeriodData): WeekPoint {
   const weekOrders = withCostFallback(
     data.orders.filter((o) => {
       const t = new Date(o.created_at).getTime();
@@ -142,6 +144,8 @@ function buildWeek(start: Date, end: Date, data: PeriodData): WeekPoint {
   return {
     start,
     end,
+    days,
+    manual,
     label: formatWeekShort(start),
     stats: computeStats(weekOrders, weekPurchases, weekPayments, weekDiscounts),
     orderCount: weekOrders.length,
@@ -150,8 +154,9 @@ function buildWeek(start: Date, end: Date, data: PeriodData): WeekPoint {
   };
 }
 
-// Una fila por semana de negocio (la más antigua primero).
-export function weeklySeries(raw: PeriodData, weeks: number, now: Date = new Date()): WeekPoint[] {
+// Una fila por semana de negocio (la más antigua primero). `weeks` son semanas ya
+// calculadas con el calendario; un número significa "las últimas N con la regla sábado→viernes".
+export function weeklySeries(raw: PeriodData, weeks: Week[] | number, now: Date = new Date()): WeekPoint[] {
   const data: PeriodData = {
     orders: activeOnly(raw.orders),
     purchases: activeOnly(raw.purchases),
@@ -159,13 +164,11 @@ export function weeklySeries(raw: PeriodData, weeks: number, now: Date = new Dat
     discounts: activeOnly(raw.discounts ?? []),
     fallbackCostPerKg: raw.fallbackCostPerKg,
   };
-  const currentStart = weekRange(now).start.toISOString();
-  const points: WeekPoint[] = [];
-  for (let i = weeks - 1; i >= 0; i--) {
-    const { start, end } = weekRange(shiftWeek(currentStart, -i));
-    points.push(buildWeek(start, end, data));
+  if (typeof weeks === "number") {
+    const cal = buildCalendar([], now);
+    return lastWeeks(cal, weeks, currentWeek(cal)).map((week) => buildWeek(week, data));
   }
-  return points;
+  return weeks.map((week) => buildWeek(week, data));
 }
 
 // Totales de varias semanas: suma lo que ya calculó cada una.

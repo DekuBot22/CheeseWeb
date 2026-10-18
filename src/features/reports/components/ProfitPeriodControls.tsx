@@ -1,24 +1,27 @@
-import { bogotaDate } from "@/lib/bogota-time";
-import { shiftWeek } from "@/domain/week";
-import { formatWeekLabel } from "@/lib/format";
+import type { Week } from "@/domain/week-calendar";
+import { formatWeekLabel, plural } from "@/lib/format";
 import { SegmentedControl } from "@/ui/SegmentedControl";
 import { WeekPicker } from "@/ui/WeekPicker";
 import type { ProfitView } from "../profit-views";
 
 const href = (view: string, extra = "") => `/admin/ganancias?vista=${view}${extra}`;
 
+// "Sáb a vie" solo en la semana de siempre; si se abrió a mano o recortó, los días que duró.
+const caption = (week: Week) => (week.manual || week.days !== 7 ? plural(week.days, "día") : "Sáb a vie");
+
 // Selector de período (semana / 12 semanas / todo) y, en vista semanal, la navegación entre semanas.
 export function ProfitPeriodControls({
   view,
   week,
   isCurrent,
+  neighbors,
 }: {
   view: ProfitView;
-  week: { start: Date; end: Date };
+  week: Week;
   isCurrent: boolean;
+  neighbors: { prev: Week; next: Week | null };
 }) {
-  const step = (delta: number) =>
-    href("semana", `&semana=${bogotaDate(shiftWeek(week.start.toISOString(), delta))}`);
+  const step = (target: Week | null) => (target ? href("semana", `&semana=${target.from}`) : undefined);
 
   return (
     <div className="flex flex-wrap items-center justify-between gap-3">
@@ -34,9 +37,10 @@ export function ProfitPeriodControls({
       {view === "semana" && (
         <WeekPicker
           label={formatWeekLabel(week.start, week.end)}
+          caption={caption(week)}
           isCurrent={isCurrent}
-          prevHref={step(-1)}
-          nextHref={step(1)}
+          prevHref={step(neighbors.prev) ?? href("semana")}
+          nextHref={step(neighbors.next)}
         />
       )}
     </div>

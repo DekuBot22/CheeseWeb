@@ -6,11 +6,12 @@ import { BottomNav } from "@/features/shell/components/BottomNav";
 import { SettingsLink } from "@/features/shell/components/SettingsLink";
 import { SidebarNav } from "@/features/shell/components/SidebarNav";
 import { formatWeekLabel } from "@/lib/format";
-import { weekRange } from "@/domain/week";
+import { currentWeek } from "@/domain/week-calendar";
+import { getWeekCalendar } from "@/features/weeks/server/get-week-calendar";
 import { Toast } from "@/ui/Toast";
 
 export default async function AdminPanelLayout({ children }: { children: React.ReactNode }) {
-  const { start, end } = weekRange();
+  const { start, end } = currentWeek(await getWeekCalendar());
   // El proxy marca esta cabecera cuando la auth está apagada (modo local).
   const localMode = (await headers()).get("x-admin-auth") === "off";
 

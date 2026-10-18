@@ -1,6 +1,6 @@
 import { remainingOf } from "@/domain/order";
 import { activeOnly } from "@/domain/void";
-import { shiftWeek, weekRange } from "@/domain/week";
+import { currentWeek, previousWeek, type WeekCalendar } from "@/domain/week-calendar";
 import { formatCOP, plural } from "@/lib/format";
 import { pickParam } from "@/lib/search-params";
 import {
@@ -14,6 +14,7 @@ import { OrdersTable } from "@/features/orders/components/OrdersTable";
 import { listOrders } from "@/features/orders/server/orders.repo";
 import { NewSaleButton } from "@/features/orders/components/NewSaleButton";
 import { getSettings } from "@/features/settings/server/settings.repo";
+import { getWeekCalendar } from "@/features/weeks/server/get-week-calendar";
 import { ButtonLink } from "@/ui/Button";
 import { PageHeader } from "@/ui/PageHeader";
 
@@ -24,10 +25,10 @@ const LIMIT = 200;
 type Params = { q?: string; estado?: string; pago?: string; tipo?: string; periodo?: string };
 
 // Rango de fechas del filtro de período (undefined = todos).
-function periodRange(periodo: (typeof ORDER_PERIODS)[number]) {
-  const current = weekRange();
+function periodRange(periodo: (typeof ORDER_PERIODS)[number], cal: WeekCalendar) {
+  const current = currentWeek(cal);
   if (periodo === "semana") return current;
-  if (periodo === "anterior") return weekRange(shiftWeek(current.start.toISOString(), -1));
+  if (periodo === "anterior") return previousWeek(cal, current);
   return undefined;
 }
 
@@ -42,13 +43,14 @@ export default async function PedidosPage({ searchParams }: { searchParams: Prom
   const tipo = pickParam(params.tipo, CHEESE_FILTERS);
   const periodo = pickParam(params.periodo, ORDER_PERIODS);
 
+  const cal = await getWeekCalendar();
   const [settings, orders] = await Promise.all([getSettings(), listOrders(
     {
       q: q || undefined,
       estado: orUndefined(estado),
       pago: orUndefined(pago),
       tipo: orUndefined(tipo),
-      range: periodRange(periodo),
+      range: periodRange(periodo, cal),
     },
     LIMIT
   )]);
