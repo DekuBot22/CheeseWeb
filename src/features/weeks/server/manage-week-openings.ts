@@ -5,11 +5,11 @@ import { openingDateError, type WeekOpening } from "@/domain/week-opening";
 import { MIGRATION_007_MESSAGE } from "@/server/db";
 import { AppError, NotFoundError, ValidationError } from "@/server/errors";
 import type { OpenWeekInput } from "../schemas";
-import { insertWeekOpening, listWeekOpenings, moveWeekOpening, voidWeekOpening } from "./week-openings.repo";
+import { fetchWeekOpenings, insertWeekOpening, moveWeekOpening, voidWeekOpening } from "./week-openings.repo";
 
 // Lectura fresca (sin cache) de las aperturas vigentes, para validar antes de escribir.
 async function activeOpenings() {
-  const { openings, ready } = await listWeekOpenings();
+  const { openings, ready } = await fetchWeekOpenings();
   if (!ready) throw new AppError(MIGRATION_007_MESSAGE, 503);
   return activeOnly(openings);
 }

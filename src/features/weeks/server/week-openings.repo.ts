@@ -18,7 +18,8 @@ async function orEmptyIfMissing<T>(read: () => Promise<T[]>): Promise<{ rows: T[
 }
 
 // Todas las aperturas (también las anuladas), de la más vieja a la más nueva, y si la tabla ya existe.
-export async function listWeekOpenings(): Promise<{ openings: WeekOpening[]; ready: boolean }> {
+// Lectura fresca: la usan las escrituras para validar contra lo que hay de verdad.
+export async function fetchWeekOpenings(): Promise<{ openings: WeekOpening[]; ready: boolean }> {
   const { rows, ready } = await orEmptyIfMissing(() =>
     fetchAll<WeekOpening>((from, to) =>
       db().from("week_openings").select("*").order("start_date", { ascending: true }).range(from, to)
@@ -27,11 +28,14 @@ export async function listWeekOpenings(): Promise<{ openings: WeekOpening[]; rea
   return { openings: rows, ready };
 }
 
-// Fechas de las aperturas vigentes. Se pide una sola vez por página (cache de React).
-export const listActiveOpeningDates = cache(async (): Promise<string[]> => {
+// Lo mismo, pero una sola vez por página (cache de React): para pintar pantallas.
+export const listWeekOpenings = cache(fetchWeekOpenings);
+
+// Fechas de las aperturas vigentes.
+export async function listActiveOpeningDates(): Promise<string[]> {
   const { openings } = await listWeekOpenings();
   return activeOnly(openings).map((o) => o.start_date);
-});
+}
 
 export async function insertWeekOpening(row: { start_date: string; note: string | null }): Promise<WeekOpening> {
   const { data, error } = await db().from("week_openings").insert(row).select().single();
