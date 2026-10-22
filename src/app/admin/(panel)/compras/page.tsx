@@ -47,10 +47,10 @@ export default async function ComprasPage() {
       </div>
 
       <section aria-labelledby="libro">
-        <h2 id="libro" className="mb-1 font-display text-lg font-semibold text-tinta">
+        <h2 id="libro" className="mb-1 text-[0.9375rem]/[1.375rem] font-semibold text-tinta">
           Libro del proveedor
         </h2>
-        <p className="mb-3 text-[0.8125rem] text-tinta-2">
+        <p className="mb-3 text-[0.8125rem]/[1.125rem] text-tinta-2">
           Cada compra suma al saldo; cada pago y cada descuento lo reducen.
           {o.ledgerTotalRows > LEDGER_MAX_ROWS && ` Mostrando los ${LEDGER_MAX_ROWS} movimientos más recientes.`}
         </p>

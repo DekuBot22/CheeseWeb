@@ -93,7 +93,7 @@ export function ProviderPaymentForm({ onDone }: { onDone?: () => void }) {
         />
       </Field>
 
-      <Button type="submit" loading={loading}>
+      <Button type="submit" size="sm" className="w-full md:w-auto md:self-start" loading={loading}>
         Registrar pago
       </Button>
       <div aria-live="polite">

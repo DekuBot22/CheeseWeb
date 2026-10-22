@@ -2,7 +2,7 @@ import type { ReactNode } from "react";
 import { cx } from "@/lib/cx";
 import { Sparkline } from "./Sparkline";
 
-// Cifra suelta en su tarjeta: 16 px en móvil (caben tres en fila) y 24 px desde md.
+// Cifra suelta en su tarjeta: 20 px en móvil y 24 px desde md.
 export function Stat({
   label,
   value,
@@ -10,6 +10,7 @@ export function Stat({
   delta,
   spark,
   emphasis = "default",
+  compact = false,
   className,
 }: {
   label: ReactNode;
@@ -18,6 +19,8 @@ export function Stat({
   delta?: ReactNode;
   spark?: number[];
   emphasis?: "default" | "hero";
+  // Cifra más chica en móvil, para tres tarjetas en fila (detalle de cliente).
+  compact?: boolean;
   className?: string;
 }) {
   return (
@@ -27,7 +30,11 @@ export function Stat({
         <p
           className={cx(
             "num font-semibold text-tinta",
-            emphasis === "hero" ? "text-[2rem]/9 tracking-[-0.01em]" : "text-base/6 md:text-2xl/7"
+            emphasis === "hero"
+              ? "text-[2rem]/9 tracking-[-0.01em]"
+              : compact
+                ? "text-base/6 md:text-2xl/7"
+                : "text-xl/7 md:text-2xl/7"
           )}
         >
           {value}

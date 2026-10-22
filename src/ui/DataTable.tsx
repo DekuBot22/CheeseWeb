@@ -37,7 +37,7 @@ function Table<T>({ columns, rows, rowKey, rowClassName, footer, caption, hidden
                 scope="col"
                 aria-sort={c.sortDir === "asc" ? "ascending" : c.sortDir === "desc" ? "descending" : undefined}
                 className={cx(
-                  "h-9 border-b border-linea px-2 text-xs/4 font-medium text-tinta-3 first:pl-4 last:pr-4",
+                  "h-9 whitespace-nowrap border-b border-linea px-2 text-xs/4 font-medium text-tinta-3 first:pl-4 last:pr-4",
                   c.align === "right" ? "text-right" : "text-left"
                 )}
               >

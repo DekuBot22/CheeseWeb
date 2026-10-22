@@ -8,11 +8,13 @@ export function ClientSummary({ debe, credit, comprado }: { debe: number; credit
   return (
     <div className="grid grid-cols-3 gap-2 md:gap-4">
       <Stat
+        compact
         className={card}
         label="Debe"
         value={<Money value={debe} tone={debe > 0 ? "debe" : "neutral"} />}
       />
       <Stat
+        compact
         className={card}
         label={
           <>
@@ -23,6 +25,7 @@ export function ClientSummary({ debe, credit, comprado }: { debe: number; credit
         value={<Money value={credit} tone={credit > 0 ? "cobrado" : "neutral"} />}
       />
       <Stat
+        compact
         className={card}
         label={
           <>
