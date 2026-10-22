@@ -35,7 +35,7 @@ export function ProfitStats({
       />
       <Stat
         label="Ganancia"
-        value={<Money value={stats.profit} tone="auto" />}
+        value={<Money value={stats.profit} tone={stats.profit < 0 ? "debe" : "cobrado"} />}
         delta={previous ? <Delta pct={percentChange(stats.profit, previous.profit)} /> : undefined}
         hint={`Cobrado − costo · margen ${stats.margin.toFixed(0)} %${perLb === null ? "" : ` · ${formatCOP(Math.round(perLb))} por libra`}`}
         className="col-span-2 lg:col-span-1"
@@ -56,7 +56,7 @@ export function ProfitStats({
       />
       <Stat
         label="Saldo del período"
-        value={<Money value={stats.saldoProveedor} tone="auto" />}
+        value={<Money value={stats.saldoProveedor} className={stats.saldoProveedor > 0 ? "text-acento" : ""} />}
         hint="Compras − descuentos − pagos al proveedor"
       />
     </div>

@@ -58,6 +58,7 @@ export async function getProfitReport(view: ProfitView, weekParam: string | unde
   const single = view === "semana";
 
   return {
+    now,
     week,
     isCurrent: week.start.getTime() === current.start.getTime(),
     prevWeek: previousWeek(cal, week),
