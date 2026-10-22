@@ -1,6 +1,7 @@
 import type { ReactNode } from "react";
 import { cx } from "@/lib/cx";
 
+// Tarjeta plana: borde fino y sin sombra (la elevación solo la tienen las hojas y los avisos).
 export function Card({
   tone = "default",
   className,
@@ -14,7 +15,7 @@ export function Card({
     <section
       className={cx(
         "rounded-lg border border-linea",
-        tone === "default" ? "bg-hoja shadow-hoja" : "bg-hoja-2",
+        tone === "default" ? "bg-hoja" : "bg-hoja-2",
         className
       )}
     >
@@ -33,10 +34,10 @@ export function CardHeader({
   action?: ReactNode;
 }) {
   return (
-    <header className="flex items-start justify-between gap-3 border-b border-linea px-4 py-3 md:px-5">
+    <header className="flex items-start justify-between gap-3 px-4 pt-4 md:px-5 md:pt-5">
       <div>
-        <h2 className="font-display text-lg/7 font-semibold text-tinta">{title}</h2>
-        {subtitle && <p className="text-[0.8125rem] text-tinta-2">{subtitle}</p>}
+        <h2 className="text-[0.9375rem]/[1.375rem] font-semibold text-tinta">{title}</h2>
+        {subtitle && <p className="text-[0.8125rem]/[1.125rem] text-tinta-2">{subtitle}</p>}
       </div>
       {action}
     </header>

@@ -13,7 +13,8 @@ export interface Column<T> {
   className?: string;
 }
 
-// Tabla densa en pantallas md+ y lista de tarjetas en móvil. Es presentacional
+// Tabla densa desde lg (1024 px) y lista de tarjetas por debajo: con el menú lateral desde md
+// el contenido en tablet es angosto. Es presentacional
 // (sin estado), así que sirve tanto en páginas de servidor como en componentes cliente.
 export function DataTable<T>({
   columns,
@@ -35,9 +36,9 @@ export function DataTable<T>({
   if (rows.length === 0 && empty) return <>{empty}</>;
 
   return (
-    <div className="overflow-hidden rounded-lg border border-linea bg-hoja shadow-hoja">
+    <div className="overflow-hidden rounded-md border border-linea bg-hoja">
       {mobileCard && (
-        <ul className="divide-y divide-linea md:hidden">
+        <ul className="divide-y divide-linea-suave lg:hidden">
           {rows.map((row) => (
             <li key={rowKey(row)} className="p-4">
               {mobileCard(row)}
@@ -46,11 +47,11 @@ export function DataTable<T>({
         </ul>
       )}
 
-      <div className={cx("overflow-x-auto", mobileCard && "hidden md:block")}>
+      <div className={cx("overflow-x-auto", mobileCard && "hidden lg:block")}>
         <table className="w-full border-collapse text-sm">
           <caption className="sr-only">{caption}</caption>
           <thead>
-            <tr className="bg-hoja-2">
+            <tr>
               {columns.map((c) => (
                 <th
                   key={c.key}
@@ -59,7 +60,7 @@ export function DataTable<T>({
                     c.sortDir === "asc" ? "ascending" : c.sortDir === "desc" ? "descending" : undefined
                   }
                   className={cx(
-                    "border-b border-linea px-3 py-2.5 text-xs font-semibold uppercase tracking-[0.06em] text-tinta-3",
+                    "h-9 border-b border-linea px-4 text-xs/4 font-medium text-tinta-3",
                     c.align === "right" ? "text-right" : "text-left"
                   )}
                 >
@@ -77,12 +78,12 @@ export function DataTable<T>({
           </thead>
           <tbody>
             {rows.map((row) => (
-              <tr key={rowKey(row)} className="border-b border-linea last:border-b-0 hover:bg-hoja-3">
+              <tr key={rowKey(row)} className="border-b border-linea-suave last:border-b-0 hover:bg-hoja-2">
                 {columns.map((c) => (
                   <td
                     key={c.key}
                     className={cx(
-                      "px-3 py-2.5 align-middle",
+                      "px-4 py-3 align-middle",
                       c.align === "right" && "num text-right",
                       c.className
                     )}

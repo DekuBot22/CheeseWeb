@@ -12,7 +12,7 @@ export function UnitProfitPanel({ priceLb, costLb }: { priceLb: number; costLb: 
 
   return (
     <div className="rounded-md border border-linea bg-hoja-2 p-4" aria-live="polite">
-      <p className="text-xs font-semibold uppercase tracking-[0.06em] text-tinta-3">Ganancia por libra</p>
+      <p className="text-xs/4 font-medium text-tinta-3">Ganancia por libra</p>
 
       {!hasPrice || !hasCost ? (
         <p className="mt-1 text-sm text-tinta-2">
