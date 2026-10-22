@@ -14,6 +14,7 @@ export function BarChart({
   mode = "grouped",
   height = 220,
   format = "cop",
+  dimExceptLast = false,
   ariaLabel,
 }: {
   data: BarDatum[];
@@ -21,6 +22,8 @@ export function BarChart({
   mode?: BarMode;
   height?: number;
   format?: ValueFormat;
+  // Apaga todas las barras menos la última (la semana que se mira).
+  dimExceptLast?: boolean;
   ariaLabel: string;
 }) {
   const uid = useId().replace(/:/g, "");
@@ -65,6 +68,7 @@ export function BarChart({
             datum={d}
             index={i}
             active={active === i}
+            dim={dimExceptLast && i !== data.length - 1}
             onActive={setActive}
             chart={{ layout, series, mode, uid, height, format }}
           />

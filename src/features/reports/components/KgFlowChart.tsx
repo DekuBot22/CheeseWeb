@@ -4,8 +4,8 @@ import { BarChart } from "@/ui/charts/BarChart";
 import { ChartFrame } from "@/ui/charts/ChartFrame";
 
 const SERIES = [
-  { key: "vendidos", label: "Vendidos", color: "var(--serie-1)" },
-  { key: "comprados", label: "Comprados", color: "var(--serie-2)" },
+  { key: "vendidos", label: "Vendidos", color: "var(--cobrado)" },
+  { key: "comprados", label: "Comprados", color: "var(--cat-3)" },
 ];
 
 // Kilos vendidos frente a kilos comprados: la diferencia es la merma o lo que quedó sin vender.

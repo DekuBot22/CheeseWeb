@@ -10,11 +10,11 @@ export interface HBarItem {
   href?: string;
 }
 
-// Lista de barras horizontales (top deudores, antigüedad de la deuda).
+// Lista de barras horizontales (antigüedad de la deuda).
 export function HBarList({ items }: { items: HBarItem[] }) {
   const max = Math.max(...items.map((i) => i.value), 1);
   return (
-    <ul className="space-y-3">
+    <ul className="flex flex-col gap-4">
       {items.map((it) => {
         const name = it.href ? (
           <Link href={it.href} className="font-medium text-tinta hover:underline">
@@ -25,16 +25,16 @@ export function HBarList({ items }: { items: HBarItem[] }) {
         );
         return (
           <li key={it.label}>
-            <div className="flex items-baseline justify-between gap-3 text-sm">
+            <div className="flex items-baseline justify-between gap-3 text-sm/5">
               <span className="min-w-0 truncate">
                 {name}
                 {it.sub && <span className="ml-2 text-xs text-tinta-3">{it.sub}</span>}
               </span>
               <span className="num shrink-0 font-semibold text-tinta">{it.valueLabel}</span>
             </div>
-            <div className="mt-1 h-2 rounded-full bg-hoja-2">
+            <div className="mt-1.5 h-1.5 overflow-hidden rounded-[3px] bg-hoja-3">
               <div
-                className="h-2 rounded-full"
+                className="h-full rounded-[3px]"
                 style={{ width: `${Math.max((it.value / max) * 100, 2)}%`, background: it.color ?? "var(--acento)" }}
               />
             </div>

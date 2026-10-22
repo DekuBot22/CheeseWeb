@@ -6,8 +6,8 @@ import { LineChart } from "@/ui/charts/LineChart";
 import { RevenueCostChart } from "./RevenueCostChart";
 
 const COLLECTED_SERIES = [
-  { key: "cobrado", label: "Cobrado", color: "var(--serie-1)" },
-  { key: "porcobrar", label: "Por cobrar", color: "var(--serie-1-claro)" },
+  { key: "cobrado", label: "Cobrado", color: "var(--cobrado)" },
+  { key: "porcobrar", label: "Por cobrar", color: "var(--aviso)" },
 ];
 
 const unpaid = (w: WeekPoint) => Math.max(w.stats.revenue - w.stats.collected, 0);
