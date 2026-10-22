@@ -54,7 +54,7 @@ function MoveForm({ id, from, today, onDone }: { id: string; from: string; today
         <Input id={`${uid}-fecha`} type="date" required value={date} max={today} onChange={(e) => setDate(e.target.value)} />
       </Field>
       {changed && date && date <= today && <EffectNotice params={{ action: "mover", id, date }} />}
-      <Button type="submit" loading={loading} disabled={!changed}>
+      <Button type="submit" size="sm" className="w-full" loading={loading} disabled={!changed}>
         Mover inicio de semana
       </Button>
     </form>

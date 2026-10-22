@@ -83,7 +83,7 @@ export default async function PedidosPage({ searchParams }: { searchParams: Prom
         initialOrders={orders}
         emptyTitle={filtered ? "Ningún pedido coincide" : "Todavía no hay pedidos"}
         emptyDescription={
-          filtered ? "Prueba quitando algún filtro." : "Cuando un cliente haga un pedido aparecerá aquí."
+          filtered ? "Prueba quitando algún filtro." : "Cuando un cliente haga un pedido aparecerá aquí. También puedes registrar una venta tú mismo."
         }
       />
     </div>

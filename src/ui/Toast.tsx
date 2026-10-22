@@ -14,13 +14,13 @@ export function Toast() {
     <div
       role="status"
       aria-live="polite"
-      className="pointer-events-none fixed inset-x-0 bottom-[calc(5rem+env(safe-area-inset-bottom))] z-40 flex justify-center px-4 lg:bottom-6 lg:justify-end lg:px-8"
+      className="pointer-events-none fixed inset-x-0 bottom-[calc(5rem+env(safe-area-inset-bottom))] z-40 flex justify-center px-4 md:bottom-6 md:justify-end md:px-8"
     >
       {aviso && (
         <p
           key={aviso.id}
           data-saliendo={aviso.saliendo ? "" : undefined}
-          className="aviso rounded-md border border-linea bg-hoja-3 px-4 py-2.5 text-sm font-medium text-tinta shadow-flota"
+          className="aviso rounded-md border border-linea bg-hoja-3 px-4 py-2.5 text-sm/5 font-medium text-tinta shadow-flota"
         >
           <span aria-hidden="true" className="mr-2 text-cobrado">
             ✓

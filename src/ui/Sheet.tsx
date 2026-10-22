@@ -53,9 +53,9 @@ export function Sheet({
         if (e.target === ref.current && pressedOnVeil.current) onClose();
       }}
       aria-label={title}
-      className="hoja m-0 mt-auto max-h-[90dvh] w-full max-w-none overflow-y-auto rounded-t-2xl border-t border-linea bg-hoja-3 p-0 text-tinta shadow-flota md:m-auto md:max-h-[min(85dvh,46rem)] md:w-[32rem] md:max-w-[calc(100vw-3rem)] md:rounded-xl md:border"
+      className="hoja m-0 mt-auto max-h-[90dvh] w-full max-w-none overflow-y-auto rounded-t-2xl border-t border-linea bg-hoja p-0 text-tinta shadow-flota md:m-auto md:max-h-[min(85dvh,46rem)] md:w-[32rem] md:max-w-[calc(100vw-3rem)] md:rounded-xl md:border"
     >
-      <div className="sticky top-0 z-10 flex items-center justify-between border-b border-linea bg-hoja-3 px-5 py-3">
+      <div className="sticky top-0 z-10 flex items-center justify-between border-b border-linea bg-hoja px-5 py-3">
         <h2 className="text-base/6 font-semibold">{title}</h2>
         <button
           type="button"

@@ -94,9 +94,9 @@ export function SaleForm({
         </p>
       )}
 
-      <div className="flex items-center justify-between border-t border-linea pt-3 text-sm">
-        <span className="text-tinta-2">Total estimado</span>
-        <Money value={f.total} className="text-base font-semibold" />
+      <div className="flex items-center justify-between rounded-md border border-linea bg-hoja-2 px-4 py-3.5">
+        <span className="text-sm/5 text-tinta-2">Total estimado</span>
+        <Money value={f.total} className="text-2xl/7 font-semibold text-tinta" />
       </div>
 
       {f.error && (
@@ -105,7 +105,7 @@ export function SaleForm({
         </p>
       )}
 
-      <Button type="submit" loading={f.loading}>
+      <Button type="submit" size="sm" className="w-full" loading={f.loading}>
         Registrar venta
       </Button>
     </form>

@@ -236,8 +236,6 @@ body {
   background: var(--papel);
   color: var(--tinta);
   font-family: var(--font-inter), var(--font-geist-sans), Arial, sans-serif;
-  /* El panel usa Inter también en los títulos: Fraunces queda solo en la página pública. */
-  --font-fraunces: var(--font-inter);
 }
 
 .admin-root :focus-visible {
@@ -260,7 +258,7 @@ body {
 /* Chrome pinta el autocompletado en azul claro: lo devolvemos a la paleta. */
 [data-theme="oscuro"] input:-webkit-autofill {
   -webkit-text-fill-color: var(--tinta);
-  box-shadow: 0 0 0 1000px var(--hoja) inset;
+  box-shadow: 0 0 0 1000px var(--papel) inset;
   caret-color: var(--acento);
 }
 

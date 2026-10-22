@@ -91,7 +91,7 @@ export function PaymentForm({
         />
       </Field>
 
-      <Button type="submit" loading={f.loading}>
+      <Button type="submit" size="sm" className="w-full" loading={f.loading}>
         Registrar abono
       </Button>
     </form>

@@ -62,10 +62,10 @@ export function ReasonForm({
       </div>
 
       <div className="flex gap-2">
-        <Button type="button" variant="ghost" onClick={onCancel}>
+        <Button type="button" size="sm" variant="ghost" onClick={onCancel}>
           Volver
         </Button>
-        <Button type="submit" variant="danger" loading={loading} className="flex-1">
+        <Button type="submit" size="sm" variant="danger" loading={loading} className="flex-1">
           {confirmLabel}
         </Button>
       </div>

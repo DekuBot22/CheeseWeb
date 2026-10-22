@@ -54,7 +54,7 @@ export function LoginForm() {
               aria-describedby={error ? `${uid}-pass-desc` : undefined}
             />
           </Field>
-          <Button type="submit" loading={loading}>
+          <Button type="submit" className="w-full md:h-11" loading={loading}>
             Ingresar
           </Button>
         </form>

@@ -2,7 +2,7 @@ import type { InputHTMLAttributes, ReactNode, SelectHTMLAttributes, TextareaHTML
 import { cx } from "@/lib/cx";
 
 const CONTROL =
-  "w-full rounded-sm border border-linea-fuerte bg-hoja px-3 caret-acento text-sm text-tinta placeholder:text-tinta-3 " +
+  "w-full rounded-sm border border-linea-fuerte bg-papel px-3 caret-acento text-sm text-tinta placeholder:text-tinta-3 " +
   "disabled:opacity-60 aria-[invalid=true]:border-debe";
 
 export function Field({
