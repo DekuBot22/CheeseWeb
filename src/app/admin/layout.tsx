@@ -1,10 +1,10 @@
 import type { Metadata, Viewport } from "next";
-import { IBM_Plex_Sans } from "next/font/google";
+import { Inter } from "next/font/google";
 import { ServiceWorkerRegister } from "@/features/pwa/components/ServiceWorkerRegister";
 
 // La fuente del panel solo se carga en /admin; la página pública no la paga.
-const plex = IBM_Plex_Sans({
-  variable: "--font-plex",
+const inter = Inter({
+  variable: "--font-inter",
   subsets: ["latin"],
   weight: ["400", "500", "600"],
 });
@@ -30,7 +30,7 @@ export const viewport: Viewport = {
 
 export default function AdminRootLayout({ children }: { children: React.ReactNode }) {
   return (
-    <div data-theme="oscuro" className={`${plex.variable} admin-root flex flex-1 flex-col`}>
+    <div data-theme="oscuro" className={`${inter.variable} admin-root flex flex-1 flex-col`}>
       <ServiceWorkerRegister />
       {children}
     </div>

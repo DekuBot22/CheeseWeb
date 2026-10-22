@@ -53,15 +53,15 @@ export function Sheet({
         if (e.target === ref.current && pressedOnVeil.current) onClose();
       }}
       aria-label={title}
-      className="hoja m-0 mt-auto max-h-[90dvh] w-full max-w-none overflow-y-auto rounded-t-lg border-t border-linea bg-hoja-3 p-0 text-tinta shadow-flota md:m-auto md:max-h-[min(85dvh,46rem)] md:w-[32rem] md:max-w-[calc(100vw-3rem)] md:rounded-lg md:border"
+      className="hoja m-0 mt-auto max-h-[90dvh] w-full max-w-none overflow-y-auto rounded-t-2xl border-t border-linea bg-hoja p-0 text-tinta shadow-flota md:m-auto md:max-h-[min(85dvh,46rem)] md:w-[32rem] md:max-w-[calc(100vw-3rem)] md:rounded-xl md:border"
     >
-      <div className="sticky top-0 z-10 flex items-center justify-between border-b border-linea bg-hoja-3 px-5 py-3">
-        <h2 className="font-display text-lg font-semibold">{title}</h2>
+      <div className="sticky top-0 z-10 flex items-center justify-between border-b border-linea bg-hoja px-5 py-3">
+        <h2 className="text-base/6 font-semibold">{title}</h2>
         <button
           type="button"
           onClick={onClose}
           aria-label="Cerrar"
-          className="presionable flex h-11 w-11 items-center justify-center rounded-md text-tinta-2 hover:bg-hoja-2 hover:text-tinta"
+          className="presionable flex h-11 w-11 items-center justify-center rounded-sm text-tinta-2 hover:bg-hoja-2 hover:text-tinta"
         >
           <IconClose />
         </button>

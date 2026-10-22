@@ -3,13 +3,8 @@ import { activeOnly } from "@/domain/void";
 import { currentWeek, previousWeek, type WeekCalendar } from "@/domain/week-calendar";
 import { formatCOP, plural } from "@/lib/format";
 import { pickParam } from "@/lib/search-params";
-import {
-  CHEESE_FILTERS,
-  OrdersFilters,
-  ORDER_PERIODS,
-  ORDER_STATES,
-  PAYMENT_FILTERS,
-} from "@/features/orders/components/OrdersFilters";
+import { OrdersFilters } from "@/features/orders/components/OrdersFilters";
+import { CHEESE_FILTERS, ORDER_PERIODS, ORDER_STATES, PAYMENT_FILTERS } from "@/features/orders/order-filters";
 import { OrdersTable } from "@/features/orders/components/OrdersTable";
 import { listOrders } from "@/features/orders/server/orders.repo";
 import { NewSaleButton } from "@/features/orders/components/NewSaleButton";
@@ -65,6 +60,7 @@ export default async function PedidosPage({ searchParams }: { searchParams: Prom
       <PageHeader
         title="Pedidos"
         subtitle="Estado de cada pedido y lo que falta por cobrar."
+        stretchActions
         actions={
           <>
             <NewSaleButton pricePerKg={settings ? Number(settings.price_per_kg) : 0} />
@@ -77,9 +73,9 @@ export default async function PedidosPage({ searchParams }: { searchParams: Prom
 
       <OrdersFilters values={{ q, estado, pago, tipo, periodo }} />
 
-      <p className="num mb-3 text-sm text-tinta-2" aria-live="polite">
-        {plural(orders.length, "pedido")} · vendido <strong className="text-tinta">{formatCOP(total)}</strong> · por
-        cobrar <strong className={pendiente > 0 ? "text-debe" : "text-tinta"}>{formatCOP(pendiente)}</strong>
+      <p className="num mb-3 text-[0.8125rem]/[1.125rem] text-tinta-2" aria-live="polite">
+        {plural(orders.length, "pedido")} · vendido <strong className="font-semibold text-tinta">{formatCOP(total)}</strong> · por
+        cobrar <strong className={pendiente > 0 ? "font-semibold text-debe" : "font-semibold text-tinta"}>{formatCOP(pendiente)}</strong>
         {orders.length === LIMIT && ` · mostrando los ${LIMIT} más recientes`}
       </p>
 
@@ -87,7 +83,7 @@ export default async function PedidosPage({ searchParams }: { searchParams: Prom
         initialOrders={orders}
         emptyTitle={filtered ? "Ningún pedido coincide" : "Todavía no hay pedidos"}
         emptyDescription={
-          filtered ? "Prueba quitando algún filtro." : "Cuando un cliente haga un pedido aparecerá aquí."
+          filtered ? "Prueba quitando algún filtro." : "Cuando un cliente haga un pedido aparecerá aquí. También puedes registrar una venta tú mismo."
         }
       />
     </div>

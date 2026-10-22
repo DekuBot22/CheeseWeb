@@ -11,30 +11,22 @@ export function BottomNav() {
   return (
     <nav
       aria-label="Secciones del panel"
-      className="fixed inset-x-0 bottom-0 z-30 border-t border-linea bg-hoja/95 pb-[env(safe-area-inset-bottom)] backdrop-blur lg:hidden"
+      className="fixed inset-x-0 bottom-0 z-30 border-t border-linea bg-papel pb-[env(safe-area-inset-bottom)] md:hidden"
     >
-      <ul className="grid grid-cols-5">
+      <ul className="flex h-16 items-center gap-1 px-2">
         {MAIN_NAV.map(({ href, label, Icon }) => {
           const active = isActive(pathname, href);
           return (
-            <li key={href}>
+            <li key={href} className="min-w-0 flex-1">
               <Link
                 href={href}
                 aria-current={active ? "page" : undefined}
                 className={cx(
-                  "group relative flex min-h-16 flex-col items-center justify-center gap-1 text-[0.6875rem] font-medium transition-colors duration-(--dur-rapida)",
-                  active ? "text-acento" : "text-tinta-2"
+                  "presionable relative flex h-[3.25rem] flex-col items-center justify-center gap-[3px] rounded-sm text-xs font-medium",
+                  active ? "bg-hoja-2 text-tinta" : "text-tinta-3"
                 )}
               >
-                {/* Solo la pastilla del ícono reacciona al toque: escalar toda la celda se vería mal. */}
-                <span
-                  className={cx(
-                    "flex h-7 w-12 items-center justify-center rounded-full transition-[transform,background-color] duration-(--dur-rapida) ease-(--ease-salida) group-active:scale-[0.94] motion-reduce:group-active:scale-100",
-                    active && "bg-acento-suave"
-                  )}
-                >
-                  <Icon />
-                </span>
+                <Icon width={22} height={22} />
                 {label}
                 <LinkPending />
               </Link>

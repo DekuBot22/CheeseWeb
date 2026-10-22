@@ -5,20 +5,18 @@ import { Skeleton } from "@/ui/Skeleton";
 // fuera contenido; `esqueleto-tardio` lo hace aparecer 120 ms tarde para evitar el destello.
 export default function PanelLoading() {
   return (
-    <div className="esqueleto-tardio space-y-6" aria-busy="true" aria-label="Cargando">
-      <div className="space-y-2">
-        <Skeleton className="h-8 w-40" />
-        <Skeleton className="h-4 w-56" />
+    <div className="esqueleto-tardio space-y-4 md:space-y-6" aria-busy="true" aria-label="Cargando">
+      <div className="flex items-center justify-between">
+        <div className="space-y-2">
+          <Skeleton className="h-7 w-32" />
+          <Skeleton className="h-4 w-52" />
+        </div>
+        <Skeleton className="hidden h-8 w-64 md:block" />
       </div>
-      <Skeleton className="h-32 w-full" />
-      <div className="grid grid-cols-2 gap-3 lg:grid-cols-4">
-        {[0, 1, 2, 3].map((i) => (
-          <Skeleton key={i} className="h-28" />
-        ))}
-      </div>
-      <div className="grid gap-4 lg:grid-cols-[1.2fr_1fr]">
-        <Skeleton className="h-72" />
-        <Skeleton className="h-72" />
+      <Skeleton className="h-52 w-full" />
+      <div className="grid gap-4 lg:grid-cols-[1.35fr_1fr] lg:gap-6">
+        <Skeleton className="h-80" />
+        <Skeleton className="h-80" />
       </div>
     </div>
   );

@@ -1,29 +1,22 @@
 import type { ReactNode } from "react";
 import { cx } from "@/lib/cx";
+import { Dot, type DotTone } from "./Dot";
 
-type Tone = "debe" | "parcial" | "pagado" | "pendiente" | "listo" | "neutral" | "aviso";
+type Tone = "debe" | "parcial" | "pagado" | "pendiente" | "listo" | "neutral" | "aviso" | "info";
 
-const TONES: Record<Tone, string> = {
-  debe: "bg-debe-bg text-debe border-debe-borde",
-  parcial: "bg-aviso-bg text-aviso border-aviso-borde",
-  pagado: "bg-cobrado-bg text-cobrado border-cobrado-borde",
-  pendiente: "bg-aviso-bg text-aviso border-aviso-borde",
-  listo: "bg-cobrado-bg text-cobrado border-cobrado-borde",
-  aviso: "bg-aviso-bg text-aviso border-aviso-borde",
-  neutral: "bg-hoja-2 text-tinta-2 border-linea",
+// Cada estado de pedido se traduce al color del punto del diseño.
+const DOTS: Record<Tone, DotTone> = {
+  debe: "debe",
+  parcial: "aviso",
+  pagado: "cobrado",
+  pendiente: "info",
+  listo: "cobrado",
+  aviso: "aviso",
+  info: "info",
+  neutral: "neutro",
 };
 
-// El estado nunca se comunica solo con color: cada tono lleva su símbolo.
-const ICONS: Record<Tone, string> = {
-  debe: "●",
-  parcial: "◐",
-  pagado: "✓",
-  pendiente: "○",
-  listo: "✓",
-  aviso: "!",
-  neutral: "",
-};
-
+// El estado nunca se comunica solo con color: el punto acompaña siempre a un texto.
 export function Badge({
   tone = "neutral",
   children,
@@ -36,13 +29,11 @@ export function Badge({
   return (
     <span
       className={cx(
-        // Solo color: al marcar "listo" o saldar un pedido el tono cambia suave en vez de saltar.
-        "inline-flex items-center gap-1.5 rounded-full border px-2.5 py-0.5 text-xs font-semibold whitespace-nowrap transition-[color,background-color,border-color] duration-(--dur-rapida)",
-        TONES[tone],
+        "inline-flex h-6 items-center gap-1.5 rounded-full border border-linea px-2 text-xs/4 font-medium whitespace-nowrap text-tinta",
         className
       )}
     >
-      {ICONS[tone] && <span aria-hidden="true">{ICONS[tone]}</span>}
+      <Dot tone={DOTS[tone]} className="transition-colors duration-(--dur-rapida)" />
       {children}
     </span>
   );

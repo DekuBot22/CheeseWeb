@@ -15,12 +15,15 @@ export function BarSlot({
   datum,
   index,
   active,
+  dim = false,
   onActive,
   chart,
 }: {
   datum: BarDatum;
   index: number;
   active: boolean;
+  // Barra apagada: así se resalta la semana que se está mirando.
+  dim?: boolean;
   onActive: (index: number | null) => void;
   chart: BarChartContext;
 }) {
@@ -45,6 +48,7 @@ export function BarSlot({
             key={s.key}
             d={roundedTop({ x, y: top, w: layout.barW, h: Math.max(h - gap, 0), r: 4 })}
             fill={estimated ? `url(#${uid}-hatch-${s.key})` : s.color}
+            fillOpacity={dim ? 0.55 : undefined}
             stroke={estimated ? s.color : undefined}
             strokeWidth={estimated ? 1 : undefined}
           />

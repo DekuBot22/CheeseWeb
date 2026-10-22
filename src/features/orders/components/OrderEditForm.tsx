@@ -121,10 +121,10 @@ export function OrderEditForm({
       {f.preview && <Callout tone="info">{previewText(f.preview, f.paidSum, f.clientName)}</Callout>}
 
       <div className="flex gap-2">
-        <Button type="button" variant="ghost" onClick={onCancel}>
+        <Button type="button" size="sm" variant="ghost" onClick={onCancel}>
           Volver
         </Button>
-        <Button type="submit" loading={f.loading} className="flex-1">
+        <Button type="submit" size="sm" loading={f.loading} className="flex-1">
           Guardar cambios
         </Button>
       </div>

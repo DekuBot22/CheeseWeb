@@ -77,6 +77,12 @@ export function formatDay(dateStr: string): string {
   return `${d} ${MESES[m - 1].slice(0, 3)} ${y}`;
 }
 
+// Para columnas `date` cuando el año sobra: "4 oct".
+export function formatDayShort(dateStr: string): string {
+  const [, m, d] = dateStr.split("-").map(Number);
+  return `${d} ${MESES[m - 1].slice(0, 3)}`;
+}
+
 export function formatWeekLabel(start: Date, end: Date): string {
   const s = toBogotaWall(start);
   const e = toBogotaWall(end);

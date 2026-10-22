@@ -18,9 +18,14 @@ export default function PanelError({
 
   return (
     <EmptyState
+      tone="error"
       title="No se pudo cargar esta pantalla"
       description="Puede ser un problema de conexión con la base de datos. Intenta de nuevo; si sigue fallando, revisa que las tablas de Supabase estén creadas."
-      action={<Button onClick={() => retry()}>Reintentar</Button>}
+      action={
+        <Button size="sm" onClick={() => retry()}>
+          Reintentar
+        </Button>
+      }
     />
   );
 }

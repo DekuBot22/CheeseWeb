@@ -138,7 +138,7 @@ proyecto hermano de **QueseriaApp** (escritorio, Python/Tkinter, en
   `cobrado`, `aviso`, `serie-*`, `aging-*`) en `src/app/globals.css`: los valores
   **oscuros** van bajo `[data-theme="oscuro"]` (atributo en `src/app/admin/layout.tsx`);
   los de `:root` son reserva clara. No cambiar `:root` para oscurecer: la página
-  pública comparte `--tinta`. Fuente IBM Plex Sans solo en `/admin`; títulos en
+  pública comparte `--tinta`. Fuente Inter solo en `/admin` (rediseño sobrio); títulos en
   Fraunces. La página pública conserva su paleta (`cuajada`, `corteza`, `curado`, `terracota`).
 - Auth del panel: cookie HMAC derivada de `ADMIN_PASSWORD`, sin tabla de
   sesiones (`src/features/auth/server/session.ts`), **400 días y renovada en cada

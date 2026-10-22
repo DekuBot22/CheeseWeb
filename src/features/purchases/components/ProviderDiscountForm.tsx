@@ -108,7 +108,7 @@ export function ProviderDiscountForm({
         <Input id={`${uid}-nota`} type="text" maxLength={300} required={v.reason === "otro"} value={v.notes} onChange={(e) => set.setNotes(e.target.value)} placeholder="Ej. llegó muy salado, lo vendí más barato" />
       </Field>
 
-      <Button type="submit" loading={status.loading}>
+      <Button type="submit" size="sm" className="w-full md:w-auto md:self-start" loading={status.loading}>
         Registrar descuento
       </Button>
       <div aria-live="polite">

@@ -7,9 +7,9 @@ export function SettingsLink() {
     <Link
       href={href}
       aria-label={label}
-      className="flex h-11 w-11 items-center justify-center rounded-md text-tinta-2 hover:bg-hoja-2"
+      className="flex h-11 w-11 items-center justify-center rounded-sm text-tinta-2 hover:bg-hoja-2 hover:text-tinta"
     >
-      <Icon />
+      <Icon width={20} height={20} />
     </Link>
   );
 }

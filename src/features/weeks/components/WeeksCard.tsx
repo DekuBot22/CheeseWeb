@@ -1,5 +1,5 @@
 import type { WeekContext } from "@/domain/week-hint";
-import { formatDay, plural } from "@/lib/format";
+import { formatDayShort, plural } from "@/lib/format";
 import { Callout } from "@/ui/Callout";
 import { Card, CardBody, CardHeader } from "@/ui/Card";
 import type { WeekRow } from "../types";
@@ -24,12 +24,12 @@ export function WeeksCard({ rows, context, ready }: { rows: WeekRow[]; context: 
             </Callout>
           </div>
         )}
-        <ul className="divide-y divide-linea">
+        <ul className="divide-y divide-linea-suave">
           {rows.map((w) => (
             <li key={w.from} className="flex items-center justify-between gap-3 py-2.5">
               <div className="min-w-0">
                 <p className="text-sm font-medium text-tinta">
-                  {formatDay(w.from)} – {formatDay(w.to)}
+                  {formatDayShort(w.from)} – {formatDayShort(w.to)}
                 </p>
                 <p className="num text-[0.8125rem] text-tinta-2">
                   {plural(w.days, "día")} · {w.openingId ? "abierta a mano" : "automática"}

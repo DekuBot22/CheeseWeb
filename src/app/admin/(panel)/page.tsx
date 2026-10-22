@@ -1,68 +1,59 @@
-import Link from "next/link";
-import { formatWeekLabel } from "@/lib/format";
-import { PendingOrdersList } from "@/features/orders/components/PendingOrdersList";
-import { DashboardStats } from "@/features/reports/components/DashboardStats";
+import { formatWeekLabel, plural } from "@/lib/format";
 import { DebtorsCard } from "@/features/reports/components/DebtorsCard";
-import { PerDayNote } from "@/features/reports/components/PerDayNote";
+import { InicioBanner } from "@/features/reports/components/InicioBanner";
 import { QuickActions } from "@/features/reports/components/QuickActions";
+import { ReviewCard } from "@/features/reports/components/ReviewCard";
+import { WeekSummaryCard } from "@/features/reports/components/WeekSummaryCard";
 import { getDashboard } from "@/features/reports/server/get-dashboard";
-import { WeekPrompt } from "@/features/weeks/components/WeekPrompt";
-import { Callout } from "@/ui/Callout";
+import { profitDifference, weekSummaryNotes } from "@/features/reports/week-summary";
 import { PageHeader } from "@/ui/PageHeader";
 
 export const dynamic = "force-dynamic";
+
+const HINT_NOTES = {
+  compra: "Hoy registraste una compra, ¿llegó el queso?",
+  largo: "Esta semana ya lleva muchos días, ¿llegó el queso?",
+} as const;
 
 export default async function InicioPage() {
   const d = await getDashboard();
   const pricePerKg = d.settings ? Number(d.settings.price_per_kg) : 0;
   const costPerKg = d.settings ? Number(d.settings.cost_per_kg) : 0;
 
+  // Todo lo que pide atención va en un solo aviso, en este orden.
+  const notes: string[] = [];
+  if (d.weekHint) notes.push(HINT_NOTES[d.weekHint]);
+  if (pricePerKg <= 0) {
+    notes.push("Falta el precio de venta en Ajustes: sin él la página pública no recibe pedidos.");
+  } else if (costPerKg <= 0) {
+    notes.push("Falta el costo por libra en Ajustes: sin él la ganancia sale igual a lo cobrado.");
+  }
+
   return (
-    <div className="space-y-6 md:space-y-8">
+    <div className="space-y-4 md:space-y-6">
       <PageHeader
         title="Inicio"
-        subtitle={`Semana ${formatWeekLabel(d.current.start, d.current.end)}`}
+        subtitle={`Semana ${formatWeekLabel(d.current.start, d.current.end)} · ${plural(d.weekElapsed, "día")}`}
+        stretchActions
         actions={<QuickActions payable={d.openOrders} pricePerKg={pricePerKg} week={d.weekContext} />}
       />
 
-      <WeekPrompt week={d.weekContext} hint={d.weekHint} elapsed={d.weekElapsed} />
+      <InicioBanner week={d.weekContext} hint={d.weekHint} notes={notes} />
 
-      {pricePerKg <= 0 && (
-        <Callout tone="aviso">
-          Aún no has puesto el precio de venta. <Link href="/admin/ajustes" className="font-semibold underline">Configúralo en Ajustes</Link>{" "}
-          para que la página pública pueda recibir pedidos.
-        </Callout>
-      )}
-
-      {pricePerKg > 0 && costPerKg <= 0 && (
-        <Callout tone="aviso">
-          No has puesto lo que te cuesta cada libra, así que la ganancia sale igual a lo cobrado.{" "}
-          <Link href="/admin/ajustes" className="font-semibold underline">Ponlo en Ajustes</Link>.
-        </Callout>
-      )}
-
-      <DashboardStats
-        week={{
-          cur: d.cur,
-          revenueChange: d.revenueChange,
-          profitChange: d.profitChange,
-          collectedPct: d.collectedPct,
-        }}
-        debt={{ total: d.debt.total, clients: d.debt.debtors.length }}
-        provider={d.provider}
+      <WeekSummaryCard
+        profit={d.cur.stats.profit}
+        profitDiff={profitDifference(d.cur, d.prev)}
+        revenue={d.cur.stats.revenue}
+        orderCount={d.cur.orderCount}
+        collected={d.cur.stats.collected}
+        collectedPct={d.collectedPct}
+        kgSold={d.cur.kgSold}
+        notes={weekSummaryNotes(d.current, d.cur, d.prev, d.weekElapsed)}
       />
 
-      <div className="-mt-3 text-right">
-        <Link href="/admin/ganancias/graficas" className="text-sm font-medium text-acento hover:underline">
-          Ver gráficas →
-        </Link>
-      </div>
-
-      <PerDayNote cur={d.cur} prev={d.prev} elapsed={d.weekElapsed} />
-
-      <div className="grid gap-4 lg:grid-cols-[1.2fr_1fr] lg:gap-6">
-        <DebtorsCard debtors={d.debt.debtors} />
-        <PendingOrdersList orders={d.pending} />
+      <div className="grid gap-4 lg:grid-cols-[1.35fr_1fr] lg:items-start lg:gap-6">
+        <DebtorsCard debtors={d.debt.debtors} total={d.debt.total} />
+        <ReviewCard pending={d.pending} debtors={d.debt.debtors} providerBalance={d.provider.saldo} />
       </div>
     </div>
   );

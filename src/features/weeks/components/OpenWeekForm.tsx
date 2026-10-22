@@ -74,7 +74,7 @@ export function OpenWeekForm({
         </Callout>
       )}
 
-      <Button type="submit" loading={loading} disabled={!date}>
+      <Button type="submit" size="sm" className="w-full" loading={loading} disabled={!date}>
         Abrir semana nueva
       </Button>
     </form>

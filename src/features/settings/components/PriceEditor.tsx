@@ -32,7 +32,7 @@ export function PriceEditor({
         subtitle={f.lastUpdated ? `Última actualización: ${formatDate(f.lastUpdated)}` : "Aún no configurado"}
       />
       <CardBody>
-        <form onSubmit={f.submit} className="flex max-w-xl flex-col gap-4">
+        <form onSubmit={f.submit} className="flex flex-col gap-4">
           <Field
             label="Precio de venta por libra (lo que paga el cliente)"
             htmlFor={`${uid}-precio`}
@@ -68,11 +68,11 @@ export function PriceEditor({
 
           <UnitProfitPanel priceLb={priceLb} costLb={costLb} />
 
-          <p className="text-[0.8125rem] text-tinta-2">
+          <p className="text-[0.8125rem]/[1.125rem] text-tinta-2">
             El costo solo se usa para estimar la ganancia de las semanas que no tienen compra registrada.
           </p>
 
-          <Button type="submit" loading={f.loading}>
+          <Button type="submit" size="sm" className="w-full md:w-auto md:self-start" loading={f.loading}>
             Guardar
           </Button>
         </form>

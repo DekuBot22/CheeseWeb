@@ -1,5 +1,5 @@
 import type { LedgerRow } from "@/domain/provider-ledger";
-import { formatDay, plural } from "@/lib/format";
+import { formatCOP, formatDayShort, plural } from "@/lib/format";
 import { Badge } from "@/ui/Badge";
 import { DataTable, type Column } from "@/ui/DataTable";
 import { EmptyState } from "@/ui/EmptyState";
@@ -19,10 +19,20 @@ function KindBadge({ kind }: { kind: LedgerRow["kind"] }) {
   return <Badge tone={KINDS[kind].tone}>{KINDS[kind].label}</Badge>;
 }
 
-// Monto con signo de la fila para la tarjeta móvil: compra +, pago y descuento −.
-function signedAmount(r: LedgerRow) {
-  if (r.kind === "compra") return r.compra;
-  return -(r.kind === "pago" ? r.pago : r.descuento);
+// Monto con signo para la tarjeta móvil: compra "+", pago y descuento "−".
+function SignedAmount({ row }: { row: LedgerRow }) {
+  const isPurchase = row.kind === "compra";
+  const value = isPurchase ? row.compra : row.kind === "pago" ? row.pago : row.descuento;
+  return (
+    <span
+      className={cx(
+        "num text-sm/5 font-semibold",
+        row.voided ? "text-tinta-3 line-through" : isPurchase ? "text-tinta" : "text-cobrado"
+      )}
+    >
+      {isPurchase ? "+" : "−"} {formatCOP(value)}
+    </span>
+  );
 }
 
 // Lo anulado se ve tachado y apagado; no mueve el saldo.
@@ -38,31 +48,35 @@ function Amount({ row, value, tone }: { row: LedgerRow; value: number; tone?: "c
 }
 
 function movementLabel(r: LedgerRow): string {
-  return `${KINDS[r.kind].label.toLowerCase()} del ${formatDay(r.date)}`;
+  return `${KINDS[r.kind].label.toLowerCase()} del ${formatDayShort(r.date)}`;
 }
 
 function VoidInfo({ row }: { row: LedgerRow }) {
   if (!row.voided) return null;
   return (
-    <span className="mt-0.5 block text-xs text-tinta-3">
+    <span className="mt-0.5 block text-xs/4 text-tinta-3">
       Anulado{row.voidReason ? `: ${row.voidReason}` : ""}
     </span>
   );
 }
 
 const COLUMNS: Column<LedgerRow>[] = [
-  { key: "fecha", header: "Fecha", cell: (r) => <span className="num">{formatDay(r.date)}</span> },
+  {
+    key: "fecha",
+    header: "Fecha",
+    cell: (r) => <span className="num whitespace-nowrap text-[0.8125rem]/[1.125rem] text-tinta-2">{formatDayShort(r.date)}</span>,
+  },
   {
     key: "concepto",
     header: "Concepto",
     cell: (r) => (
-      <span>
+      <div>
         <span className={cx("flex items-center gap-2", r.voided && "opacity-60")}>
           <KindBadge kind={r.kind} />
-          <span className="text-tinta-2">{r.detail || "—"}</span>
+          <span className="text-[0.8125rem]/[1.125rem] text-tinta-2">{r.detail || "—"}</span>
         </span>
         <VoidInfo row={r} />
-      </span>
+      </div>
     ),
   },
   { key: "compra", header: "Compra (+)", align: "right", cell: (r) => <Amount row={r} value={r.compra} /> },
@@ -90,25 +104,46 @@ interface Totals {
 }
 
 function LedgerFooter({ totals }: { totals: Totals }) {
+  const cell = "px-2 py-3 text-right";
   return (
-    <tr className="border-t-2 border-linea-fuerte bg-hoja-2 font-semibold">
-      <td colSpan={2} className="px-3 py-2.5 text-right text-tinta-2">
+    <tr className="border-t border-linea bg-hoja-2 font-semibold">
+      <td colSpan={2} className="px-4 py-3 text-left font-medium text-tinta-2">
         Totales
       </td>
-      <td className="px-3 py-2.5 text-right">
+      <td className={cell}>
         <Money value={totals.comprado} />
       </td>
-      <td className="px-3 py-2.5 text-right">
+      <td className={cell}>
         <Money value={totals.pagado} tone="cobrado" />
       </td>
-      <td className="px-3 py-2.5 text-right">
+      <td className={cell}>
         <Money value={totals.descontado} tone="cobrado" />
       </td>
-      <td className="total-doble px-3 py-2.5 text-right">
+      <td className={cell}>
         <Money value={totals.saldo} className={totals.saldo > 0 ? "text-acento" : ""} />
       </td>
       <td />
     </tr>
+  );
+}
+
+// Resumen del libro en móvil: lo mismo que la fila de totales de la tabla.
+function MobileTotals({ totals }: { totals: Totals }) {
+  const rows: [string, React.ReactNode][] = [
+    ["Comprado", <Money key="c" value={totals.comprado} />],
+    ["Pagado", <Money key="p" value={totals.pagado} tone="cobrado" />],
+    ["Descontado", <Money key="d" value={totals.descontado} tone="cobrado" />],
+    ["Saldo", <Money key="s" value={totals.saldo} className={totals.saldo > 0 ? "text-acento" : ""} />],
+  ];
+  return (
+    <dl className="mt-3 flex flex-col gap-1.5 rounded-lg border border-linea bg-hoja-2 p-4 text-sm/5 lg:hidden">
+      {rows.map(([label, value]) => (
+        <div key={label} className="flex items-center justify-between">
+          <dt className="text-tinta-2">{label}</dt>
+          <dd className="num font-semibold">{value}</dd>
+        </div>
+      ))}
+    </dl>
   );
 }
 
@@ -120,6 +155,7 @@ export function ProviderLedgerTable({ rows, totals, purchaseCount }: { rows: Led
         columns={COLUMNS}
         rows={rows}
         rowKey={(r) => r.key}
+        mobileLayout="cards"
         empty={
           <EmptyState
             title="Aún no hay movimientos"
@@ -127,25 +163,23 @@ export function ProviderLedgerTable({ rows, totals, purchaseCount }: { rows: Led
           />
         }
         mobileCard={(r) => (
-          <div className="flex items-start justify-between gap-3">
-            <div className="min-w-0">
+          <div className="flex flex-col gap-2">
+            <div className="flex items-center justify-between gap-3">
               <p className={cx("flex items-center gap-2", r.voided && "opacity-60")}>
                 <KindBadge kind={r.kind} />
-                <span className="num text-sm text-tinta-2">{formatDay(r.date)}</span>
+                <span className="num text-[0.8125rem]/[1.125rem] text-tinta-2">{formatDayShort(r.date)}</span>
               </p>
-              {r.detail && <p className="mt-1 text-[0.8125rem] text-tinta-2">{r.detail}</p>}
-              <VoidInfo row={r} />
+              <SignedAmount row={r} />
             </div>
-            <div className="text-right">
-              <span className={cx(r.voided && "text-tinta-3 line-through")}>
-                <Money
-                  value={signedAmount(r)}
-                  tone={r.kind === "compra" || r.voided ? "neutral" : "cobrado"}
-                  className="text-sm font-semibold"
-                />
-              </span>
-              <p className="num text-xs text-tinta-3">
-                Saldo <Money value={r.saldo} />
+            {(r.detail || r.voided) && (
+              <div className="text-[0.8125rem]/[1.125rem] text-tinta-2">
+                {r.detail}
+                <VoidInfo row={r} />
+              </div>
+            )}
+            <div className="flex items-center justify-between gap-3">
+              <p className="num text-xs/4 text-tinta-3">
+                Saldo <Money value={r.saldo} className="text-sm/5 font-semibold text-tinta" />
               </p>
               {!r.voided && <VoidMovementButton kind={r.kind} id={r.id} label={movementLabel(r)} />}
             </div>
@@ -153,7 +187,8 @@ export function ProviderLedgerTable({ rows, totals, purchaseCount }: { rows: Led
         )}
         footer={<LedgerFooter totals={totals} />}
       />
-      <p className="mt-2 text-xs text-tinta-3">
+      {rows.length > 0 && <MobileTotals totals={totals} />}
+      <p className="mt-2 text-xs/4 text-tinta-3">
         {plural(purchaseCount, "compra")} en total · saldo = comprado − descuentos − pagado.
       </p>
     </>

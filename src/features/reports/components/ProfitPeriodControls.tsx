@@ -24,7 +24,7 @@ export function ProfitPeriodControls({
   const step = (target: Week | null) => (target ? href("semana", `&semana=${target.from}`) : undefined);
 
   return (
-    <div className="flex flex-wrap items-center justify-between gap-3">
+    <div className="flex flex-col items-start gap-3 md:flex-row md:items-center md:gap-4">
       <SegmentedControl
         label="Período"
         value={view}

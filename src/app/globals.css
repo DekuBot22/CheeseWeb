@@ -42,6 +42,14 @@
 
   /* Reservas del tema claro (el panel hoy usa el oscuro, ver más abajo). */
   --hoja-3: #f1ebdd;
+  --linea-suave: #eee4d1;
+  --boton: #2e2115;
+  --boton-hover: #46341f;
+  --sobre-boton: #fffdf8;
+  --cat-1: #b5651d;
+  --cat-2: #7a4fa8;
+  --cat-3: #2f64b0;
+  --cat-4: #6b5a48;
   --sobre-acento: #fffdf8;
   --info-borde: #bcd0ea;
   --aging-1: #f2c9b8;
@@ -70,6 +78,7 @@
   --hoja-2: #221f1b;
   --hoja-3: #2a2621;
   --linea: #2f2b25;
+  --linea-suave: #24211d;
   --linea-fuerte: #776e60;
   --tinta: #efe8dc;
   --tinta-2: #bdb3a3;
@@ -78,6 +87,15 @@
   --acento-hover: #e6b65a;
   --acento-suave: #2c2416;
   --sobre-acento: #17120a;
+  /* Botón principal: crema (el ámbar queda para señales, no para botones). */
+  --boton: #efe8dc;
+  --boton-hover: #f8f3ea;
+  --sobre-boton: #0f0e0c;
+  /* Categorías: tipo de queso y movimientos. */
+  --cat-1: #e0894a;
+  --cat-2: #a98be0;
+  --cat-3: #5e9be6;
+  --cat-4: #8c8478;
   --debe: #f0826b;
   --debe-bg: #2b1714;
   --debe-borde: #5a2c23;
@@ -122,6 +140,14 @@
   --color-hoja-3: var(--hoja-3);
   --color-sobre-acento: var(--sobre-acento);
   --color-info-borde: var(--info-borde);
+  --color-linea-suave: var(--linea-suave);
+  --color-boton: var(--boton);
+  --color-boton-hover: var(--boton-hover);
+  --color-sobre-boton: var(--sobre-boton);
+  --color-cat-1: var(--cat-1);
+  --color-cat-2: var(--cat-2);
+  --color-cat-3: var(--cat-3);
+  --color-cat-4: var(--cat-4);
   --color-aging-1: var(--aging-1);
   --color-aging-2: var(--aging-2);
   --color-aging-3: var(--aging-3);
@@ -148,10 +174,13 @@
   --color-serie-2: var(--serie-2);
   --color-serie-3: var(--serie-3);
   --color-serie-1-claro: var(--serie-1-claro);
-  --font-ui: var(--font-plex);
+  --font-ui: var(--font-inter);
+  /* Radios del diseño: sm botones y campos, md banner y tabla, lg tarjetas, xl hoja en PC, 2xl hoja en móvil. */
   --radius-sm: 6px;
-  --radius-md: 10px;
-  --radius-lg: 14px;
+  --radius-md: 8px;
+  --radius-lg: 10px;
+  --radius-xl: 12px;
+  --radius-2xl: 16px;
   --shadow-hoja: var(--sombra-hoja);
   --shadow-flota: var(--sombra-flota);
 }
@@ -206,7 +235,7 @@ body {
 .admin-root {
   background: var(--papel);
   color: var(--tinta);
-  font-family: var(--font-plex), var(--font-geist-sans), Arial, sans-serif;
+  font-family: var(--font-inter), var(--font-geist-sans), Arial, sans-serif;
 }
 
 .admin-root :focus-visible {
@@ -229,7 +258,7 @@ body {
 /* Chrome pinta el autocompletado en azul claro: lo devolvemos a la paleta. */
 [data-theme="oscuro"] input:-webkit-autofill {
   -webkit-text-fill-color: var(--tinta);
-  box-shadow: 0 0 0 1000px var(--hoja) inset;
+  box-shadow: 0 0 0 1000px var(--papel) inset;
   caret-color: var(--acento);
 }
 

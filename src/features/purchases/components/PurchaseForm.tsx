@@ -67,7 +67,7 @@ export function PurchaseForm({ onDone, week }: { onDone?: (info: PurchaseDone) =
         </label>
       )}
 
-      <Button type="submit" loading={status.loading}>
+      <Button type="submit" size="sm" className="w-full md:w-auto md:self-start" loading={status.loading}>
         Registrar compra
       </Button>
       <div aria-live="polite">

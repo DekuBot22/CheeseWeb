@@ -4,8 +4,8 @@ import { BarChart } from "@/ui/charts/BarChart";
 import { ChartFrame } from "@/ui/charts/ChartFrame";
 
 const SERIES = [
-  { key: "cobrado", label: "Cobrado", color: "var(--serie-1)" },
-  { key: "costo", label: "Costo", color: "var(--serie-2)" },
+  { key: "cobrado", label: "Cobrado", color: "var(--cobrado)" },
+  { key: "costo", label: "Costo", color: "var(--cat-4)" },
 ];
 
 // Lo cobrado frente a su costo por semana (la diferencia es la ganancia).

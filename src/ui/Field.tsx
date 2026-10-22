@@ -2,7 +2,7 @@ import type { InputHTMLAttributes, ReactNode, SelectHTMLAttributes, TextareaHTML
 import { cx } from "@/lib/cx";
 
 const CONTROL =
-  "w-full rounded-sm border border-linea-fuerte bg-hoja px-3 caret-acento text-sm text-tinta placeholder:text-tinta-3 " +
+  "w-full rounded-sm border border-linea-fuerte bg-papel px-3 caret-acento text-sm text-tinta placeholder:text-tinta-3 " +
   "disabled:opacity-60 aria-[invalid=true]:border-debe";
 
 export function Field({
@@ -44,7 +44,7 @@ export function Field({
 export function Input({ className, onWheel, ...props }: InputHTMLAttributes<HTMLInputElement>) {
   return (
     <input
-      className={cx(CONTROL, "h-11", className)}
+      className={cx(CONTROL, "h-11 md:h-9", className)}
       onWheel={(e) => {
         if (e.currentTarget.type === "number") e.currentTarget.blur();
         onWheel?.(e);
@@ -55,7 +55,7 @@ export function Input({ className, onWheel, ...props }: InputHTMLAttributes<HTML
 }
 
 export function Select({ className, ...props }: SelectHTMLAttributes<HTMLSelectElement>) {
-  return <select className={cx(CONTROL, "h-11", className)} {...props} />;
+  return <select className={cx(CONTROL, "h-11 md:h-9", className)} {...props} />;
 }
 
 export function Textarea({ className, ...props }: TextareaHTMLAttributes<HTMLTextAreaElement>) {

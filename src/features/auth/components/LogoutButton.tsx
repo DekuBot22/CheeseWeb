@@ -2,7 +2,6 @@
 
 import { useRouter } from "next/navigation";
 import { IconLogout } from "@/ui/icons";
-import { cx } from "@/lib/cx";
 
 export function LogoutButton({ iconOnly = false }: { iconOnly?: boolean }) {
   const router = useRouter();
@@ -18,13 +17,13 @@ export function LogoutButton({ iconOnly = false }: { iconOnly?: boolean }) {
       type="button"
       onClick={handleLogout}
       aria-label="Cerrar sesión"
-      className={cx(
-        "flex items-center gap-3 rounded-md text-sm font-medium text-tinta-2 hover:bg-hoja-2 hover:text-tinta",
-        iconOnly ? "h-11 w-11 justify-center" : "h-10 w-full px-3"
-      )}
+      className={
+        iconOnly
+          ? "flex h-11 w-11 items-center justify-center rounded-sm text-tinta-2 hover:bg-hoja-2 hover:text-tinta"
+          : "pl-2 text-left text-[0.8125rem]/[1.125rem] text-tinta-3 hover:text-tinta"
+      }
     >
-      <IconLogout />
-      {!iconOnly && "Cerrar sesión"}
+      {iconOnly ? <IconLogout /> : "Cerrar sesión"}
     </button>
   );
 }
