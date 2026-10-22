@@ -1,11 +1,10 @@
-import { CHEESE_TYPE_LABELS, SALT_LEVEL_LABELS } from "@/domain/catalog";
 import { remainingOf, type Order } from "@/domain/order";
 import { formatDateShort } from "@/lib/format";
 import { Money } from "@/ui/Money";
 import type { Column } from "@/ui/DataTable";
 import { isVoided } from "@/domain/void";
 import { PaymentBadge } from "./OrderBadges";
-import { ClientLink, MoreButton, OrderStateCell, PayButton } from "./OrderRowCells";
+import { CheeseLabel, ClientLink, MoreButton, OrderStateCell, PayButton } from "./OrderRowCells";
 
 interface Options {
   showClient: boolean;
@@ -17,20 +16,32 @@ interface Options {
 
 // Columnas de la tabla de pedidos en escritorio.
 export function buildOrderColumns({ showClient, updatingId, onToggle, onPay, onMore }: Options): Column<Order>[] {
-  const client: Column<Order> = { key: "cliente", header: "Cliente", cell: (o) => <ClientLink order={o} /> };
+  const client: Column<Order> = {
+    key: "cliente",
+    header: "Cliente",
+    cell: (o) => <ClientLink order={o} className="text-sm/5" />,
+  };
 
   return [
-    { key: "fecha", header: "Fecha", cell: (o) => <span className="num text-tinta-2">{formatDateShort(o.created_at)}</span> },
+    {
+      key: "fecha",
+      header: "Fecha",
+      cell: (o) => <span className="num whitespace-nowrap text-[0.8125rem]/[1.125rem] text-tinta-2">{formatDateShort(o.created_at)}</span>,
+    },
     ...(showClient ? [client] : []),
-    { key: "cant", header: "Cantidad", cell: (o) => <span className="num">{o.quantity} {o.unit}</span> },
+    { key: "cant", header: "Cantidad", cell: (o) => <span className="num whitespace-nowrap">{o.quantity} {o.unit}</span> },
     {
       key: "queso",
       header: "Queso",
       cell: (o) => (
-        <span className="text-tinta-2">
-          {CHEESE_TYPE_LABELS[o.cheese_type]} · {SALT_LEVEL_LABELS[o.salt_level]}
-          {o.note && <span className="block max-w-[16rem] truncate text-[0.8125rem] italic" title={o.note}>{o.note}</span>}
-        </span>
+        <div className="text-[0.8125rem]/[1.125rem] text-tinta-2">
+          <CheeseLabel order={o} />
+          {o.note && (
+            <span className="block max-w-[16rem] truncate text-xs/4 italic text-tinta-3" title={o.note}>
+              {o.note}
+            </span>
+          )}
+        </div>
       ),
     },
     { key: "total", header: "Total", align: "right", cell: (o) => <Money value={Number(o.total)} /> },

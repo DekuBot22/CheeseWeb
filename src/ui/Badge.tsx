@@ -9,7 +9,7 @@ const DOTS: Record<Tone, DotTone> = {
   debe: "debe",
   parcial: "aviso",
   pagado: "cobrado",
-  pendiente: "aviso",
+  pendiente: "info",
   listo: "cobrado",
   aviso: "aviso",
   info: "info",

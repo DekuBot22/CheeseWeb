@@ -3,6 +3,7 @@
 import { useRouter } from "next/navigation";
 import { useState } from "react";
 import type { Order } from "@/domain/order";
+import { isVoided } from "@/domain/void";
 import { DataTable } from "@/ui/DataTable";
 import { EmptyState } from "@/ui/EmptyState";
 import { avisar } from "@/ui/toast-store";
@@ -72,6 +73,8 @@ export function OrdersTable({
         columns={buildOrderColumns({ showClient, updatingId, onToggle: toggleStatus, onPay, onMore })}
         rows={orders}
         rowKey={(o) => o.id}
+        mobileLayout="cards"
+        rowClassName={(o) => (isVoided(o) ? "opacity-[0.55]" : undefined)}
         empty={<EmptyState title={emptyTitle} description={emptyDescription} />}
         mobileCard={(o) => (
           <OrderMobileCard

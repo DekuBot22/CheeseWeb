@@ -6,6 +6,7 @@ import { isVoided } from "@/domain/void";
 import { PaymentBadge } from "./OrderBadges";
 import { ClientLink, MoreButton, OrderStateCell, PayButton } from "./OrderRowCells";
 
+// Tarjeta del pedido en móvil: cliente y total, detalle, insignias y, abajo, "Abonar" a todo el ancho.
 export function OrderMobileCard({
   order,
   updating,
@@ -20,20 +21,20 @@ export function OrderMobileCard({
   onMore: (order: Order) => void;
 }) {
   return (
-    <div className="flex flex-col gap-2">
+    <div className="flex flex-col gap-3">
       <div className="flex items-start justify-between gap-3">
-        <div className="min-w-0">
+        <div className="flex min-w-0 flex-col gap-0.5">
           <p className="truncate">
-            <ClientLink order={order} />
+            <ClientLink order={order} className="text-[0.9375rem]/[1.375rem] font-semibold" />
           </p>
-          <p className="num text-[0.8125rem] text-tinta-2">
+          <p className="num text-sm/5 text-tinta-2">
             {order.quantity} {order.unit} · {CHEESE_TYPE_LABELS[order.cheese_type]} ·{" "}
             {SALT_LEVEL_LABELS[order.salt_level]}
           </p>
-          <p className="num text-xs text-tinta-3">{formatDateShort(order.created_at)}</p>
-          {order.note && <p className="mt-0.5 line-clamp-2 text-[0.8125rem] italic text-tinta-2">{order.note}</p>}
+          <p className="num text-xs/4 text-tinta-3">{formatDateShort(order.created_at)}</p>
+          {order.note && <p className="mt-0.5 line-clamp-2 text-sm/5 italic text-tinta-2">{order.note}</p>}
         </div>
-        <Money value={Number(order.total)} className="text-base font-semibold" />
+        <Money value={Number(order.total)} className="text-[0.9375rem]/[1.375rem] font-semibold text-tinta" />
       </div>
       <div className="flex flex-wrap items-center gap-2">
         <OrderStateCell order={order} disabled={updating} onToggle={onToggle} />
@@ -48,8 +49,10 @@ export function OrderMobileCard({
             )}
           </PaymentBadge>
         )}
-        <span className="ml-auto flex items-center gap-1">
-          <PayButton order={order} onPay={onPay} />
+      </div>
+      <div className="flex items-center gap-2">
+        <PayButton order={order} onPay={onPay} className="flex-1" />
+        <span className="ml-auto">
           <MoreButton order={order} onMore={onMore} />
         </span>
       </div>

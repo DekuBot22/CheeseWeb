@@ -120,3 +120,10 @@ export const IconLogout = (p: IconProps) => (
     <path d="m13.333 14.167 4.167-4.167-4.167-4.167M17.5 10h-10" />
   </NavIcon>
 );
+
+// Embudo de "Filtros" (trazo de la rejilla de 24, como los íconos de acción de arriba).
+export const IconFilter = (p: IconProps) => (
+  <Icon width={18} height={18} {...p}>
+    <path d="M4 5h16l-6.2 7.4V19l-3.6-1.8v-4.8z" />
+  </Icon>
+);
