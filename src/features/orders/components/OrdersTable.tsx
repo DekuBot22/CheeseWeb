@@ -79,6 +79,7 @@ export function OrdersTable({
         mobileCard={(o) => (
           <OrderMobileCard
             order={o}
+            showClient={showClient}
             updating={updatingId === o.id}
             onToggle={toggleStatus}
             onPay={onPay}

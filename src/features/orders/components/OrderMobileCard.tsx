@@ -9,12 +9,15 @@ import { ClientLink, MoreButton, OrderStateCell, PayButton } from "./OrderRowCel
 // Tarjeta del pedido en móvil: cliente y total, detalle, insignias y, abajo, "Abonar" a todo el ancho.
 export function OrderMobileCard({
   order,
+  showClient = true,
   updating,
   onToggle,
   onPay,
   onMore,
 }: {
   order: Order;
+  // false en el historial de un cliente: el detalle del pedido pasa a ser el título.
+  showClient?: boolean;
   updating: boolean;
   onToggle: (order: Order) => void;
   onPay: (order: Order) => void;
@@ -24,10 +27,12 @@ export function OrderMobileCard({
     <div className="flex flex-col gap-3">
       <div className="flex items-start justify-between gap-3">
         <div className="flex min-w-0 flex-col gap-0.5">
-          <p className="truncate">
-            <ClientLink order={order} className="text-[0.9375rem]/[1.375rem] font-semibold" />
-          </p>
-          <p className="num text-sm/5 text-tinta-2">
+          {showClient && (
+            <p className="truncate">
+              <ClientLink order={order} className="text-[0.9375rem]/[1.375rem] font-semibold" />
+            </p>
+          )}
+          <p className={showClient ? "num text-sm/5 text-tinta-2" : "num text-[0.9375rem]/[1.375rem] text-tinta"}>
             {order.quantity} {order.unit} · {CHEESE_TYPE_LABELS[order.cheese_type]} ·{" "}
             {SALT_LEVEL_LABELS[order.salt_level]}
           </p>

@@ -52,46 +52,55 @@ export function ClientsTable({
   totalPorCobrar: number;
   searching: boolean;
 }) {
+  const total = <Money value={totalPorCobrar} tone={totalPorCobrar > 0 ? "debe" : "neutral"} />;
+
   return (
-    <DataTable
-      caption="Clientes"
-      columns={COLUMNS}
-      rows={rows}
-      rowKey={(r) => r.id}
-      empty={
-        <EmptyState
-          title={searching ? "Ningún cliente coincide" : "Aún no hay clientes"}
-          description={
-            searching ? "Prueba con otro nombre o teléfono." : "Los clientes se crean solos cuando hacen su primer pedido."
-          }
-        />
-      }
-      mobileCard={(r) => (
-        <Link href={`/admin/clientes/${r.id}`} className="flex items-center justify-between gap-3">
-          <div className="min-w-0">
-            <p className="truncate font-semibold text-tinta">{r.name}</p>
-            <p className="num text-[0.8125rem] text-tinta-2">
-              {plural(r.orders, "pedido")}
-              {r.phone ? ` · ${r.phone}` : ""}
-            </p>
-          </div>
-          <div className="flex shrink-0 flex-col items-end gap-1 text-sm">
-            <Balance row={r} />
-            {r.daysInDebt !== null && r.daysInDebt >= 7 && <Age row={r} />}
-          </div>
-        </Link>
+    <>
+      <DataTable
+        caption="Clientes"
+        columns={COLUMNS}
+        rows={rows}
+        rowKey={(r) => r.id}
+        mobileLayout="cards"
+        empty={
+          <EmptyState
+            title={searching ? "Ningún cliente coincide" : "Aún no hay clientes"}
+            description={
+              searching ? "Prueba con otro nombre o teléfono." : "Los clientes se crean solos cuando hacen su primer pedido."
+            }
+          />
+        }
+        mobileCard={(r) => (
+          <Link href={`/admin/clientes/${r.id}`} className="flex items-center justify-between gap-3 py-1">
+            <div className="flex min-w-0 flex-col gap-0.5">
+              <p className="truncate text-sm/5 font-semibold text-tinta">{r.name}</p>
+              <p className="num text-[0.8125rem]/[1.125rem] text-tinta-2">
+                {plural(r.orders, "pedido")}
+                {r.phone ? ` · ${r.phone}` : ""}
+              </p>
+            </div>
+            <div className="flex shrink-0 flex-col items-end gap-1 text-sm">
+              <Balance row={r} />
+              {r.daysInDebt !== null && r.daysInDebt >= 7 && <Age row={r} />}
+            </div>
+          </Link>
+        )}
+        footer={
+          <tr className="border-t border-linea bg-hoja-2 font-medium">
+            <td colSpan={4} className="px-4 py-3 text-left text-tinta-2">
+              Total por cobrar
+            </td>
+            <td className="num px-2 py-3 text-right font-semibold">{total}</td>
+            <td />
+          </tr>
+        }
+      />
+      {rows.length > 0 && (
+        <div className="mt-3 flex items-center justify-between rounded-lg border border-linea bg-hoja-2 p-4 lg:hidden">
+          <p className="text-sm/5 text-tinta-2">Total por cobrar</p>
+          <p className="num text-base/6 font-semibold">{total}</p>
+        </div>
       )}
-      footer={
-        <tr className="border-t-2 border-linea-fuerte bg-hoja-2 font-semibold">
-          <td colSpan={4} className="px-3 py-2.5 text-right text-tinta-2">
-            Total por cobrar
-          </td>
-          <td className="num total-doble px-3 py-2.5 text-right">
-            <Money value={totalPorCobrar} tone={totalPorCobrar > 0 ? "debe" : "neutral"} />
-          </td>
-          <td />
-        </tr>
-      }
-    />
+    </>
   );
 }

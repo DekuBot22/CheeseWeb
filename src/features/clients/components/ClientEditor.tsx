@@ -57,8 +57,8 @@ export function ClientEditor({ client }: { client: Client }) {
               placeholder="Ej. prefiere entrega los sábados"
             />
           </Field>
-          <div className="flex items-center gap-3" aria-live="polite">
-            <Button type="submit" loading={status === "loading"}>
+          <div className="flex flex-wrap items-center gap-3" aria-live="polite">
+            <Button type="submit" size="sm" className="w-full md:w-auto" loading={status === "loading"}>
               Guardar
             </Button>
             {status === "saved" && <span className="aparece inline-block text-sm font-medium text-cobrado">✓ Guardado</span>}

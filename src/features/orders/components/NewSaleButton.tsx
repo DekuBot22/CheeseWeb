@@ -21,6 +21,17 @@ export function NewSaleButton({ pricePerKg }: { pricePerKg: number }) {
   );
 }
 
+// Solo el botón redondo con su hoja, para pantallas que no llevan "+ Venta" arriba (Clientes).
+export function SaleFab({ pricePerKg }: { pricePerKg: number }) {
+  const [open, setOpen] = useState(false);
+  return (
+    <>
+      <NewSaleFab onClick={() => setOpen(true)} />
+      <SaleSheet open={open} onClose={() => setOpen(false)} pricePerKg={pricePerKg} />
+    </>
+  );
+}
+
 // Botón redondo de "Nueva venta" que flota sobre la barra inferior (solo móvil).
 export function NewSaleFab({ onClick }: { onClick: () => void }) {
   return (

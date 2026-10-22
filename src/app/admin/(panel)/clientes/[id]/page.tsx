@@ -18,9 +18,12 @@ export default async function ClientDetailPage({ params }: { params: Promise<{ i
   const summary = summarizeClientOrders(orders);
 
   return (
-    <div className="space-y-6">
+    <div className="space-y-4 md:space-y-6">
       <div>
-        <Link href="/admin/clientes" className="mb-2 inline-block text-sm font-medium text-acento hover:underline">
+        <Link
+          href="/admin/clientes"
+          className="mb-2 inline-block text-[0.8125rem]/[1.125rem] font-medium text-acento hover:underline"
+        >
           ← Clientes
         </Link>
         <PageHeader title={client.name} subtitle={plural(summary.count, "pedido")} />
@@ -35,7 +38,7 @@ export default async function ClientDetailPage({ params }: { params: Promise<{ i
       <ClientEditor client={client} />
 
       <section aria-labelledby="historial">
-        <h2 id="historial" className="mb-3 font-display text-lg font-semibold text-tinta">
+        <h2 id="historial" className="mb-3 text-[0.9375rem]/[1.375rem] font-semibold text-tinta">
           Historial de pedidos
         </h2>
         <OrdersTable initialOrders={orders} showClient={false} emptyTitle="Este cliente aún no tiene pedidos" />

@@ -2,6 +2,7 @@ import type { ReactNode } from "react";
 import { cx } from "@/lib/cx";
 import { Sparkline } from "./Sparkline";
 
+// Cifra suelta en su tarjeta: 16 px en móvil (caben tres en fila) y 24 px desde md.
 export function Stat({
   label,
   value,
@@ -11,7 +12,7 @@ export function Stat({
   emphasis = "default",
   className,
 }: {
-  label: string;
+  label: ReactNode;
   value: ReactNode;
   hint?: ReactNode;
   delta?: ReactNode;
@@ -26,7 +27,7 @@ export function Stat({
         <p
           className={cx(
             "num font-semibold text-tinta",
-            emphasis === "hero" ? "text-[2rem]/9 tracking-[-0.01em]" : "text-2xl/7"
+            emphasis === "hero" ? "text-[2rem]/9 tracking-[-0.01em]" : "text-base/6 md:text-2xl/7"
           )}
         >
           {value}
