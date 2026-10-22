@@ -45,7 +45,7 @@ export default async function AdminPanelLayout({ children }: { children: React.R
 
         <main
           id="contenido"
-          className="mx-auto w-full max-w-[1200px] px-4 py-6 pb-[calc(7rem+env(safe-area-inset-bottom))] md:px-8 md:py-8 md:pb-8"
+          className="mx-auto w-full max-w-[1200px] px-4 py-6 pb-[calc(9rem+env(safe-area-inset-bottom))] md:px-8 md:py-8 md:pb-8"
         >
           {children}
         </main>

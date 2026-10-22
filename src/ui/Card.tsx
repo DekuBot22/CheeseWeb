@@ -34,7 +34,7 @@ export function CardHeader({
   action?: ReactNode;
 }) {
   return (
-    <header className="flex items-start justify-between gap-3 px-4 pt-4 md:px-5 md:pt-5">
+    <header className="flex items-center justify-between gap-3 px-4 pt-4 md:px-5 md:pt-5">
       <div>
         <h2 className="text-[0.9375rem]/[1.375rem] font-semibold text-tinta">{title}</h2>
         {subtitle && <p className="text-[0.8125rem]/[1.125rem] text-tinta-2">{subtitle}</p>}
