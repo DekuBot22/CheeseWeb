@@ -22,7 +22,7 @@ export function UnitProfitPanel({ priceLb, costLb }: { priceLb: number; costLb: 
         <>
           <p className="mt-1 flex flex-wrap items-baseline gap-x-3">
             <span
-              className={cx("num font-display text-[2.5rem] font-medium leading-none", ganancia >= 0 ? "text-cobrado" : "text-debe")}
+              className={cx("num text-[2rem]/9 font-semibold tracking-[-0.01em]", ganancia >= 0 ? "text-cobrado" : "text-debe")}
             >
               {ganancia >= 0 ? formatCOP(ganancia) : `−${formatCOP(Math.abs(ganancia))}`}
             </span>

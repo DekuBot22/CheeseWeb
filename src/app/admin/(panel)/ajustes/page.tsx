@@ -12,7 +12,7 @@ export default async function AjustesPage() {
   const [settings, weeks] = await Promise.all([getSettings(), getWeeksOverview()]);
 
   return (
-    <div className="max-w-2xl space-y-6">
+    <div className="max-w-[45rem] space-y-4 md:space-y-6">
       <PageHeader title="Ajustes" subtitle="Precio de venta y costo por libra, semanas, respaldo e instalación en el teléfono." />
       <PriceEditor
         initialPrice={settings?.price_per_kg ?? null}

@@ -53,9 +53,9 @@ const OTHER_STEPS = [
 function InstallBody({ platform, canPrompt }: { platform: Platform; canPrompt: boolean }) {
   if (canPrompt) {
     return (
-      <div className="flex flex-col items-start gap-3">
+      <div className="flex flex-col items-stretch gap-3 md:items-start">
         <p className="text-sm text-tinta-2">Se instala como una app más, sin pasar por ninguna tienda.</p>
-        <Button onClick={() => void promptInstall()}>Instalar Cuaderno</Button>
+        <Button variant="secondary" size="sm" className="w-full md:w-auto" onClick={() => void promptInstall()}>Instalar Cuaderno</Button>
       </div>
     );
   }

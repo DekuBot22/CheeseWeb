@@ -35,11 +35,11 @@ export function BackupCard() {
         subtitle="Cada noche se envía a tu Telegram una copia completa (JSON) y el Excel de todo el tiempo."
       />
       <CardBody>
-        <div className="flex flex-col items-start gap-3">
+        <div className="flex flex-col items-stretch gap-3 md:items-start">
           <p className="text-sm text-tinta-2">
             Guarda esos archivos: si algún día se pierde la base de datos, con ellos se recupera todo.
           </p>
-          <Button onClick={send} loading={loading}>
+          <Button variant="secondary" size="sm" className="w-full md:w-auto" onClick={send} loading={loading}>
             Enviar respaldo ahora
           </Button>
           {error && (
