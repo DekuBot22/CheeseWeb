@@ -1,6 +1,6 @@
 "use client";
 
-import { formatCOP, formatDay, plural } from "@/lib/format";
+import { formatCOP, formatDay, formatDayShort, plural } from "@/lib/format";
 import { Callout } from "@/ui/Callout";
 import type { EffectPreview } from "../types";
 import { useOpeningEffect, type EffectParams } from "./use-opening-effect";
@@ -13,6 +13,31 @@ function summary(p: EffectPreview): string {
   return parts.length > 1 ? `${parts.slice(0, -1).join(", ")} y ${parts[parts.length - 1]}` : parts[0];
 }
 
+// Vista previa de "desde / hasta": cómo quedan las semanas tocadas y qué se mueve entre ellas.
+function RangeNotice({ preview, moved }: { preview: EffectPreview; moved: string | null | undefined }) {
+  return (
+    <div className="flex flex-col gap-2">
+      {moved ? (
+        <Callout tone="aviso">Cambian de semana: {moved}. Cambia la ganancia de esas semanas.</Callout>
+      ) : (
+        <Callout tone="info">No cambia ningún pedido ni compra de semana: las cifras quedan iguales.</Callout>
+      )}
+      {!!preview.after?.length && (
+        <div className="text-[0.8125rem] text-tinta-2">
+          <p className="font-medium text-tinta">Así quedan:</p>
+          <ul className="mt-1 flex flex-col gap-0.5">
+            {preview.after.map((w) => (
+              <li key={w.from} className="num">
+                {formatDayShort(w.from)} – {formatDayShort(w.to)} · {plural(w.days, "día")}
+              </li>
+            ))}
+          </ul>
+        </div>
+      )}
+    </div>
+  );
+}
+
 // Antes de confirmar: qué pedidos y compras cambian de semana (y por tanto la ganancia de ambas semanas).
 export function EffectNotice({ params }: { params: EffectParams | null }) {
   const { preview, error, loading } = useOpeningEffect(params);
@@ -22,6 +47,7 @@ export function EffectNotice({ params }: { params: EffectParams | null }) {
 
   const { effect } = preview;
   const moved = effect && summary(preview);
+  if (preview.after) return <RangeNotice preview={preview} moved={moved} />;
   if (!effect || !moved) {
     return <Callout tone="info">No cambia ningún pedido ni compra de semana: las cifras quedan iguales.</Callout>;
   }

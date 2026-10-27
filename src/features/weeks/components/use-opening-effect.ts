@@ -4,9 +4,12 @@ import { useEffect, useState } from "react";
 import type { EffectPreview } from "../types";
 
 export interface EffectParams {
-  action: "abrir" | "mover" | "anular";
+  action: "abrir" | "mover" | "anular" | "rango";
   date?: string;
   id?: string;
+  // Solo "rango": inicio y fin de la semana (sin `until` = sigue en curso).
+  from?: string;
+  until?: string;
 }
 
 const DEBOUNCE_MS = 250;

@@ -48,6 +48,18 @@ export async function insertWeekOpening(row: { start_date: string; note: string 
   return data as WeekOpening;
 }
 
+// Inserta varias aperturas en una sola sentencia (todas o ninguna).
+export async function insertWeekOpenings(rows: { start_date: string; note: string | null }[]): Promise<WeekOpening[]> {
+  const { data, error } = await db().from("week_openings").insert(rows).select();
+  if (error && isMissingTableError(error)) throw new AppError(MIGRATION_007_MESSAGE, 503);
+  if (error?.code === "23505") throw new ValidationError("Ya hay una semana que empieza ese día");
+  if (error || !data) {
+    console.error(error);
+    throw new AppError("No se pudo guardar la semana");
+  }
+  return data as WeekOpening[];
+}
+
 // Errores que lanza `move_week_opening` (`raise exception '...'`) → texto claro.
 const MOVE_ERRORS: Record<string, () => AppError> = {
   apertura_no_encontrada: () => new NotFoundError("Apertura no encontrada"),

@@ -1,6 +1,6 @@
 import "server-only";
 import { activeOnly } from "@/domain/void";
-import { currentWeek, lastWeeks } from "@/domain/week-calendar";
+import { currentWeek, lastWeeks, nextWeek } from "@/domain/week-calendar";
 import { weekContext } from "@/domain/week-hint";
 import type { WeekRow } from "../types";
 import { getWeekCalendar } from "./get-week-calendar";
@@ -17,7 +17,9 @@ export async function getWeeksOverview(now: Date = new Date()) {
     .reverse()
     .map((w) => {
       const opening = w.manual ? active.find((o) => o.start_date === w.from) : undefined;
-      return { from: w.from, to: w.to, days: w.days, openingId: opening?.id ?? null, note: opening?.note ?? null };
+      const next = nextWeek(cal, w);
+      return { from: w.from, to: w.to, days: w.days, openingId: opening?.id ?? null, note: opening?.note ?? null, until: next?.from ?? null };
     });
-  return { rows, ready, context: weekContext(cal, current) };
+  const refs = active.map((o) => ({ id: o.id, date: o.start_date }));
+  return { rows, openings: refs, ready, context: weekContext(cal, current) };
 }
