@@ -1,17 +1,16 @@
 import "server-only";
 import { isEmptyWeek, sumWeeks, weeklySeries, type PeriodData, type WeekPoint } from "@/domain/accounting";
-import { parseWeekParam } from "@/domain/week";
 import {
   currentWeek,
   dropEmptyLead,
   lastWeeks,
   nextWeek,
   previousWeek,
-  weekOf,
   weeksSince,
   type Week,
   type WeekCalendar,
 } from "@/domain/week-calendar";
+import { resolveWeek } from "@/domain/week-scope";
 import { getWeekCalendar } from "@/features/weeks/server/get-week-calendar";
 import type { ProfitView } from "../profit-views";
 import { loadPeriod } from "./load-period";
@@ -28,9 +27,9 @@ function firstMovement(data: PeriodData, now: Date): Date {
 }
 
 // Semana que se está mirando: la del parámetro de la URL o la actual (nunca el futuro).
+// "Todo" siempre termina en la actual.
 function pickWeek(view: ProfitView, weekParam: string | undefined, cal: WeekCalendar): Week {
-  const parsed = view === "semana" ? parseWeekParam(weekParam) : null;
-  return parsed ? weekOf(cal, parsed) : currentWeek(cal);
+  return resolveWeek(cal, view === "todo" ? undefined : weekParam).week;
 }
 
 // Rango que baja el botón de Excel según el período mostrado.
