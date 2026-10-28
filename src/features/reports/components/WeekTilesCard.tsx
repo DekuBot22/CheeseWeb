@@ -51,7 +51,7 @@ export function WeekTilesCard({ weeks, now }: { weeks: WeekPoint[]; now: number 
   return (
     <Card>
       <CardHeader
-        title={`Últimas ${weeks.length} semanas`}
+        title={weeks.length === 1 ? "Última semana" : `Últimas ${weeks.length} semanas`}
         action={<Legend className="hidden justify-end sm:flex" />}
       />
       <CardBody>

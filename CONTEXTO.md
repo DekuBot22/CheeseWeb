@@ -110,8 +110,11 @@ proyecto hermano de **QueseriaApp** (escritorio, Python/Tkinter, en
    dueño puede **abrir la semana a mano** el día que llegue el queso (domingo,
    lunes…): cada semana va de su apertura al día antes de la siguiente
    (`src/domain/week-calendar.ts`). Antes de la primera apertura rige el sábado,
-   así que sin aperturas las cifras son las de siempre. Detalle en la sección
-   "Semanas abiertas a mano" de `docs/ARQUITECTURA.md`.
+   así que sin aperturas las cifras son las de siempre. Las semanas se crean y
+   editan con "desde / hasta" (el hasta es el día que llega el queso siguiente) o
+   desde un calendario mensual en Ajustes; la lista solo muestra desde la primera
+   apertura. Detalle en la sección "Semanas abiertas a mano" de
+   `docs/ARQUITECTURA.md`.
 5. **Clientes se crean solos** al llegar un pedido (nombre normalizado). Riesgo
    aceptado: variaciones del nombre duplican clientes; no hay UI para fusionar.
 6. **Saldo a favor:** el excedente de un abono queda en `credit_balance`; no se
