@@ -47,10 +47,13 @@ export function ClientsTable({
   rows,
   totalPorCobrar,
   searching,
+  scoped = false,
 }: {
   rows: ClientRow[];
   totalPorCobrar: number;
   searching: boolean;
+  // Se ve una semana pasada: la lista vacía significa "nadie compró esa semana".
+  scoped?: boolean;
 }) {
   const total = <Money value={totalPorCobrar} tone={totalPorCobrar > 0 ? "debe" : "neutral"} />;
 
@@ -64,9 +67,13 @@ export function ClientsTable({
         mobileLayout="cards"
         empty={
           <EmptyState
-            title={searching ? "Ningún cliente coincide" : "Aún no hay clientes"}
+            title={searching ? "Ningún cliente coincide" : scoped ? "Nadie compró esa semana" : "Aún no hay clientes"}
             description={
-              searching ? "Prueba con otro nombre o teléfono." : "Los clientes se crean solos cuando hacen su primer pedido."
+              searching
+                ? "Prueba con otro nombre o teléfono."
+                : scoped
+                  ? "No hay pedidos en esa semana."
+                  : "Los clientes se crean solos cuando hacen su primer pedido."
             }
           />
         }

@@ -32,6 +32,16 @@ function periodRange(periodo: (typeof ORDER_PERIODS)[number], cal: WeekCalendar)
 // "todos" no filtra: se manda como ausente.
 const orUndefined = <T extends string>(value: T) => (value === "todos" ? undefined : (value as Exclude<T, "todos">));
 
+// Texto de la lista vacía según haya filtros o se esté mirando una semana sin ventas.
+function emptyText(filtered: boolean, scoped: boolean) {
+  if (filtered) return { title: "Ningún pedido coincide", description: "Prueba quitando algún filtro." };
+  if (scoped) return { title: "Sin pedidos esa semana", description: "No hubo ventas en esa semana." };
+  return {
+    title: "Todavía no hay pedidos",
+    description: "Cuando un cliente haga un pedido aparecerá aquí. También puedes registrar una venta tú mismo.",
+  };
+}
+
 export default async function PedidosPage({ searchParams }: { searchParams: Promise<Params> }) {
   const params = await searchParams;
   const q = params.q?.trim() ?? "";
@@ -59,6 +69,7 @@ export default async function PedidosPage({ searchParams }: { searchParams: Prom
   const total = active.reduce((s, o) => s + Number(o.total), 0);
   const pendiente = active.reduce((s, o) => s + remainingOf(o), 0);
   const filtered = Boolean(q) || [estado, pago, tipo, scoped ? "todos" : periodo].some((v) => v !== "todos");
+  const empty = emptyText(filtered, scoped);
 
   return (
     <div>
@@ -93,10 +104,8 @@ export default async function PedidosPage({ searchParams }: { searchParams: Prom
 
       <OrdersTable
         initialOrders={orders}
-        emptyTitle={filtered ? "Ningún pedido coincide" : "Todavía no hay pedidos"}
-        emptyDescription={
-          filtered ? "Prueba quitando algún filtro." : "Cuando un cliente haga un pedido aparecerá aquí. También puedes registrar una venta tú mismo."
-        }
+        emptyTitle={empty.title}
+        emptyDescription={empty.description}
       />
     </div>
   );

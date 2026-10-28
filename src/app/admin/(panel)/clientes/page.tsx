@@ -36,7 +36,7 @@ export default async function ClientesPage({
         }
       />
       <ClientsToolbar query={q} sort={sort} semana={scope.param} />
-      <ClientsTable rows={rows} totalPorCobrar={totalPorCobrar} searching={Boolean(q)} />
+      <ClientsTable rows={rows} totalPorCobrar={totalPorCobrar} searching={Boolean(q)} scoped={!scope.isCurrent} />
       <SaleFab pricePerKg={settings ? Number(settings.price_per_kg) : 0} />
     </div>
   );
