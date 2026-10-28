@@ -8,6 +8,12 @@
 
 ## 📍 Dónde quedamos (retomar desde aquí)
 
+- **Rama `semana-mejoras` (2026-10-28, sin merge ni push; parte de `semana-global`):** seis mejoras pedidas
+  por el dueño: cifras en la lista de semanas, ventas por día en el calendario de Ajustes, «Deshacer» tras
+  cambiar una semana, deslizar entre semanas en el celular, abono con «Otra fecha» y «Cobro del mes» por
+  cliente con WhatsApp. Detalle en `docs/ARQUITECTURA.md` → «Mejoras del selector y del calendario».
+  Pendiente: que el dueño las pruebe (sobre todo el celular) y dé luz verde para merge + push.
+
 - **Rama `semana-global` (2026-10-27/28, sin merge ni push; parte de `semanas-calendario`):** selector
   global de semana. `?semana=` en la URL hace que Inicio, Pedidos, Clientes, Compras, Ganancias y
   Gráficas se vean "como esa semana" (menú lateral en PC, botón + hoja en el móvil, franja de aviso).
