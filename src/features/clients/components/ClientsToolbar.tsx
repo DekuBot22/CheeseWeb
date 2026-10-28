@@ -1,6 +1,8 @@
+import Link from "next/link";
 import { Suspense } from "react";
 import type { ClientSort } from "@/domain/client-balance";
 import { withWeekParam } from "@/lib/week-param";
+import { buttonClasses } from "@/ui/Button";
 import { SearchInput } from "@/ui/SearchInput";
 import { SegmentedControl } from "@/ui/SegmentedControl";
 
@@ -35,6 +37,9 @@ export function ClientsToolbar({ query, sort, semana = null }: { query: string; 
           ]}
         />
       </div>
+      <Link href="/admin/clientes/cobro" className={buttonClasses("secondary", "sm", "md:ml-auto")}>
+        Cobro del mes
+      </Link>
     </div>
   );
 }

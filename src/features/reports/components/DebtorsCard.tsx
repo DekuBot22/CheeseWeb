@@ -84,14 +84,17 @@ export function DebtorsCard({ debtors, total, semana = null }: { debtors: Debtor
                 rowKey={(d) => d.clientId ?? d.name}
               />
             </div>
-            {debtors.length > TOP_DEBTORS && (
-              <Link
-                href={withWeekParam("/admin/clientes", semana)}
-                className="mt-3 inline-block text-[0.8125rem]/[1.125rem] font-semibold text-acento hover:underline"
-              >
-                Ver todos →
+            <div className="mt-3 flex flex-wrap gap-x-5 gap-y-1 text-[0.8125rem]/[1.125rem] font-semibold text-acento">
+              {debtors.length > TOP_DEBTORS && (
+                <Link href={withWeekParam("/admin/clientes", semana)} className="hover:underline">
+                  Ver todos →
+                </Link>
+              )}
+              <Link href="/admin/clientes/cobro" className="hover:underline">
+                Cobro del mes →
               </Link>
-            )}
+            </div>
+
           </>
         )}
       </CardBody>
