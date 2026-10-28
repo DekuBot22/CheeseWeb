@@ -4,6 +4,7 @@ import {
   buildCalendar,
   currentWeek,
   lastWeeks,
+  markedWeeks,
   nextWeek,
   previousWeek,
   weekOf,
@@ -137,5 +138,34 @@ describe("con aperturas marcadas", () => {
     expect(weeks[0].from).toBe("2026-09-19");
     expect(weeks).toHaveLength(4);
     expect(weeksSince(cal, at("2020-01-01T10:00:00"), currentWeek(cal), 10)).toHaveLength(10);
+  });
+});
+
+describe("markedWeeks: solo las semanas desde la primera apertura", () => {
+  const now = at("2026-10-27T10:00:00");
+  const shown = (openings: string[]) => {
+    const cal = buildCalendar(openings, now);
+    return markedWeeks(cal, currentWeek(cal), 12).map((w) => `${w.from}..${w.to}`);
+  };
+
+  it("caso real [18, 27]: sin la semana fantasma 17–17 ni las automáticas de antes", () => {
+    expect(shown(["2026-10-18", "2026-10-27"])).toEqual(["2026-10-18..2026-10-26", "2026-10-27..2026-11-02"]);
+  });
+
+  it("con [10, 18, 24] salen 10–17, 18–23 y la actual", () => {
+    expect(shown(["2026-10-10", "2026-10-18", "2026-10-24"])).toEqual([
+      "2026-10-10..2026-10-17",
+      "2026-10-18..2026-10-23",
+      "2026-10-24..2026-10-30",
+    ]);
+  });
+
+  it("sin aperturas solo queda la semana actual (sábado a viernes)", () => {
+    expect(shown([])).toEqual(["2026-10-24..2026-10-30"]);
+  });
+
+  it("respeta el tope de semanas (las más recientes)", () => {
+    const cal = buildCalendar(["2026-10-10", "2026-10-18", "2026-10-24"], now);
+    expect(markedWeeks(cal, currentWeek(cal), 2).map((w) => w.from)).toEqual(["2026-10-18", "2026-10-24"]);
   });
 });

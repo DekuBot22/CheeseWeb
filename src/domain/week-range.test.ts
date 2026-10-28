@@ -1,5 +1,6 @@
 import { describe, expect, it } from "vitest";
 import { buildCalendar, dayStart, weekOf } from "./week-calendar";
+import { calendarChanges } from "./week-effect";
 import { planWeekRange, weekUntil, type OpeningRef, type WeekRangePlan } from "./week-range";
 
 const TODAY = "2026-10-27"; // martes
@@ -149,5 +150,33 @@ describe("weekUntil", () => {
   it("es el inicio de la siguiente semana o null si es la en curso", () => {
     expect(weekUntil(["2026-10-18", "2026-10-24"], "2026-10-18")).toBe("2026-10-24");
     expect(weekUntil(["2026-10-18", "2026-10-24"], "2026-10-24")).toBeNull();
+  });
+});
+
+describe("el caso real del dueño (aperturas 18 y 27 oct)", () => {
+  const real = [ref("a", "2026-10-18"), ref("b", "2026-10-27")];
+
+  it("paso 1: Nueva semana 10 → 18 inserta solo el 10 y solo cambia el 17", () => {
+    const plan = okPlan(planWeekRange(real, { from: "2026-10-10", until: "2026-10-18" }, TODAY));
+    expect(plan.steps).toEqual([{ kind: "insert", dates: ["2026-10-10"] }]);
+    expect(calendarChanges(["2026-10-18", "2026-10-27"], plan.after, TODAY)).toEqual([
+      { from: "2026-10-17", to: "2026-10-17", fromWeek: "2026-10-17", toWeek: "2026-10-10" },
+    ]);
+  });
+
+  it("paso 2: Editar la del 27 con inicio 24 mueve esa apertura; del 24 al 26 pasan a la semana del 24", () => {
+    const plan = okPlan(planWeekRange(real, { editingId: "b", from: "2026-10-24", until: null }, TODAY));
+    expect(plan.steps).toEqual([{ kind: "move", id: "b", date: "2026-10-24" }]);
+    expect(calendarChanges(["2026-10-18", "2026-10-27"], plan.after, TODAY)).toEqual([
+      { from: "2026-10-24", to: "2026-10-26", fromWeek: "2026-10-18", toWeek: "2026-10-24" },
+      { from: "2026-10-27", to: "2026-10-27", fromWeek: "2026-10-27", toWeek: "2026-10-24" },
+    ]);
+  });
+
+  it("al final quedan 10–17, 18–23 y 24 en curso", () => {
+    const first = okPlan(planWeekRange(real, { from: "2026-10-10", until: "2026-10-18" }, TODAY));
+    const second = okPlan(planWeekRange([ref("c", "2026-10-10"), ...real], { editingId: "b", from: "2026-10-24", until: null }, TODAY));
+    expect(first.after).toEqual(["2026-10-10", "2026-10-18", "2026-10-27"]);
+    expect(second.after).toEqual(["2026-10-10", "2026-10-18", "2026-10-24"]);
   });
 });

@@ -107,6 +107,13 @@ export function lastWeeks(cal: WeekCalendar, count: number, anchor: Week): Week[
   return weeks;
 }
 
+// Las semanas que el dueño marcó: desde su primera apertura hasta `anchor` (tope `max`, las más recientes).
+// Sin aperturas solo queda la semana actual: las automáticas de antes no se muestran.
+export function markedWeeks(cal: WeekCalendar, anchor: Week, max: number): Week[] {
+  if (cal.openings.length === 0) return [anchor];
+  return weeksSince(cal, dayStart(cal.openings[0]), anchor, max);
+}
+
 // Semanas desde la que contiene `first` hasta `anchor` (tope `max`, las más recientes).
 export function weeksSince(cal: WeekCalendar, first: Date, anchor: Week, max: number): Week[] {
   const weeks: Week[] = [anchor];

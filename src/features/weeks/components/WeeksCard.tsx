@@ -7,7 +7,7 @@ import type { WeekRow } from "../types";
 import { NewWeekButton } from "./NewWeekButton";
 import { WeekRowActions } from "./WeekRowActions";
 
-// Las últimas semanas con sus fechas y duración. Las abiertas a mano se pueden editar o anular.
+// Las semanas marcadas con sus fechas y duración. Las abiertas a mano se pueden editar o anular.
 export function WeeksCard({
   rows,
   openings,
@@ -23,7 +23,7 @@ export function WeeksCard({
     <Card>
       <CardHeader
         title="Semanas"
-        subtitle="Cada semana va desde el día que llega el queso hasta el día antes del siguiente. Antes de tu primera semana, va de sábado a viernes."
+        subtitle="Cada semana va desde el día que llega el queso hasta el día antes del siguiente."
         action={<NewWeekButton openings={openings} today={context.today} />}
       />
       <CardBody>
@@ -35,12 +35,18 @@ export function WeeksCard({
             </Callout>
           </div>
         )}
+        {openings.length === 0 && (
+          <p className="mb-3 text-[0.8125rem] text-tinta-2">
+            Aún no has marcado semanas; mientras tanto se cuentan de sábado a viernes. Usa «Nueva semana» para marcar el día
+            en que llegó el queso.
+          </p>
+        )}
         <ul className="divide-y divide-linea-suave">
           {rows.map((w) => (
             <li key={w.from} className="flex items-center justify-between gap-3 py-2.5">
               <div className="min-w-0">
                 <p className="text-sm font-medium text-tinta">
-                  {formatDayShort(w.from)} – {formatDayShort(w.to)}
+                  {formatDayShort(w.from)} – {w.openingId && w.until === null ? "en curso" : formatDayShort(w.to)}
                 </p>
                 <p className="num text-[0.8125rem] text-tinta-2">
                   {plural(w.days, "día")} · {w.openingId ? "abierta a mano" : "automática"}
