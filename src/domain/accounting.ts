@@ -154,6 +154,11 @@ function buildWeek({ start, end, from, to, days, manual }: Week, data: PeriodDat
   };
 }
 
+// Semana sin pedidos, compras ni movimientos del proveedor (todas sus cifras en 0).
+export function isEmptyWeek(p: WeekPoint): boolean {
+  return p.orderCount === 0 && p.kgBought === 0 && Object.values(p.stats).every((v) => v === 0);
+}
+
 // Una fila por semana de negocio (la más antigua primero). `weeks` son semanas ya
 // calculadas con el calendario; un número significa "las últimas N con la regla sábado→viernes".
 export function weeklySeries(raw: PeriodData, weeks: Week[] | number, now: Date = new Date()): WeekPoint[] {

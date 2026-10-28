@@ -114,6 +114,14 @@ export function markedWeeks(cal: WeekCalendar, anchor: Week, max: number): Week[
   return weeksSince(cal, dayStart(cal.openings[0]), anchor, max);
 }
 
+// Quita del principio las semanas automáticas sin nada (nunca una marcada a mano) y deja al menos `keep`.
+// Solo recorta filas vacías: las sumas de lo que queda son idénticas a las de la lista completa.
+export function dropEmptyLead<T extends { manual: boolean }>(items: T[], isEmpty: (item: T) => boolean, keep = 1): T[] {
+  let skip = 0;
+  while (skip < items.length - keep && !items[skip].manual && isEmpty(items[skip])) skip++;
+  return items.slice(skip);
+}
+
 // Semanas desde la que contiene `first` hasta `anchor` (tope `max`, las más recientes).
 export function weeksSince(cal: WeekCalendar, first: Date, anchor: Week, max: number): Week[] {
   const weeks: Week[] = [anchor];

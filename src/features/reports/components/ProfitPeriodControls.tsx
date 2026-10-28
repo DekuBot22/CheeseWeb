@@ -19,7 +19,7 @@ export function ProfitPeriodControls({
   view: ProfitView;
   week: Week;
   isCurrent: boolean;
-  neighbors: { prev: Week; next: Week | null };
+  neighbors: { prev: Week | null; next: Week | null };
 }) {
   const step = (target: Week | null) => (target ? href("semana", `&semana=${target.from}`) : undefined);
 
@@ -39,7 +39,7 @@ export function ProfitPeriodControls({
           label={formatWeekLabel(week.start, week.end)}
           caption={caption(week)}
           isCurrent={isCurrent}
-          prevHref={step(neighbors.prev) ?? href("semana")}
+          prevHref={step(neighbors.prev)}
           nextHref={step(neighbors.next)}
         />
       )}

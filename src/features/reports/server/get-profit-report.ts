@@ -1,8 +1,9 @@
 import "server-only";
-import { sumWeeks, weeklySeries, type PeriodData, type WeekPoint } from "@/domain/accounting";
+import { isEmptyWeek, sumWeeks, weeklySeries, type PeriodData, type WeekPoint } from "@/domain/accounting";
 import { parseWeekParam } from "@/domain/week";
 import {
   currentWeek,
+  dropEmptyLead,
   lastWeeks,
   nextWeek,
   previousWeek,
@@ -52,7 +53,8 @@ export async function getProfitReport(view: ProfitView, weekParam: string | unde
   const weeks = isAll
     ? weeksSince(cal, firstMovement(data, now), current, MAX_ALL_WEEKS)
     : lastWeeks(cal, 12, week);
-  const series = weeklySeries(data, weeks);
+  // Sin las semanas vacías del principio (antes de la primera apertura): las sumas no cambian.
+  const series = dropEmptyLead(weeklySeries(data, weeks), isEmptyWeek);
   const selected: WeekPoint = series[series.length - 1];
   const visible = series.slice(-MAX_SHOWN_WEEKS);
   const single = view === "semana";
@@ -61,7 +63,7 @@ export async function getProfitReport(view: ProfitView, weekParam: string | unde
     now,
     week,
     isCurrent: week.start.getTime() === current.start.getTime(),
-    prevWeek: previousWeek(cal, week),
+    prevWeek: series.length > 1 ? previousWeek(cal, week) : null,
     nextWeek: nextWeek(cal, week),
     rangeStart,
     series,

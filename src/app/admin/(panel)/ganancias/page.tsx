@@ -30,7 +30,7 @@ export default async function GananciasPage({
     view === "semana"
       ? formatWeekLabel(r.week.start, r.week.end)
       : view === "12"
-        ? `Últimas 12 semanas hasta el ${formatWeekLabel(r.week.start, r.week.end).split(" – ")[1]}`
+        ? `${r.series.length > 1 ? `Últimas ${r.series.length} semanas` : "Semana"} hasta el ${formatWeekLabel(r.week.start, r.week.end).split(" – ")[1]}`
         : "Todo el tiempo";
 
   return (

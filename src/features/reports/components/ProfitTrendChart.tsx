@@ -16,7 +16,7 @@ export function ProfitTrendChart({ weeks }: { weeks: WeekPoint[] }) {
   return (
     <ChartFrame
       title="Ganancia por semana"
-      subtitle={`Últimas ${weeks.length} semanas, de sábado a viernes`}
+      subtitle={weeks.length === 1 ? "Última semana" : `Últimas ${weeks.length} semanas`}
       legend={hasLoss ? undefined : SERIES}
       table={{
         headers: ["Semana", "Ganancia"],

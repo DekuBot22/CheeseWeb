@@ -19,7 +19,7 @@ export function ProfitCharts({ weeks, selected }: { weeks: WeekPoint[]; selected
       <RevenueCostChart
         weeks={weeks}
         title="Cobrado y costo por semana"
-        subtitle={`Últimas ${weeks.length} semanas, de sábado a viernes`}
+        subtitle={weeks.length === 1 ? "Última semana" : `Últimas ${weeks.length} semanas`}
         ariaLabel={`Cobrado y costo de las últimas ${weeks.length} semanas. Semana del ${weekTitle(selected.label, selected.days)}: cobrado ${formatCOP(selected.stats.collected)}, costo ${formatCOP(selected.stats.cost)}.`}
       />
 

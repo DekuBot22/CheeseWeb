@@ -1,7 +1,7 @@
 import "server-only";
-import { weeklySeries } from "@/domain/accounting";
+import { isEmptyWeek, weeklySeries } from "@/domain/accounting";
 import { receivables } from "@/domain/receivables";
-import { currentWeek, lastWeeks } from "@/domain/week-calendar";
+import { currentWeek, dropEmptyLead, lastWeeks } from "@/domain/week-calendar";
 import { getWeekCalendar } from "@/features/weeks/server/get-week-calendar";
 import { listOpenOrders } from "@/features/orders/server/orders.repo";
 import { loadPeriod } from "./load-period";
@@ -12,7 +12,7 @@ export async function getChartsReport(weeks: number, now: Date = new Date()) {
   const list = lastWeeks(cal, weeks, currentWeek(cal));
 
   const [period, openOrders] = await Promise.all([loadPeriod(list[0].start, null), listOpenOrders()]);
-  const series = weeklySeries(period, list);
+  const series = dropEmptyLead(weeklySeries(period, list), isEmptyWeek);
 
   return {
     series,

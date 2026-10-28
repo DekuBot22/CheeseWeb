@@ -17,7 +17,7 @@ export default async function GraficasPage({ searchParams }: { searchParams: Pro
 
   return (
     <div className="space-y-6 md:space-y-8">
-      <PageHeader title="Gráficas" subtitle="Cómo va el negocio semana a semana, de sábado a viernes." />
+      <PageHeader title="Gráficas" subtitle="Cómo va el negocio semana a semana." />
       <ChartsRangeControls weeks={range} />
 
       <ProfitTrendChart weeks={r.series} />

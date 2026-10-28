@@ -17,14 +17,20 @@ export function WeekPicker({
   // Texto bajo la fecha cuando no es la semana actual (p. ej. "Sáb a vie" o "9 días").
   caption: string;
   isCurrent: boolean;
-  prevHref: string;
+  prevHref?: string;
   nextHref?: string;
 }) {
   return (
     <div className="flex w-full items-center justify-between gap-2 md:w-auto md:justify-start">
-      <Link href={prevHref} aria-label="Semana anterior" className={ARROW}>
-        <IconChevronLeft />
-      </Link>
+      {prevHref ? (
+        <Link href={prevHref} aria-label="Semana anterior" className={ARROW}>
+          <IconChevronLeft />
+        </Link>
+      ) : (
+        <span aria-hidden="true" className={cx(ARROW, "opacity-40")}>
+          <IconChevronLeft />
+        </span>
+      )}
       <div className="min-w-36 text-center">
         <p className="num text-sm/5 font-medium text-tinta">{label}</p>
         <p className="text-[0.6875rem]/[0.875rem] font-medium text-tinta-3">{isCurrent ? "Semana actual" : caption}</p>
