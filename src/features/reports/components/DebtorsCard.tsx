@@ -1,4 +1,5 @@
 import Link from "next/link";
+import { ScopedLink } from "@/features/shell/components/ScopedLink";
 import type { Debtor } from "@/domain/receivables";
 import { plural } from "@/lib/format";
 import { withWeekParam } from "@/lib/week-param";
@@ -18,9 +19,9 @@ export function debtTone(days: number): "debe" | "aviso" | "neutral" {
 function DebtorName({ d }: { d: Debtor }) {
   const className = "text-sm/5 font-medium text-tinta";
   return d.clientId ? (
-    <Link href={`/admin/clientes/${d.clientId}`} className={`${className} hover:underline`}>
+    <ScopedLink href={`/admin/clientes/${d.clientId}`} className={`${className} hover:underline`}>
       {d.name}
-    </Link>
+    </ScopedLink>
   ) : (
     <span className={className}>{d.name}</span>
   );

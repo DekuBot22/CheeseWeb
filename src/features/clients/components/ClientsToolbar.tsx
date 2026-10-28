@@ -1,15 +1,16 @@
 import { Suspense } from "react";
 import type { ClientSort } from "@/domain/client-balance";
+import { withWeekParam } from "@/lib/week-param";
 import { SearchInput } from "@/ui/SearchInput";
 import { SegmentedControl } from "@/ui/SegmentedControl";
 
-export function ClientsToolbar({ query, sort }: { query: string; sort: ClientSort }) {
+export function ClientsToolbar({ query, sort, semana = null }: { query: string; sort: ClientSort; semana?: string | null }) {
   const link = (next: ClientSort) => {
     const sp = new URLSearchParams();
     if (query) sp.set("q", query);
     if (next !== "deuda") sp.set("orden", next);
     const qs = sp.toString();
-    return qs ? `/admin/clientes?${qs}` : "/admin/clientes";
+    return withWeekParam(qs ? `/admin/clientes?${qs}` : "/admin/clientes", semana);
   };
 
   return (

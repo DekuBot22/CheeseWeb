@@ -9,7 +9,8 @@ import { Sheet } from "@/ui/Sheet";
 import { activeFilterCount, hrefWith, type OrdersFilterValues } from "../order-filters";
 
 // En PC los filtros se ven siempre; en móvil se esconden tras el botón "Filtros".
-export function OrdersFilters({ values }: { values: OrdersFilterValues }) {
+// Con una semana elegida (`scoped`) el filtro de período sobra: la semana ya manda.
+export function OrdersFilters({ values, scoped = false }: { values: OrdersFilterValues; scoped?: boolean }) {
   const [open, setOpen] = useState(false);
   const link = (changes: Partial<OrdersFilterValues>) => hrefWith(values, changes);
   const count = activeFilterCount(values);
@@ -76,7 +77,7 @@ export function OrdersFilters({ values }: { values: OrdersFilterValues }) {
           <IconFilter />
           Filtros{count > 0 && ` · ${count}`}
         </Button>
-        <div className="hidden md:block">{period}</div>
+        {!scoped && <div className="hidden md:block">{period}</div>}
       </div>
       <div className="hidden flex-wrap items-center gap-3 md:flex">
         {state}
@@ -93,7 +94,7 @@ export function OrdersFilters({ values }: { values: OrdersFilterValues }) {
           }}
         >
           {[
-            ["Período", period],
+            ...(scoped ? [] : [["Período", period]]),
             ["Estado del pedido", state],
             ["Tipo de queso", cheese],
             ["Estado del pago", payment],

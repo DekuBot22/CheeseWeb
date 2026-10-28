@@ -1,8 +1,10 @@
 import { remainingOf } from "@/domain/order";
 import { activeOnly } from "@/domain/void";
 import { currentWeek, previousWeek, type WeekCalendar } from "@/domain/week-calendar";
-import { formatCOP, plural } from "@/lib/format";
+import { resolveWeek } from "@/domain/week-scope";
+import { formatCOP, formatWeekLabel, plural } from "@/lib/format";
 import { pickParam } from "@/lib/search-params";
+import { withWeekParam } from "@/lib/week-param";
 import { OrdersFilters } from "@/features/orders/components/OrdersFilters";
 import { CHEESE_FILTERS, ORDER_PERIODS, ORDER_STATES, PAYMENT_FILTERS } from "@/features/orders/order-filters";
 import { OrdersTable } from "@/features/orders/components/OrdersTable";
@@ -17,7 +19,7 @@ export const dynamic = "force-dynamic";
 
 const LIMIT = 200;
 
-type Params = { q?: string; estado?: string; pago?: string; tipo?: string; periodo?: string };
+type Params = { q?: string; estado?: string; pago?: string; tipo?: string; periodo?: string; semana?: string };
 
 // Rango de fechas del filtro de período (undefined = todos).
 function periodRange(periodo: (typeof ORDER_PERIODS)[number], cal: WeekCalendar) {
@@ -39,13 +41,16 @@ export default async function PedidosPage({ searchParams }: { searchParams: Prom
   const periodo = pickParam(params.periodo, ORDER_PERIODS);
 
   const cal = await getWeekCalendar();
+  // Con una semana pasada elegida en el panel manda ella; en la actual, el filtro de período de siempre.
+  const scope = resolveWeek(cal, params.semana);
+  const scoped = !scope.isCurrent;
   const [settings, orders] = await Promise.all([getSettings(), listOrders(
     {
       q: q || undefined,
       estado: orUndefined(estado),
       pago: orUndefined(pago),
       tipo: orUndefined(tipo),
-      range: periodRange(periodo, cal),
+      range: scoped ? scope.week : periodRange(periodo, cal),
     },
     LIMIT
   )]);
@@ -53,25 +58,32 @@ export default async function PedidosPage({ searchParams }: { searchParams: Prom
   const active = activeOnly(orders);
   const total = active.reduce((s, o) => s + Number(o.total), 0);
   const pendiente = active.reduce((s, o) => s + remainingOf(o), 0);
-  const filtered = Boolean(q) || [estado, pago, tipo, periodo].some((v) => v !== "todos");
+  const filtered = Boolean(q) || [estado, pago, tipo, scoped ? "todos" : periodo].some((v) => v !== "todos");
 
   return (
     <div>
       <PageHeader
         title="Pedidos"
-        subtitle="Estado de cada pedido y lo que falta por cobrar."
+        subtitle={
+          scoped
+            ? `Semana ${formatWeekLabel(scope.week.start, scope.week.end)} · lo que falta por cobrar hoy`
+            : "Estado de cada pedido y lo que falta por cobrar."
+        }
         stretchActions
         actions={
           <>
             <NewSaleButton pricePerKg={settings ? Number(settings.price_per_kg) : 0} />
-            <ButtonLink href="/admin/ajustes" variant="secondary" size="sm">
+            <ButtonLink href={withWeekParam("/admin/ajustes", scope.param)} variant="secondary" size="sm">
               Precio y costo
             </ButtonLink>
           </>
         }
       />
 
-      <OrdersFilters values={{ q, estado, pago, tipo, periodo }} />
+      <OrdersFilters
+        values={{ q, estado, pago, tipo, periodo: scoped ? "todos" : periodo, semana: scope.param }}
+        scoped={scoped}
+      />
 
       <p className="num mb-3 text-[0.8125rem]/[1.125rem] text-tinta-2" aria-live="polite">
         {plural(orders.length, "pedido")} · vendido <strong className="font-semibold text-tinta">{formatCOP(total)}</strong> · por

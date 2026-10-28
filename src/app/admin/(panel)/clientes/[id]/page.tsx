@@ -1,5 +1,5 @@
-import Link from "next/link";
 import { notFound } from "next/navigation";
+import { ScopedLink } from "@/features/shell/components/ScopedLink";
 import { summarizeClientOrders } from "@/domain/client-balance";
 import { plural } from "@/lib/format";
 import { ClientEditor } from "@/features/clients/components/ClientEditor";
@@ -20,12 +20,12 @@ export default async function ClientDetailPage({ params }: { params: Promise<{ i
   return (
     <div className="space-y-4 md:space-y-6">
       <div>
-        <Link
+        <ScopedLink
           href="/admin/clientes"
           className="mb-2 inline-block text-[0.8125rem]/[1.125rem] font-medium text-acento hover:underline"
         >
           ← Clientes
-        </Link>
+        </ScopedLink>
         <PageHeader title={client.name} subtitle={plural(summary.count, "pedido")} />
       </div>
 

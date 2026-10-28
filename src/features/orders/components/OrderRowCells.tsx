@@ -1,4 +1,4 @@
-import Link from "next/link";
+import { ScopedLink } from "@/features/shell/components/ScopedLink";
 import { CHEESE_TYPE_LABELS, SALT_LEVEL_LABELS, type CheeseType } from "@/domain/catalog";
 import type { Order } from "@/domain/order";
 import { Button } from "@/ui/Button";
@@ -25,9 +25,9 @@ export function ClientLink({ order, className }: { order: Order; className?: str
   const style = cx("font-medium", isVoided(order) ? "text-tinta-3 line-through" : "text-tinta", className);
   if (!order.client_id) return <span className={style}>{order.client_name}</span>;
   return (
-    <Link href={`/admin/clientes/${order.client_id}`} className={cx(style, "hover:underline")}>
+    <ScopedLink href={`/admin/clientes/${order.client_id}`} className={cx(style, "hover:underline")}>
       {order.client_name}
-    </Link>
+    </ScopedLink>
   );
 }
 

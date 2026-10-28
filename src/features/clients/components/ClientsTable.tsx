@@ -1,4 +1,4 @@
-import Link from "next/link";
+import { ScopedLink } from "@/features/shell/components/ScopedLink";
 import type { ClientRow } from "@/domain/client-balance";
 import { formatDateShort, plural } from "@/lib/format";
 import { Badge } from "@/ui/Badge";
@@ -25,9 +25,9 @@ function Age({ row }: { row: ClientRow }) {
 }
 
 const nameLink = (r: ClientRow) => (
-  <Link href={`/admin/clientes/${r.id}`} className="font-semibold text-tinta hover:underline">
+  <ScopedLink href={`/admin/clientes/${r.id}`} className="font-semibold text-tinta hover:underline">
     {r.name}
-  </Link>
+  </ScopedLink>
 );
 
 const COLUMNS: Column<ClientRow>[] = [
@@ -71,7 +71,7 @@ export function ClientsTable({
           />
         }
         mobileCard={(r) => (
-          <Link href={`/admin/clientes/${r.id}`} className="flex items-center justify-between gap-3 py-1">
+          <ScopedLink href={`/admin/clientes/${r.id}`} className="flex items-center justify-between gap-3 py-1">
             <div className="flex min-w-0 flex-col gap-0.5">
               <p className="truncate text-sm/5 font-semibold text-tinta">{r.name}</p>
               <p className="num text-[0.8125rem]/[1.125rem] text-tinta-2">
@@ -83,7 +83,7 @@ export function ClientsTable({
               <Balance row={r} />
               {r.daysInDebt !== null && r.daysInDebt >= 7 && <Age row={r} />}
             </div>
-          </Link>
+          </ScopedLink>
         )}
         footer={
           <tr className="border-t border-linea bg-hoja-2 font-medium">

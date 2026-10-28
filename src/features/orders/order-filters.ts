@@ -10,6 +10,8 @@ export interface OrdersFilterValues {
   pago: (typeof PAYMENT_FILTERS)[number];
   tipo: (typeof CHEESE_FILTERS)[number];
   periodo: (typeof ORDER_PERIODS)[number];
+  // Semana elegida en el panel (`?semana=`), null = actual. No es un filtro: solo se conserva en los enlaces.
+  semana?: string | null;
 }
 
 // Conserva los demás filtros al cambiar uno.
