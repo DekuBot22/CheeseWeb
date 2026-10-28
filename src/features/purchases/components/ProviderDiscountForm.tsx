@@ -38,13 +38,15 @@ export function ProviderDiscountForm({
   purchases,
   ready,
   onDone,
+  initialDate,
 }: {
   purchases: PurchaseOption[];
   ready: boolean;
   onDone?: () => void;
+  initialDate?: string;
 }) {
   const uid = useId();
-  const { values: v, status, set, submit } = useProviderDiscountForm(purchases, onDone);
+  const { values: v, status, set, submit } = useProviderDiscountForm(purchases, onDone, initialDate);
 
   if (!ready) {
     return (

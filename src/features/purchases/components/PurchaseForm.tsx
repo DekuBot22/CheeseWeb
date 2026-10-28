@@ -7,9 +7,18 @@ import { Field, Input } from "@/ui/Field";
 import { usePurchaseForm, type PurchaseDone } from "./use-purchase-form";
 
 // `week` activa la casilla "Llegó el lote" (abrir semana nueva el día de la compra).
-export function PurchaseForm({ onDone, week }: { onDone?: (info: PurchaseDone) => void; week?: WeekContext }) {
+// `initialDate`: fecha con la que arranca (al mirar una semana pasada, su último día).
+export function PurchaseForm({
+  onDone,
+  week,
+  initialDate,
+}: {
+  onDone?: (info: PurchaseDone) => void;
+  week?: WeekContext;
+  initialDate?: string;
+}) {
   const uid = useId();
-  const { values, set, lot, status, submit } = usePurchaseForm(onDone, week);
+  const { values, set, lot, status, submit } = usePurchaseForm(onDone, week, initialDate);
 
   return (
     <form onSubmit={submit} className="flex flex-col gap-4">

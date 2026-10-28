@@ -9,7 +9,12 @@ export type SaleMode = "cantidad" | "valor";
 
 // Estado de la hoja "Nueva venta": qué se vendió, a quién, si ya pagó y de qué día.
 // El total que se ve es una estimación con el precio vigente; el servidor lo fija.
-export function useSaleForm(pricePerKg: number, onDone: (order: Order, paymentError?: string) => void) {
+// `initialDate`: fecha con la que arranca (al mirar una semana pasada, su último día); vacía = hoy.
+export function useSaleForm(
+  pricePerKg: number,
+  onDone: (order: Order, paymentError?: string) => void,
+  initialDate = ""
+) {
   const [clientName, setClientName] = useState("");
   const [mode, setMode] = useState<SaleMode>("cantidad");
   const [quantity, setQuantity] = useState("");
@@ -25,7 +30,7 @@ export function useSaleForm(pricePerKg: number, onDone: (order: Order, paymentEr
   const [showNote, setShowNote] = useState(false);
   const [paid, setPaid] = useState(false);
   const [method, setMethod] = useState("");
-  const [date, setDate] = useState("");
+  const [date, setDate] = useState(initialDate);
   const [loading, setLoading] = useState(false);
   const [error, setError] = useState("");
 

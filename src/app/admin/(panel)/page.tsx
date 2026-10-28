@@ -36,7 +36,12 @@ export default async function InicioPage({ searchParams }: { searchParams: Promi
         title="Inicio"
         subtitle={`Semana ${formatWeekLabel(d.current.start, d.current.end)} · ${plural(d.weekElapsed, "día")}`}
         stretchActions
-        actions={<QuickActions payable={d.openOrders} pricePerKg={pricePerKg} week={d.weekContext} />}
+        actions={<QuickActions
+            payable={d.openOrders}
+            pricePerKg={pricePerKg}
+            week={d.isCurrent ? d.weekContext : undefined}
+            purchaseDate={d.isCurrent ? undefined : d.current.to}
+          />}
       />
 
       <InicioBanner week={d.weekContext} hint={d.weekHint} notes={notes} />

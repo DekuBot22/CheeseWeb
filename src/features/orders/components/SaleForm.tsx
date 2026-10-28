@@ -5,6 +5,7 @@ import { CHEESE_TYPE_LABELS, SALT_LEVEL_LABELS, type CheeseType, type SaltLevel 
 import type { Order } from "@/domain/order";
 import { toKg, type Unit } from "@/domain/units";
 import { formatCOP } from "@/lib/format";
+import { inWeekDate } from "@/domain/week-scope";
 import { bogotaDate } from "@/lib/bogota-time";
 import { Button } from "@/ui/Button";
 import { Field, Input, Select } from "@/ui/Field";
@@ -14,16 +15,20 @@ import { SaleExtras } from "./SaleExtras";
 import { useClientNames } from "./use-client-names";
 import { useSaleForm, type SaleMode } from "./use-sale-form";
 
+// `weekView`: semana pasada que se está mirando; la fecha arranca en su último día.
 export function SaleForm({
   pricePerKg,
   onDone,
+  weekView,
 }: {
   pricePerKg: number;
   onDone: (order: Order, paymentError?: string) => void;
+  weekView?: { from: string; to: string };
 }) {
   const uid = useId();
   const names = useClientNames();
-  const f = useSaleForm(pricePerKg, onDone);
+  const f = useSaleForm(pricePerKg, onDone, weekView?.to);
+  const outsideWeek = weekView ? !inWeekDate(weekView, f.date || bogotaDate()) : false;
 
   return (
     <form onSubmit={f.submit} className="flex flex-col gap-4">
@@ -73,9 +78,15 @@ export function SaleForm({
 
       <SaleExtras f={f} uid={uid} />
 
-      <Field label="Fecha (opcional)" htmlFor={`${uid}-fecha`} hint="Si la dejas vacía es de hoy.">
+      <Field label="Fecha (opcional)" htmlFor={`${uid}-fecha`} hint={weekView ? "Viene puesta el último día de la semana que estás viendo." : "Si la dejas vacía es de hoy."}>
         <Input id={`${uid}-fecha`} type="date" max={bogotaDate()} value={f.date} onChange={(e) => f.setDate(e.target.value)} />
       </Field>
+
+      {outsideWeek && (
+        <p role="status" className="aparece text-[0.8125rem] font-medium text-aviso">
+          Esta fecha cae fuera de la semana que estás viendo.
+        </p>
+      )}
 
       <label className="flex items-center gap-2 text-sm text-tinta">
         <input type="checkbox" checked={f.paid} onChange={(e) => f.setPaid(e.target.checked)} />

@@ -18,10 +18,14 @@ export function QuickActions({
   payable,
   pricePerKg,
   week,
+  purchaseDate,
 }: {
   payable: PayableOrder[];
   pricePerKg: number;
-  week: WeekContext;
+  // Solo en la semana actual: en una pasada no se ofrece "Llegó el lote".
+  week?: WeekContext;
+  // Fecha con la que arranca "+ Compra" (al mirar una semana pasada, su último día).
+  purchaseDate?: string;
 }) {
   const router = useRouter();
   const [mode, setMode] = useState<"venta" | "abono" | "compra" | null>(null);
@@ -60,6 +64,7 @@ export function QuickActions({
       <Sheet open={mode === "compra"} onClose={() => setMode(null)} title="Nueva compra al proveedor">
         <PurchaseForm
           week={week}
+          initialDate={purchaseDate}
           onDone={({ weekOpened }) => {
             setMode(null);
             avisar(weekOpened ? "Compra registrada y semana nueva abierta" : "Compra registrada");

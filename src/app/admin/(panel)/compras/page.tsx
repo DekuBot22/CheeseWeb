@@ -13,6 +13,8 @@ export const dynamic = "force-dynamic";
 export default async function ComprasPage({ searchParams }: { searchParams: Promise<{ semana?: string }> }) {
   const { semana } = await searchParams;
   const o = await getPurchasesOverview(semana);
+  // Al mirar una semana pasada los formularios arrancan en su último día y no ofrecen abrir semana.
+  const initialDate = o.isCurrent ? undefined : o.week.to;
 
   return (
     <div className="space-y-6 md:space-y-8">
@@ -28,13 +30,13 @@ export default async function ComprasPage({ searchParams }: { searchParams: Prom
         <Card>
           <CardHeader title="Nueva compra" subtitle="Queso que le compraste al proveedor." />
           <CardBody>
-            <PurchaseForm week={o.weekContext} />
+            <PurchaseForm key={o.week.from} week={o.isCurrent ? o.weekContext : undefined} initialDate={initialDate} />
           </CardBody>
         </Card>
         <Card>
           <CardHeader title="Nuevo pago" subtitle="Dinero que le entregaste al proveedor." />
           <CardBody>
-            <ProviderPaymentForm />
+            <ProviderPaymentForm key={o.week.from} initialDate={initialDate} />
           </CardBody>
         </Card>
         <Card className="md:col-span-2 xl:col-span-1">
@@ -43,7 +45,12 @@ export default async function ComprasPage({ searchParams }: { searchParams: Prom
             subtitle="Rebaja que te hace el proveedor sobre lo que le debes. La compra no cambia."
           />
           <CardBody>
-            <ProviderDiscountForm purchases={o.purchaseOptions} ready={o.discountsReady} />
+            <ProviderDiscountForm
+              key={o.week.from}
+              purchases={o.purchaseOptions}
+              ready={o.discountsReady}
+              initialDate={initialDate}
+            />
           </CardBody>
         </Card>
       </div>

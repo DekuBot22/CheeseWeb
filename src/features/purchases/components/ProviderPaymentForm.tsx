@@ -6,10 +6,10 @@ import { Button } from "@/ui/Button";
 import { Field, Input } from "@/ui/Field";
 import { bogotaDate } from "@/lib/bogota-time";
 
-export function ProviderPaymentForm({ onDone }: { onDone?: () => void }) {
+export function ProviderPaymentForm({ onDone, initialDate }: { onDone?: () => void; initialDate?: string }) {
   const router = useRouter();
   const uid = useId();
-  const [date, setDate] = useState(bogotaDate());
+  const [date, setDate] = useState(initialDate ?? bogotaDate());
   const [amount, setAmount] = useState("");
   const [method, setMethod] = useState("");
   const [notes, setNotes] = useState("");

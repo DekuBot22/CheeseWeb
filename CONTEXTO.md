@@ -8,6 +8,12 @@
 
 ## 📍 Dónde quedamos (retomar desde aquí)
 
+- **Rama `semana-global` (2026-10-27/28, sin merge ni push; parte de `semanas-calendario`):** selector
+  global de semana. `?semana=` en la URL hace que Inicio, Pedidos, Clientes, Compras, Ganancias y
+  Gráficas se vean "como esa semana" (menú lateral en PC, botón + hoja en el móvil, franja de aviso).
+  Detalle y decisiones en `docs/ARQUITECTURA.md` → "Semana elegida". Pendiente: que el dueño la pruebe
+  (sobre todo en el celular) y dé luz verde para merge + push junto con `semanas-calendario`.
+
 - **Producción** (`main`): la web está desplegada en Vercel
   (`https://cheese-web-phi.vercel.app`, repo `https://github.com/DekuBot22/CheeseWeb`).
   Supabase y el bot de Telegram ya existen y funcionan.

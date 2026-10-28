@@ -1,11 +1,12 @@
 "use client";
 
+import Link from "next/link";
 import { useRouter } from "next/navigation";
 import { useState } from "react";
 import { draftInput, setEdge, setOngoing, type Draft, type Edge } from "@/domain/week-draft";
 import { rangeSummary, strayDays, type OpeningRef, type WeekRangePlan } from "@/domain/week-range";
 import { formatDayShort } from "@/lib/format";
-import { Button } from "@/ui/Button";
+import { Button, buttonClasses } from "@/ui/Button";
 import { Callout } from "@/ui/Callout";
 import { SegmentedButtons } from "@/ui/SegmentedButtons";
 import { Sheet } from "@/ui/Sheet";
@@ -115,7 +116,12 @@ export function DraftPanel({
           Cancelar
         </Button>
         {draft.id && (
-          <Button size="sm" variant="ghost" className="md:ml-auto" onClick={() => setVoiding(true)}>
+          <Link href={`/admin?semana=${draft.from}`} className={buttonClasses("ghost", "sm", "md:ml-auto")}>
+            Ver esta semana
+          </Link>
+        )}
+        {draft.id && (
+          <Button size="sm" variant="ghost" onClick={() => setVoiding(true)}>
             Anular semana
           </Button>
         )}

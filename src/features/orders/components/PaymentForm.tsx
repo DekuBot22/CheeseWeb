@@ -12,16 +12,20 @@ export function PaymentForm({
   orders,
   initialOrderId,
   onDone,
+  notice,
 }: {
   orders: PayableOrder[];
   initialOrderId?: string;
   onDone: (order: Order) => void;
+  // Aviso arriba del formulario (p. ej. al mirar una semana pasada).
+  notice?: string;
 }) {
   const uid = useId();
   const f = usePaymentForm(orders, initialOrderId, onDone);
 
   return (
     <form onSubmit={f.submit} className="flex flex-col gap-4">
+      {notice && <p className="text-[0.8125rem]/[1.125rem] text-tinta-2">{notice}</p>}
       {f.clientNames.length > 1 && (
         <Field label="Cliente" htmlFor={`${uid}-cliente`}>
           <Select id={`${uid}-cliente`} value={f.clientName} onChange={(e) => f.pickClient(e.target.value)}>

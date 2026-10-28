@@ -10,11 +10,11 @@ const round2 = (n: number) => Math.round(n * 100) / 100;
 
 // Estado y envío del formulario "Nuevo descuento". El monto en pesos es la
 // fuente de verdad; "calcular por kg" solo ayuda a obtenerlo (kg × rebaja por kg).
-export function useProviderDiscountForm(options: PurchaseOption[], onDone?: () => void) {
+export function useProviderDiscountForm(options: PurchaseOption[], onDone?: () => void, initialDate?: string) {
   const router = useRouter();
   const [reason, setReason] = useState<DiscountReason>("salado");
   const [purchaseId, setPurchaseId] = useState("");
-  const [date, setDate] = useState(bogotaDate());
+  const [date, setDate] = useState(initialDate ?? bogotaDate());
   const [amount, setAmount] = useState("");
   const [byKg, setByKg] = useState(false);
   const [kg, setKg] = useState("");

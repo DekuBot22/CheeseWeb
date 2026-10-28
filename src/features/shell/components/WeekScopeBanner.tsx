@@ -21,7 +21,7 @@ export function WeekScopeBanner() {
           </Link>
         }
       >
-        Pedidos, deudas y cifras son de esa semana.
+        Inicio, Pedidos, Clientes, Compras y Ganancias muestran esa semana. Las ventas y compras nuevas arrancan con el último día de la semana; el abono lleva la fecha de hoy.
       </Banner>
     </div>
   );

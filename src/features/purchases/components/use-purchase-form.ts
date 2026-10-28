@@ -10,9 +10,10 @@ export interface PurchaseDone {
 }
 
 // Estado y envío del formulario de compra. `week` activa la casilla "Llegó el lote".
-export function usePurchaseForm(onDone?: (info: PurchaseDone) => void, week?: WeekContext) {
+// `initialDate`: fecha con la que arranca (por defecto hoy).
+export function usePurchaseForm(onDone?: (info: PurchaseDone) => void, week?: WeekContext, initialDate?: string) {
   const router = useRouter();
-  const [date, setDate] = useState(bogotaDate());
+  const [date, setDate] = useState(initialDate ?? bogotaDate());
   const [kg, setKg] = useState("");
   const [totalCost, setTotalCost] = useState("");
   const [description, setDescription] = useState("");
