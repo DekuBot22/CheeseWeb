@@ -9,6 +9,7 @@ import { Button, ButtonLink } from "@/ui/Button";
 import { Sheet } from "@/ui/Sheet";
 import { OpenWeekForm } from "@/features/weeks/components/OpenWeekForm";
 import { useOpenWeek } from "@/features/weeks/components/use-open-week";
+import { useWeekScope } from "@/features/shell/components/WeekScopeProvider";
 
 // Avisos del Inicio en un solo cuadro: "¿Llegó el queso?" (con sus botones para abrir la
 // semana) y lo que falta configurar en Ajustes. `notes` ya viene redactado del servidor.
@@ -24,6 +25,7 @@ export function InicioBanner({
 }) {
   const [open, setOpen] = useState(false);
   const { openWeek, loading } = useOpenWeek();
+  const { withScope } = useWeekScope();
   const { today, lastOpening } = week;
   // "Abrir hoy" abre directo, salvo que corte una semana automática: ahí se confirma en la hoja.
   const needsConfirm = !lastOpening && shortenedPreviousWeek(today, today) !== null;
@@ -45,7 +47,7 @@ export function InicioBanner({
               </Button>
             </>
           ) : (
-            <ButtonLink size="sm" variant="secondary" href="/admin/ajustes">
+            <ButtonLink size="sm" variant="secondary" href={withScope("/admin/ajustes")}>
               Ir a Ajustes
             </ButtonLink>
           )

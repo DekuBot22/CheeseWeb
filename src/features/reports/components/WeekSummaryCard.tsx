@@ -42,6 +42,8 @@ export function WeekSummaryCard({
   collectedPct,
   kgSold,
   notes,
+  title = "Esta semana",
+  compareLabel = "vs semana pasada",
 }: {
   profit: number;
   profitDiff: number | null;
@@ -51,6 +53,9 @@ export function WeekSummaryCard({
   collectedPct: number;
   kgSold: number;
   notes: string[];
+  // En una semana pasada: su fecha y "vs la semana anterior".
+  title?: string;
+  compareLabel?: string;
 }) {
   const [unit, setUnit] = useWeightUnit();
   const other: Unit = unit === "lb" ? "kg" : "lb";
@@ -59,7 +64,7 @@ export function WeekSummaryCard({
   return (
     <Card>
       <CardHeader
-        title="Esta semana"
+        title={title}
         action={<SegmentedButtons label="Unidad de peso" options={UNITS} value={unit} onChange={setUnit} />}
       />
       <div className="flex flex-col gap-4 p-4 md:p-5">
@@ -72,7 +77,7 @@ export function WeekSummaryCard({
               <p className={MICRO}>Sin semana anterior para comparar</p>
             ) : (
               <p className={cx("num text-[0.6875rem]/[0.875rem] font-medium", profitDiff >= 0 ? "text-cobrado" : "text-debe")}>
-                {profitDiff >= 0 ? "+" : "−"} {formatCOP(Math.abs(profitDiff))} vs semana pasada
+                {profitDiff >= 0 ? "+" : "−"} {formatCOP(Math.abs(profitDiff))} {compareLabel}
               </p>
             )}
           </Figure>

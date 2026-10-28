@@ -15,7 +15,12 @@ export function profitDifference(cur: WeekPoint, prev: WeekPoint): number | null
 // Notas pequeñas al pie de "Esta semana": desde cuándo corre, ganancia por día, margen y,
 // si la semana anterior duró distinto, la comparación por día (en pesos engañaría: una
 // semana de 9 días siempre parece mejor que una de 7).
-export function weekSummaryNotes(current: Week, cur: WeekPoint, prev: WeekPoint, elapsed: number): string[] {
+export function weekSummaryNotes(
+  current: Week,
+  cur: WeekPoint,
+  prev: WeekPoint,
+  { elapsed, past = false }: { elapsed: number; past?: boolean }
+): string[] {
   const stats = cur.stats;
   const perLb = profitPerLb(stats.profit, stats.kgPaid);
   const since = `${current.manual ? "Semana abierta a mano el" : "Semana desde el"} ${formatDay(current.from)}`;
@@ -27,7 +32,7 @@ export function weekSummaryNotes(current: Week, cur: WeekPoint, prev: WeekPoint,
 
   if (cur.days !== prev.days) {
     notes.push(
-      `La semana anterior duró ${plural(prev.days, "día")} y esta lleva ${plural(elapsed, "día")}. Por día: cobrado ${perDay(stats.collected, elapsed)} frente a ${perDay(prev.stats.collected, prev.days)}; ganancia ${perDay(stats.profit, elapsed)} frente a ${perDay(prev.stats.profit, prev.days)}.`
+      `La semana anterior duró ${plural(prev.days, "día")} y esta ${past ? "duró" : "lleva"} ${plural(elapsed, "día")}. Por día: cobrado ${perDay(stats.collected, elapsed)} frente a ${perDay(prev.stats.collected, prev.days)}; ganancia ${perDay(stats.profit, elapsed)} frente a ${perDay(prev.stats.profit, prev.days)}.`
     );
   }
   return notes;

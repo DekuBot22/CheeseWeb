@@ -2,6 +2,7 @@ import Link from "next/link";
 import type { Debtor } from "@/domain/receivables";
 import type { Order } from "@/domain/order";
 import { formatCOP, plural } from "@/lib/format";
+import { withWeekParam } from "@/lib/week-param";
 import { Card, CardBody, CardHeader } from "@/ui/Card";
 import type { DotTone } from "@/ui/Dot";
 import { DotItem } from "@/ui/DotItem";
@@ -27,10 +28,13 @@ export function ReviewCard({
   pending,
   debtors,
   providerBalance,
+  semana = null,
 }: {
   pending: Order[];
   debtors: Debtor[];
   providerBalance: number;
+  // Semana pasada que se está mirando (null = actual): el saldo del proveedor sigue siendo el de hoy.
+  semana?: string | null;
 }) {
   const aging = debtors.filter((d) => d.days >= 8 && d.days < 15);
   const overdue = debtors.filter((d) => d.days >= 15);
@@ -72,7 +76,7 @@ export function ReviewCard({
   if (providerBalance > 0) {
     items.push({
       tone: "neutro",
-      title: "Saldo con el proveedor",
+      title: semana ? "Saldo con el proveedor (hoy)" : "Saldo con el proveedor",
       detail: `Le debes ${formatCOP(providerBalance)}`,
     });
   }
@@ -93,7 +97,7 @@ export function ReviewCard({
           </ul>
         )}
         <Link
-          href="/admin/pedidos?estado=pendiente"
+          href={withWeekParam("/admin/pedidos?estado=pendiente", semana)}
           className="mt-3 inline-block text-[0.8125rem]/[1.125rem] font-semibold text-acento hover:underline"
         >
           Ver pedidos pendientes →

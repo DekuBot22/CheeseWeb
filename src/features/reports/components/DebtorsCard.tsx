@@ -1,6 +1,7 @@
 import Link from "next/link";
 import type { Debtor } from "@/domain/receivables";
 import { plural } from "@/lib/format";
+import { withWeekParam } from "@/lib/week-param";
 import { Badge } from "@/ui/Badge";
 import { Card, CardBody, CardHeader } from "@/ui/Card";
 import { DataTable, type Column } from "@/ui/DataTable";
@@ -37,13 +38,15 @@ const COLUMNS: Column<Debtor>[] = [
 ];
 
 // Quién me debe: los mayores deudores con la antigüedad de su deuda más vieja.
-export function DebtorsCard({ debtors, total }: { debtors: Debtor[]; total: number }) {
+// En una semana pasada (`semana`) son solo los pedidos de esa semana y el título lo dice.
+export function DebtorsCard({ debtors, total, semana = null }: { debtors: Debtor[]; total: number; semana?: string | null }) {
   const top = debtors.slice(0, TOP_DEBTORS);
 
   return (
     <Card>
       <CardHeader
         title="Quién me debe"
+        subtitle={semana ? "De los pedidos de esa semana · lo que falta cobrar hoy" : undefined}
         action={
           debtors.length > 0 && (
             <p className="num text-right text-[0.8125rem]/[1.125rem] text-tinta-2">
@@ -82,7 +85,7 @@ export function DebtorsCard({ debtors, total }: { debtors: Debtor[]; total: numb
             </div>
             {debtors.length > TOP_DEBTORS && (
               <Link
-                href="/admin/clientes"
+                href={withWeekParam("/admin/clientes", semana)}
                 className="mt-3 inline-block text-[0.8125rem]/[1.125rem] font-semibold text-acento hover:underline"
               >
                 Ver todos →

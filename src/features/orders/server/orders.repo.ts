@@ -54,9 +54,11 @@ export async function listOrdersByClient(clientId: string): Promise<Order[]> {
   return (data as Order[]) ?? [];
 }
 
-export async function listPendingOrders(limit: number): Promise<Order[]> {
+// Pedidos por entregar; con `range` solo los de esa semana.
+export async function listPendingOrders(limit: number, range?: { start: Date; end: Date }): Promise<Order[]> {
   let query = db().from("orders").select("*").eq("status", "pendiente");
   if (await hasVoidColumns()) query = query.is("voided_at", null);
+  if (range) query = query.gte("created_at", range.start.toISOString()).lte("created_at", range.end.toISOString());
   const { data, error } = await query.order("created_at", { ascending: false }).limit(limit);
   if (error) throw new Error(error.message);
   return (data as Order[]) ?? [];

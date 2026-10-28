@@ -15,8 +15,9 @@ const HINT_NOTES = {
   largo: "Esta semana ya lleva muchos días, ¿llegó el queso?",
 } as const;
 
-export default async function InicioPage() {
-  const d = await getDashboard();
+export default async function InicioPage({ searchParams }: { searchParams: Promise<{ semana?: string }> }) {
+  const { semana } = await searchParams;
+  const d = await getDashboard(semana);
   const pricePerKg = d.settings ? Number(d.settings.price_per_kg) : 0;
   const costPerKg = d.settings ? Number(d.settings.cost_per_kg) : 0;
 
@@ -48,12 +49,14 @@ export default async function InicioPage() {
         collected={d.cur.stats.collected}
         collectedPct={d.collectedPct}
         kgSold={d.cur.kgSold}
-        notes={weekSummaryNotes(d.current, d.cur, d.prev, d.weekElapsed)}
+        notes={weekSummaryNotes(d.current, d.cur, d.prev, { elapsed: d.weekElapsed, past: !d.isCurrent })}
+        title={d.isCurrent ? undefined : `Semana del ${formatWeekLabel(d.current.start, d.current.end).replace(/, \d{4}$/, "")}`}
+        compareLabel={d.isCurrent ? undefined : "vs la semana anterior"}
       />
 
       <div className="grid gap-4 lg:grid-cols-[1.35fr_1fr] lg:items-start lg:gap-6">
-        <DebtorsCard debtors={d.debt.debtors} total={d.debt.total} />
-        <ReviewCard pending={d.pending} debtors={d.debt.debtors} providerBalance={d.provider.saldo} />
+        <DebtorsCard debtors={d.debt.debtors} total={d.debt.total} semana={d.semana} />
+        <ReviewCard pending={d.pending} debtors={d.debt.debtors} providerBalance={d.provider.saldo} semana={d.semana} />
       </div>
     </div>
   );
