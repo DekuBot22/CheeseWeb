@@ -77,6 +77,15 @@ export function formatDay(dateStr: string): string {
   return `${d} ${MESES[m - 1].slice(0, 3)} ${y}`;
 }
 
+const DIAS = ["domingo", "lunes", "martes", "miércoles", "jueves", "viernes", "sábado"];
+
+// Día completo para lectores de pantalla: "sábado 18 de octubre".
+export function formatLongDay(dateStr: string): string {
+  const [, m, d] = dateStr.split("-").map(Number);
+  const weekday = new Date(`${dateStr}T12:00:00Z`).getUTCDay();
+  return `${DIAS[weekday]} ${d} de ${MESES[m - 1]}`;
+}
+
 // Mes de una fecha "AAAA-MM": "octubre 2026".
 export function formatMonth(month: string): string {
   const [y, m] = month.split("-").map(Number);

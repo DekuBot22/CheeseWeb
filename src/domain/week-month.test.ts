@@ -1,5 +1,5 @@
 import { describe, expect, it } from "vitest";
-import { addMonths, canGoNext, GRID_FIRST_DAY, monthGrid, monthOf, weekdayOf } from "./week-month";
+import { addMonths, canGoNext, GRID_FIRST_DAY, monthGrid, monthOf, rowStart, shiftMonth, weekdayOf } from "./week-month";
 
 const TODAY = "2026-10-27"; // martes
 const OPENINGS = ["2026-10-10", "2026-10-18", "2026-10-24"];
@@ -116,5 +116,20 @@ describe("navegación de meses", () => {
   it("no se puede pasar del mes actual", () => {
     expect(canGoNext("2026-09", TODAY)).toBe(true);
     expect(canGoNext("2026-10", TODAY)).toBe(false);
+  });
+});
+
+describe("ayudantes de teclado", () => {
+  it("shiftMonth conserva el día o baja al último del mes", () => {
+    expect(shiftMonth("2026-10-27", -1)).toBe("2026-09-27");
+    expect(shiftMonth("2026-10-31", -1)).toBe("2026-09-30");
+    expect(shiftMonth("2026-01-31", 1)).toBe("2026-02-28");
+    expect(shiftMonth("2026-12-15", 1)).toBe("2027-01-15");
+  });
+
+  it("rowStart da el sábado de la fila", () => {
+    expect(rowStart("2026-10-27")).toBe("2026-10-24");
+    expect(rowStart("2026-10-24")).toBe("2026-10-24");
+    expect(rowStart("2026-10-23")).toBe("2026-10-17");
   });
 });

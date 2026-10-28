@@ -5,7 +5,9 @@ import { Callout } from "@/ui/Callout";
 import { Card, CardBody, CardHeader } from "@/ui/Card";
 import type { WeekRow } from "../types";
 import { NewWeekButton } from "./NewWeekButton";
+import { WeekCalendar } from "./WeekCalendar";
 import { WeekRowActions } from "./WeekRowActions";
+import { WeeksViews } from "./WeeksViews";
 
 // Las semanas marcadas con sus fechas y duración. Las abiertas a mano se pueden editar o anular.
 export function WeeksCard({
@@ -41,6 +43,9 @@ export function WeeksCard({
             en que llegó el queso.
           </p>
         )}
+        <WeeksViews
+          calendar={<WeekCalendar openings={openings} today={context.today} readOnly={!ready} />}
+          list={
         <ul className="divide-y divide-linea-suave">
           {rows.map((w) => (
             <li key={w.from} className="flex items-center justify-between gap-3 py-2.5">
@@ -57,6 +62,8 @@ export function WeeksCard({
             </li>
           ))}
         </ul>
+          }
+        />
       </CardBody>
     </Card>
   );

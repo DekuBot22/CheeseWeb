@@ -69,6 +69,18 @@ const lastDayOfMonth = (month: string): string => {
   return `${month}-${String(new Date(Date.UTC(y, m, 0)).getUTCDate()).padStart(2, "0")}`;
 };
 
+// Misma fecha `delta` meses después (o antes); si ese mes no tiene ese día, el último día del mes.
+export function shiftMonth(date: string, delta: number): string {
+  const month = addMonths(monthOf(date), delta);
+  const day = Math.min(Number(date.slice(8)), Number(lastDayOfMonth(month).slice(8)));
+  return `${month}-${String(day).padStart(2, "0")}`;
+}
+
+// Primer día de la fila (de GRID_FIRST_DAY) que contiene la fecha.
+export function rowStart(date: string): string {
+  return addDays(date, -((weekdayOf(date) - GRID_FIRST_DAY + 7) % 7));
+}
+
 // Día de la semana (0 = domingo) de una fecha AAAA-MM-DD.
 export const weekdayOf = (date: string): number => new Date(`${date}T12:00:00Z`).getUTCDay();
 
@@ -113,8 +125,7 @@ function cellOf(date: string, { month, openings, today, draft }: GridContext): D
 
 // Primer día de la cuadrícula: retrocede hasta el día de la semana en que empieza la fila.
 function gridStart(month: string): string {
-  const first = `${month}-01`;
-  return addDays(first, -((weekdayOf(first) - GRID_FIRST_DAY + 7) % 7));
+  return rowStart(`${month}-01`);
 }
 
 function weeksOf(openings: string[], month: string, today: string): MonthWeek[] {
