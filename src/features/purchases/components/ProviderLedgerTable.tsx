@@ -103,12 +103,12 @@ interface Totals {
   saldo: number;
 }
 
-function LedgerFooter({ totals }: { totals: Totals }) {
+function LedgerFooter({ totals, scoped }: { totals: Totals; scoped: boolean }) {
   const cell = "px-2 py-3 text-right";
   return (
     <tr className="border-t border-linea bg-hoja-2 font-semibold">
       <td colSpan={2} className="px-4 py-3 text-left font-medium text-tinta-2">
-        Totales
+        {scoped ? "Totales de la semana · saldo al cierre" : "Totales"}
       </td>
       <td className={cell}>
         <Money value={totals.comprado} />
@@ -128,12 +128,12 @@ function LedgerFooter({ totals }: { totals: Totals }) {
 }
 
 // Resumen del libro en móvil: lo mismo que la fila de totales de la tabla.
-function MobileTotals({ totals }: { totals: Totals }) {
+function MobileTotals({ totals, scoped }: { totals: Totals; scoped: boolean }) {
   const rows: [string, React.ReactNode][] = [
     ["Comprado", <Money key="c" value={totals.comprado} />],
     ["Pagado", <Money key="p" value={totals.pagado} tone="cobrado" />],
     ["Descontado", <Money key="d" value={totals.descontado} tone="cobrado" />],
-    ["Saldo", <Money key="s" value={totals.saldo} className={totals.saldo > 0 ? "text-acento" : ""} />],
+    [scoped ? "Saldo al cierre" : "Saldo", <Money key="s" value={totals.saldo} className={totals.saldo > 0 ? "text-acento" : ""} />],
   ];
   return (
     <dl className="mt-3 flex flex-col gap-1.5 rounded-lg border border-linea bg-hoja-2 p-4 text-sm/5 lg:hidden">
@@ -147,7 +147,18 @@ function MobileTotals({ totals }: { totals: Totals }) {
   );
 }
 
-export function ProviderLedgerTable({ rows, totals, purchaseCount }: { rows: LedgerRow[]; totals: Totals; purchaseCount: number }) {
+// `scoped`: se ve el libro de una semana pasada (totales de esa semana y saldo al cierre).
+export function ProviderLedgerTable({
+  rows,
+  totals,
+  purchaseCount,
+  scoped = false,
+}: {
+  rows: LedgerRow[];
+  totals: Totals;
+  purchaseCount: number;
+  scoped?: boolean;
+}) {
   return (
     <>
       <DataTable
@@ -158,8 +169,12 @@ export function ProviderLedgerTable({ rows, totals, purchaseCount }: { rows: Led
         mobileLayout="cards"
         empty={
           <EmptyState
-            title="Aún no hay movimientos"
-            description="Registra la primera compra para llevar la cuenta con tu proveedor."
+            title={scoped ? "Sin movimientos esa semana" : "Aún no hay movimientos"}
+            description={
+              scoped
+                ? "No hubo compras, pagos ni descuentos con el proveedor en esa semana."
+                : "Registra la primera compra para llevar la cuenta con tu proveedor."
+            }
           />
         }
         mobileCard={(r) => (
@@ -185,9 +200,9 @@ export function ProviderLedgerTable({ rows, totals, purchaseCount }: { rows: Led
             </div>
           </div>
         )}
-        footer={<LedgerFooter totals={totals} />}
+        footer={<LedgerFooter totals={totals} scoped={scoped} />}
       />
-      {rows.length > 0 && <MobileTotals totals={totals} />}
+      {rows.length > 0 && <MobileTotals totals={totals} scoped={scoped} />}
       <p className="mt-2 text-xs/4 text-tinta-3">
         {plural(purchaseCount, "compra")} en total · saldo = comprado − descuentos − pagado.
       </p>

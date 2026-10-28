@@ -1,5 +1,7 @@
 import { formatDay } from "@/lib/format";
 import { activeOnly, isVoided } from "./void";
+import type { Week } from "./week-calendar";
+import { inWeekDate } from "./week-scope";
 import { DISCOUNT_REASON_LABELS, type ProviderDiscount, type ProviderPayment, type Purchase } from "./purchase";
 
 export interface LedgerRow {
@@ -103,6 +105,24 @@ export function providerTotals(
   const pagado = activeOnly(payments).reduce((s, p) => s + Number(p.amount), 0);
   const descontado = activeOnly(discounts).reduce((s, d) => s + Number(d.amount), 0);
   return { comprado, pagado, descontado, saldo: comprado - descontado - pagado };
+}
+
+// El libro de una semana: solo sus movimientos (lo más viejo primero), con el saldo acumulado
+// que ya traen (no se recalcula, así sigue siendo el real) y los totales de esa semana.
+// `saldo` es el del cierre de la semana: lo que se le debía al proveedor al terminar ese día.
+export function scopeLedger(ledger: LedgerRow[], week: Pick<Week, "from" | "to">) {
+  const rows = ledger.filter((r) => inWeekDate(week, r.date));
+  const live = rows.filter((r) => !r.voided);
+  const upToEnd = ledger.filter((r) => r.date <= week.to);
+  return {
+    rows,
+    totals: {
+      comprado: live.reduce((s, r) => s + r.compra, 0),
+      pagado: live.reduce((s, r) => s + r.pago, 0),
+      descontado: live.reduce((s, r) => s + r.descuento, 0),
+      saldo: upToEnd.length ? upToEnd[upToEnd.length - 1].saldo : 0,
+    },
+  };
 }
 
 // Cuánto se puede seguir descontando de una compra: su costo menos lo ya

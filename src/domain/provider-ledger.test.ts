@@ -1,5 +1,5 @@
 import { describe, expect, it } from "vitest";
-import { buildLedger, providerTotals, remainingForDiscount } from "./provider-ledger";
+import { buildLedger, providerTotals, remainingForDiscount, scopeLedger } from "./provider-ledger";
 import type { ProviderDiscount, ProviderPayment, Purchase } from "./purchase";
 
 const purchase = (id: string, date: string, total: number, createdAt: string, over: Partial<Purchase> = {}): Purchase => ({
@@ -146,5 +146,39 @@ describe("remainingForDiscount", () => {
   it("nunca baja de 0", () => {
     expect(remainingForDiscount(compra, [{ purchase_id: "p1", amount: 900000 }])).toBe(0);
     expect(remainingForDiscount(compra, [{ purchase_id: "p1", amount: 950000 }])).toBe(0);
+  });
+});
+
+describe("scopeLedger: el libro de una semana", () => {
+  const ledger = buildLedger(
+    [
+      purchase("p1", "2026-10-03", 600, "2026-10-03T12:00:00Z"),
+      purchase("p2", "2026-10-10", 900, "2026-10-10T12:00:00Z"),
+      purchase("p3", "2026-10-24", 300, "2026-10-24T12:00:00Z"),
+    ],
+    [payment("g1", "2026-10-14", 400, "2026-10-14T12:00:00Z"), payment("g2", "2026-10-30", 200, "2026-10-30T12:00:00Z")]
+  );
+  const week = { from: "2026-10-10", to: "2026-10-17" };
+
+  it("deja solo los movimientos de la semana y conserva su saldo acumulado real", () => {
+    const { rows } = scopeLedger(ledger, week);
+    expect(rows.map((r) => r.id)).toEqual(["p2", "g1"]);
+    expect(rows.map((r) => r.saldo)).toEqual([1500, 1100]); // 600 + 900, luego − 400
+  });
+
+  it("los totales son de la semana y el saldo es el del cierre (cuadra con el anterior)", () => {
+    const { totals } = scopeLedger(ledger, week);
+    expect(totals).toEqual({ comprado: 900, pagado: 400, descontado: 0, saldo: 1100 });
+    expect(600 + totals.comprado - totals.pagado - totals.descontado).toBe(totals.saldo);
+  });
+
+  it("una semana sin movimientos muestra el saldo con el que cerró la anterior", () => {
+    const { rows, totals } = scopeLedger(ledger, { from: "2026-10-18", to: "2026-10-23" });
+    expect(rows).toEqual([]);
+    expect(totals.saldo).toBe(1100);
+  });
+
+  it("antes del primer movimiento el saldo es 0", () => {
+    expect(scopeLedger(ledger, { from: "2026-09-01", to: "2026-09-30" }).totals.saldo).toBe(0);
   });
 });

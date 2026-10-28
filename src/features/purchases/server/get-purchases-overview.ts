@@ -1,8 +1,8 @@
 import "server-only";
-import { buildLedger, providerTotals, remainingForDiscount } from "@/domain/provider-ledger";
+import { buildLedger, providerTotals, remainingForDiscount, scopeLedger } from "@/domain/provider-ledger";
 import { activeOnly } from "@/domain/void";
 import type { ProviderDiscount, Purchase } from "@/domain/purchase";
-import { currentWeek } from "@/domain/week-calendar";
+import { inWeekDate, resolveWeek } from "@/domain/week-scope";
 import { weekContext } from "@/domain/week-hint";
 import { getWeekCalendar } from "@/features/weeks/server/get-week-calendar";
 import { formatCOP, formatDay } from "@/lib/format";
@@ -32,7 +32,9 @@ function purchaseOptions(purchases: Purchase[], discounts: ProviderDiscount[]): 
 
 // Todo lo que necesita la pantalla de Compras: cifras de la semana, saldo con
 // el proveedor y el libro cronológico (lo más nuevo primero).
-export async function getPurchasesOverview(now: Date = new Date()) {
+// De una semana pasada elegida: sus cifras y solo sus movimientos en el libro, con el saldo acumulado
+// de siempre; el saldo con el proveedor de arriba sigue siendo el de hoy.
+export async function getPurchasesOverview(semana?: string, now: Date = new Date()) {
   const [purchases, payments, { discounts, ready }] = await Promise.all([
     listPurchases(),
     listProviderPayments(),
@@ -40,15 +42,21 @@ export async function getPurchasesOverview(now: Date = new Date()) {
   ]);
 
   const cal = await getWeekCalendar(now);
-  const week = currentWeek(cal);
-  const { from, to } = week;
-  const inWeek = (date: string) => date >= from && date <= to;
+  const scope = resolveWeek(cal, semana);
+  const week = scope.week;
+  const inWeek = (date: string) => inWeekDate(week, date);
   const weekPurchases = activeOnly(purchases).filter((p) => inWeek(p.purchase_date));
   // Lo anulado fue un error: desaparece del libro (en la base queda guardado, no se borra).
-  const ledger = buildLedger(activeOnly(purchases), activeOnly(payments), activeOnly(discounts));
+  const full = buildLedger(activeOnly(purchases), activeOnly(payments), activeOnly(discounts));
+  // Se filtra DESPUÉS de armar el libro: así el saldo acumulado de cada fila sigue siendo el real.
+  const scoped = scope.isCurrent ? null : scopeLedger(full, week);
+  const ledger = scoped ? scoped.rows : full;
 
   return {
     week,
+    isCurrent: scope.isCurrent,
+    semana: scope.param,
+    ledgerTotals: scoped?.totals ?? null,
     weekContext: weekContext(cal, week),
     compradoSemana: weekPurchases.reduce((s, p) => s + Number(p.total_cost), 0),
     kgSemana: weekPurchases.reduce((s, p) => s + Number(p.kg), 0),

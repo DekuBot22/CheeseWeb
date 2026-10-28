@@ -10,8 +10,9 @@ import { PageHeader } from "@/ui/PageHeader";
 
 export const dynamic = "force-dynamic";
 
-export default async function ComprasPage() {
-  const o = await getPurchasesOverview();
+export default async function ComprasPage({ searchParams }: { searchParams: Promise<{ semana?: string }> }) {
+  const { semana } = await searchParams;
+  const o = await getPurchasesOverview(semana);
 
   return (
     <div className="space-y-6 md:space-y-8">
@@ -20,6 +21,7 @@ export default async function ComprasPage() {
       <ProviderStats
         week={{ comprado: o.compradoSemana, kg: o.kgSemana, pagado: o.pagadoSemana, descontado: o.descontadoSemana }}
         saldo={o.totals.saldo}
+        past={!o.isCurrent}
       />
 
       <div className="grid gap-4 md:grid-cols-2 xl:grid-cols-3 lg:gap-6">
@@ -51,10 +53,17 @@ export default async function ComprasPage() {
           Libro del proveedor
         </h2>
         <p className="mb-3 text-[0.8125rem]/[1.125rem] text-tinta-2">
-          Cada compra suma al saldo; cada pago y cada descuento lo reducen.
+          {o.isCurrent
+            ? "Cada compra suma al saldo; cada pago y cada descuento lo reducen."
+            : "Solo los movimientos de esa semana; el saldo de cada fila es el acumulado real."}
           {o.ledgerTotalRows > LEDGER_MAX_ROWS && ` Mostrando los ${LEDGER_MAX_ROWS} movimientos más recientes.`}
         </p>
-        <ProviderLedgerTable rows={o.ledger} totals={o.totals} purchaseCount={o.purchaseCount} />
+        <ProviderLedgerTable
+          rows={o.ledger}
+          totals={o.ledgerTotals ?? o.totals}
+          purchaseCount={o.purchaseCount}
+          scoped={!o.isCurrent}
+        />
       </section>
     </div>
   );
