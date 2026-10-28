@@ -7,6 +7,8 @@
 import { parseWeekParam } from "./week";
 import { currentWeek, weekOf, type Week, type WeekCalendar } from "./week-calendar";
 
+export const MAX_LISTED_WEEKS = 60;
+
 export interface WeekScope {
   week: Week;
   isCurrent: boolean;

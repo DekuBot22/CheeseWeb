@@ -2,7 +2,7 @@
 
 import { createContext, useCallback, useContext, useMemo, type ReactNode } from "react";
 import { usePathname, useSearchParams } from "next/navigation";
-import { resolveWeek, type WeekScope } from "@/domain/week-scope";
+import { MAX_LISTED_WEEKS, resolveWeek, type WeekScope } from "@/domain/week-scope";
 import { currentWeek, dayStart, weeksSince, type Week, type WeekCalendar } from "@/domain/week-calendar";
 import { withWeekParam } from "@/lib/week-param";
 
@@ -17,7 +17,6 @@ interface WeekScopeValue {
   withScope: (href: string) => string;
 }
 
-const MAX_LISTED = 60;
 const Ctx = createContext<WeekScopeValue | null>(null);
 
 // La semana elegida vive solo en la URL (`?semana=`). El layout no se vuelve a pintar al navegar,
@@ -36,7 +35,7 @@ export function WeekScopeProvider({
   const scope = useMemo(() => resolveWeek(cal, search.get("semana") ?? undefined), [cal, search]);
 
   const weeks = useMemo(
-    () => weeksSince(cal, dayStart(firstDay), currentWeek(cal), MAX_LISTED).reverse(),
+    () => weeksSince(cal, dayStart(firstDay), currentWeek(cal), MAX_LISTED_WEEKS).reverse(),
     [cal, firstDay]
   );
 

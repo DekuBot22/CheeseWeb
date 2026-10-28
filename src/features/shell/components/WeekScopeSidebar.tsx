@@ -1,10 +1,12 @@
 "use client";
 
 import Link from "next/link";
+import { useState } from "react";
 import { nextWeek, previousWeek, type Week } from "@/domain/week-calendar";
 import { cx } from "@/lib/cx";
 import { IconChevronLeft, IconChevronRight } from "@/ui/icons";
 import { useWeekScope } from "./WeekScopeProvider";
+import { WeekScopeSheet } from "./WeekScopeSheet";
 import { weekCaption, weekShortLabel } from "./week-scope-labels";
 
 const ARROW =
@@ -29,6 +31,7 @@ function Arrow({ href, label, children }: { href: string | null; label: string; 
 export function WeekScopeSidebar({ firstDay }: { firstDay: string }) {
   const { cal, scope, hrefFor } = useWeekScope();
   const { week, isCurrent } = scope;
+  const [open, setOpen] = useState(false);
   const prev: Week | null = week.from > firstDay ? previousWeek(cal, week) : null;
   const next = nextWeek(cal, week);
 
@@ -38,10 +41,15 @@ export function WeekScopeSidebar({ firstDay }: { firstDay: string }) {
         <Arrow href={prev ? hrefFor(prev) : null} label="Semana anterior">
           <IconChevronLeft />
         </Arrow>
-        <div className="min-w-0 text-center">
+        <button
+          type="button"
+          onClick={() => setOpen(true)}
+          aria-label="Ver todas las semanas"
+          className="min-w-0 flex-1 rounded-sm py-0.5 text-center transition-colors duration-(--dur-rapida) hover:bg-hoja-2"
+        >
           <p className="num truncate text-sm/5 font-medium text-tinta">{weekShortLabel(week)}</p>
           <p className="text-[0.6875rem]/[0.875rem] font-medium text-tinta-3">{weekCaption(week, isCurrent)}</p>
-        </div>
+        </button>
         <Arrow href={next ? hrefFor(next) : null} label="Semana siguiente">
           <IconChevronRight />
         </Arrow>
@@ -55,6 +63,7 @@ export function WeekScopeSidebar({ firstDay }: { firstDay: string }) {
           Semana actual
         </Link>
       )}
+      <WeekScopeSheet open={open} onClose={() => setOpen(false)} />
     </section>
   );
 }
