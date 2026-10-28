@@ -6,6 +6,7 @@ import { WeekScopeBanner } from "@/features/shell/components/WeekScopeBanner";
 import { WeekScopeMobile } from "@/features/shell/components/WeekScopeMobile";
 import { WeekScopeProvider } from "@/features/shell/components/WeekScopeProvider";
 import { WeekScopeSidebar } from "@/features/shell/components/WeekScopeSidebar";
+import { WeekSwipe } from "@/features/shell/components/WeekSwipe";
 import { getWeekScopeData } from "@/features/weeks/server/get-week-scope-data";
 import { BrandMark } from "@/features/shell/components/BrandMark";
 import { SettingsLink } from "@/features/shell/components/SettingsLink";
@@ -56,7 +57,7 @@ export default async function AdminPanelLayout({ children }: { children: React.R
           className="mx-auto w-full max-w-[1200px] px-4 py-6 pb-[calc(9rem+env(safe-area-inset-bottom))] md:px-8 md:py-8 md:pb-8"
         >
           <WeekScopeBanner />
-          {children}
+          <WeekSwipe>{children}</WeekSwipe>
         </main>
 
         <BottomNav />
