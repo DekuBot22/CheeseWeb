@@ -10,15 +10,15 @@ import { PageHeader } from "@/ui/PageHeader";
 
 export const dynamic = "force-dynamic";
 
-export default async function GraficasPage({ searchParams }: { searchParams: Promise<{ semanas?: string }> }) {
-  const { semanas } = await searchParams;
+export default async function GraficasPage({ searchParams }: { searchParams: Promise<{ semanas?: string; semana?: string }> }) {
+  const { semanas, semana } = await searchParams;
   const range = pickParam(semanas, CHART_WEEKS);
-  const r = await getChartsReport(Number(range));
+  const r = await getChartsReport(Number(range), semana);
 
   return (
     <div className="space-y-6 md:space-y-8">
       <PageHeader title="Gráficas" subtitle="Cómo va el negocio semana a semana." />
-      <ChartsRangeControls weeks={range} />
+      <ChartsRangeControls weeks={range} semana={r.semana} />
 
       <ProfitTrendChart weeks={r.series} />
       <ProfitCharts weeks={r.series} selected={r.selected} />

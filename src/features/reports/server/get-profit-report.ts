@@ -62,6 +62,9 @@ export async function getProfitReport(view: ProfitView, weekParam: string | unde
     now,
     week,
     isCurrent: week.start.getTime() === current.start.getTime(),
+    currentFrom: current.from,
+    // Semana elegida en la URL (null = actual), también en "Todo", para no perderla al cambiar de período.
+    semana: resolveWeek(cal, weekParam).param,
     prevWeek: series.length > 1 ? previousWeek(cal, week) : null,
     nextWeek: nextWeek(cal, week),
     rangeStart,

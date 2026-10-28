@@ -1,4 +1,5 @@
 import { formatWeekLabel } from "@/lib/format";
+import { withWeekParam } from "@/lib/week-param";
 import { pickParam } from "@/lib/search-params";
 import { ProfitPeriodControls } from "@/features/reports/components/ProfitPeriodControls";
 import { ProfitStats } from "@/features/reports/components/ProfitStats";
@@ -41,7 +42,11 @@ export default async function GananciasPage({
         stretchActions
         actions={
           <>
-            <ButtonLink href="/admin/ganancias/graficas" variant="secondary" size="sm">
+            <ButtonLink
+              href={withWeekParam("/admin/ganancias/graficas", r.semana)}
+              variant="secondary"
+              size="sm"
+            >
               Gráficas
             </ButtonLink>
             <a href={exportHref} className={buttonClasses("secondary", "sm")}>
@@ -55,6 +60,8 @@ export default async function GananciasPage({
         view={view}
         week={r.week}
         isCurrent={r.isCurrent}
+        currentFrom={r.currentFrom}
+        semana={r.semana}
         neighbors={{ prev: r.prevWeek, next: r.nextWeek }}
       />
 
