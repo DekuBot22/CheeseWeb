@@ -19,6 +19,11 @@ export const registerPaymentSchema = z.object({
     .unknown()
     .optional()
     .transform((v) => (typeof v === "string" && v.trim() ? v.trim() : null)),
+  // "Otra fecha" del abono: ausente = ahora. Que no sea futura ni anterior al pedido se valida en el caso de uso.
+  date: z
+    .string("Fecha inválida")
+    .regex(/^\d{4}-\d{2}-\d{2}$/, "Fecha inválida")
+    .optional(),
 });
 
 // Campo trampa del formulario público: está escondido para las personas, así que

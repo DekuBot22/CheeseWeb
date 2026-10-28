@@ -2,6 +2,8 @@
 
 import { useMemo, useState } from "react";
 import { remainingOf, type Order } from "@/domain/order";
+import { paymentDateError } from "@/domain/payment-date";
+import { bogotaDate } from "@/lib/bogota-time";
 
 export type PayableOrder = Pick<Order, "id" | "client_name" | "total" | "amount_paid" | "created_at">;
 
@@ -24,6 +26,9 @@ export function usePaymentForm(
   const [orderId, setOrderId] = useState(first.id);
   const [amount, setAmount] = useState(String(remainingOf(first)));
   const [method, setMethod] = useState("");
+  // "Otra fecha": por defecto el abono es de hoy.
+  const [otherDate, setOtherDate] = useState(false);
+  const [date, setDate] = useState("");
   const [loading, setLoading] = useState(false);
   const [error, setError] = useState("");
 
@@ -59,13 +64,22 @@ export function usePaymentForm(
       setError("Ingresa un monto válido");
       return;
     }
+    if (otherDate && !date) {
+      setError("Elige la fecha del abono");
+      return;
+    }
+    const dateError = otherDate ? paymentDateError(date, selected.created_at, new Date()) : null;
+    if (dateError) {
+      setError(dateError);
+      return;
+    }
     setLoading(true);
     setError("");
     try {
       const res = await fetch(`/api/admin/orders/${selected.id}/payments`, {
         method: "POST",
         headers: { "Content-Type": "application/json" },
-        body: JSON.stringify({ amount: value, method: method || undefined }),
+        body: JSON.stringify({ amount: value, method: method || undefined, date: otherDate ? date : undefined }),
       });
       const data = await res.json();
       if (!res.ok) {
@@ -90,6 +104,13 @@ export function usePaymentForm(
     setAmount,
     method,
     setMethod,
+    otherDate,
+    setOtherDate,
+    date,
+    setDate,
+    // Entre el día del pedido y hoy.
+    dateMin: bogotaDate(new Date(selected.created_at)),
+    dateMax: bogotaDate(),
     loading,
     error,
     pickClient,

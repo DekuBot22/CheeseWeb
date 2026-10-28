@@ -8,6 +8,27 @@ import { Field, Input, Select } from "@/ui/Field";
 import { Money } from "@/ui/Money";
 import { usePaymentForm, type PayableOrder } from "./use-payment-form";
 
+// Casilla «Otra fecha»: al marcarla aparece el campo (entre el día del pedido y hoy).
+function PaymentDate({ f, uid }: { f: ReturnType<typeof usePaymentForm>; uid: string }) {
+  return (
+    <>
+      <label className="flex items-center gap-2 text-sm text-tinta">
+        <input type="checkbox" checked={f.otherDate} onChange={(e) => f.setOtherDate(e.target.checked)} />
+        Otra fecha
+      </label>
+      {f.otherDate && (
+        <Field
+          label="Fecha del abono"
+          htmlFor={`${uid}-fecha`}
+          hint="En Ganancias el abono cuenta en la semana del pedido, sin importar esta fecha."
+        >
+          <Input id={`${uid}-fecha`} type="date" min={f.dateMin} max={f.dateMax} value={f.date} onChange={(e) => f.setDate(e.target.value)} autoFocus />
+        </Field>
+      )}
+    </>
+  );
+}
+
 export function PaymentForm({
   orders,
   initialOrderId,
@@ -94,6 +115,8 @@ export function PaymentForm({
           placeholder="Efectivo, Nequi…"
         />
       </Field>
+
+      <PaymentDate f={f} uid={uid} />
 
       <Button type="submit" size="sm" className="w-full" loading={f.loading}>
         Registrar abono

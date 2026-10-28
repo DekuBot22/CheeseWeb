@@ -32,7 +32,7 @@ export function PaymentSheet({
           notice={
             scope.isCurrent
               ? undefined
-              : "El abono se registra con la fecha de hoy; en Ganancias cuenta en la semana del pedido."
+              : "El abono se registra con la fecha de hoy, o la que elijas en «Otra fecha»; en Ganancias cuenta en la semana del pedido."
           }
           onDone={(order) => {
             onPaid(order);
