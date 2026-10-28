@@ -2,9 +2,10 @@
 
 import { useRouter } from "next/navigation";
 import { useState } from "react";
+import type { OpeningRef } from "@/domain/week-range";
 import { formatDay } from "@/lib/format";
 import { ReasonForm } from "@/ui/ReasonForm";
-import { avisar } from "@/ui/toast-store";
+import { announceWeekChange } from "./announce-week-change";
 import { EffectNotice } from "./EffectNotice";
 
 const VOID_SUGGESTIONS = ["Me equivoqué de día", "Duplicada", "El queso no llegó"] as const;
@@ -25,7 +26,17 @@ async function postVoid(id: string, reason: string): Promise<string> {
 }
 
 // Anular una apertura (la semana se junta con la anterior): motivo obligatorio y vista previa de lo que cambia.
-export function VoidOpeningForm({ id, from, onDone }: { id: string; from: string; onDone: () => void }) {
+export function VoidOpeningForm({
+  id,
+  from,
+  openings,
+  onDone,
+}: {
+  id: string;
+  from: string;
+  openings: OpeningRef[];
+  onDone: () => void;
+}) {
   const router = useRouter();
   const [loading, setLoading] = useState(false);
   const [error, setError] = useState("");
@@ -37,7 +48,7 @@ export function VoidOpeningForm({ id, from, onDone }: { id: string; from: string
     setError(message);
     if (message) return;
     onDone();
-    avisar("Apertura anulada");
+    announceWeekChange("Apertura anulada", openings, router.refresh);
     router.refresh();
   }
 

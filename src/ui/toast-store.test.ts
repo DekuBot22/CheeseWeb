@@ -1,5 +1,6 @@
 import { afterEach, beforeEach, describe, expect, it, vi } from "vitest";
 import {
+  AVISO_CON_ACCION_MS,
   AVISO_SALIDA_MS,
   AVISO_VISIBLE_MS,
   avisar,
@@ -63,5 +64,19 @@ describe("toast-store", () => {
 
     vi.advanceTimersByTime(AVISO_VISIBLE_MS + AVISO_SALIDA_MS);
     expect(getAvisoSnapshot()).toBeNull();
+  });
+
+  it("un aviso con acción dura más que uno normal", () => {
+    avisar("Semana guardada", { accion: { etiqueta: "Deshacer", alHacer: vi.fn() } });
+    vi.advanceTimersByTime(AVISO_VISIBLE_MS);
+    expect(getAvisoSnapshot()).toMatchObject({ saliendo: false, accion: { etiqueta: "Deshacer" } });
+
+    vi.advanceTimersByTime(AVISO_CON_ACCION_MS - AVISO_VISIBLE_MS);
+    expect(getAvisoSnapshot()).toMatchObject({ saliendo: true });
+  });
+
+  it("un aviso sin acción no guarda ninguna", () => {
+    avisar("Listo");
+    expect(getAvisoSnapshot()?.accion).toBeUndefined();
   });
 });

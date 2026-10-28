@@ -39,7 +39,7 @@ export function WeekRowActions({
         <WeekRangeForm openings={openings} today={today} editing={{ id, from, until }} onDone={close} />
       </Sheet>
       <Sheet open={mode === "anular"} onClose={close} title="Anular apertura">
-        <VoidOpeningForm id={id} from={from} onDone={close} />
+        <VoidOpeningForm id={id} from={from} openings={openings} onDone={close} />
       </Sheet>
     </>
   );

@@ -3,9 +3,10 @@ import { bogotaDate } from "@/lib/bogota-time";
 import { activeOnly } from "@/domain/void";
 import { openingDateError, type WeekOpening } from "@/domain/week-opening";
 import { planWeekRange } from "@/domain/week-range";
+import { restorePlan } from "@/domain/week-restore";
 import { MIGRATION_007_MESSAGE } from "@/server/db";
 import { AppError, NotFoundError, ValidationError } from "@/server/errors";
-import type { OpenWeekInput, WeekRangeBody } from "../schemas";
+import type { OpenWeekInput, RestoreOpeningsBody, WeekRangeBody } from "../schemas";
 import { fetchWeekOpenings, insertWeekOpening, insertWeekOpenings, moveWeekOpening, voidWeekOpening } from "./week-openings.repo";
 
 // Lectura fresca (sin cache) de las aperturas vigentes, para validar antes de escribir.
@@ -34,6 +35,28 @@ export async function moveOpening(id: string, newDate: string, now: Date = new D
 
 export async function voidOpening(id: string, reason: string): Promise<WeekOpening> {
   return voidWeekOpening(id, reason);
+}
+
+const UNDO_REASON = "Se deshizo un cambio de semanas";
+
+// Deshace un cambio: deja vigentes exactamente las aperturas de `dates` (las de antes del cambio). Las que sobran se
+// anulan con motivo y las que faltan se vuelven a abrir, con la nota que tenían. Nada se borra.
+export async function restoreOpenings(input: RestoreOpeningsBody, now: Date = new Date()): Promise<{ voided: number; added: number }> {
+  const { openings, ready } = await fetchWeekOpenings();
+  if (!ready) throw new AppError(MIGRATION_007_MESSAGE, 503);
+  if (input.dates.some((d) => d > bogotaDate(now))) throw new ValidationError("No se puede abrir una semana con fecha futura");
+
+  const plan = restorePlan(
+    activeOnly(openings).map((o) => ({ id: o.id, date: o.start_date })),
+    input.dates
+  );
+  for (const id of plan.void) await voidWeekOpening(id, UNDO_REASON);
+  if (plan.add.length > 0) {
+    const noteOf = (date: string) =>
+      openings.filter((o) => o.start_date === date).sort((a, b) => b.created_at.localeCompare(a.created_at))[0]?.note ?? null;
+    await insertWeekOpenings(plan.add.map((date) => ({ start_date: date, note: noteOf(date) })));
+  }
+  return { voided: plan.void.length, added: plan.add.length };
 }
 
 // Crea o edita una semana con "desde / hasta": el dominio decide los pasos (insertar / mover) y aquí se ejecutan en orden.

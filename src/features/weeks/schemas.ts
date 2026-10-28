@@ -18,6 +18,11 @@ export const weekRangeSchema = z.object({
   note: optionalText(300),
 });
 
+// Deshacer: las fechas de apertura que había antes del cambio (puede ser ninguna).
+export const restoreOpeningsSchema = z.object({
+  dates: z.array(dateField("Fecha inválida")).max(200),
+});
+
 // Parámetros de la vista previa "qué cambia de semana" (GET).
 export const effectQuerySchema = z.object({
   action: z.enum(["abrir", "mover", "anular", "rango"], { message: "Acción inválida" }),
@@ -29,5 +34,6 @@ export const effectQuerySchema = z.object({
 });
 
 export type WeekRangeBody = z.output<typeof weekRangeSchema>;
+export type RestoreOpeningsBody = z.output<typeof restoreOpeningsSchema>;
 export type OpenWeekInput = z.output<typeof openWeekSchema>;
 export type EffectQuery = z.output<typeof effectQuerySchema>;

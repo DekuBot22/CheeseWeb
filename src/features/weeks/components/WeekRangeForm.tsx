@@ -6,7 +6,7 @@ import { planWeekRange, rangeSummary, type OpeningRef } from "@/domain/week-rang
 import { Button } from "@/ui/Button";
 import { Callout } from "@/ui/Callout";
 import { Field, Input } from "@/ui/Field";
-import { avisar } from "@/ui/toast-store";
+import { announceWeekChange } from "./announce-week-change";
 import { EffectNotice } from "./EffectNotice";
 import { postWeekRange } from "./post-week-range";
 
@@ -62,7 +62,7 @@ function useWeekRangeForm(props: FormProps) {
     const message = await postWeekRange({ from, until: untilValue, id: editing?.id, note: note.trim() || undefined });
     setLoading(false);
     if (message) return setServerError(message);
-    avisar("Semana guardada");
+    announceWeekChange("Semana guardada", props.openings, router.refresh);
     onDone();
     router.refresh();
   }

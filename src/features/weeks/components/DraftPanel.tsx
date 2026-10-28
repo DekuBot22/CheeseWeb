@@ -10,7 +10,7 @@ import { Button, buttonClasses } from "@/ui/Button";
 import { Callout } from "@/ui/Callout";
 import { SegmentedButtons } from "@/ui/SegmentedButtons";
 import { Sheet } from "@/ui/Sheet";
-import { avisar } from "@/ui/toast-store";
+import { announceWeekChange } from "./announce-week-change";
 import { EffectNotice } from "./EffectNotice";
 import { postWeekRange } from "./post-week-range";
 import { VoidOpeningForm } from "./VoidOpeningForm";
@@ -74,7 +74,7 @@ export function DraftPanel({
     const message = await postWeekRange({ from: input.from, until: input.until, id: draft.id });
     setSaving(false);
     if (message) return setError(message);
-    avisar("Semana guardada");
+    announceWeekChange("Semana guardada", openings, router.refresh);
     onClose();
     router.refresh();
   }
@@ -132,6 +132,7 @@ export function DraftPanel({
           <VoidOpeningForm
             id={draft.id}
             from={draft.from}
+            openings={openings}
             onDone={() => {
               setVoiding(false);
               onClose();

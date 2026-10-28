@@ -3,11 +3,26 @@
 // Solo hay un aviso a la vez: uno nuevo reemplaza al anterior.
 // ui/ no sabe de negocio: quien llama pone el texto ("Abono registrado").
 
+// Botón opcional dentro del aviso (p. ej. "Deshacer"). ui/ no sabe de negocio: quien llama pone qué hace.
+export interface AvisoAccion {
+  etiqueta: string;
+  alHacer: () => void;
+}
+
 export interface Aviso {
   id: number;
   texto: string;
   saliendo: boolean;
+  accion?: AvisoAccion;
 }
+
+export interface AvisoOpciones {
+  accion?: AvisoAccion;
+  // Cuánto se queda visible; con una acción conviene más tiempo para alcanzar a pulsarla.
+  duracion?: number;
+}
+
+export const AVISO_CON_ACCION_MS = 8000;
 
 export const AVISO_VISIBLE_MS = 2400;
 export const AVISO_SALIDA_MS = 150;
@@ -36,11 +51,11 @@ function empezarSalida() {
   timerQuitar = setTimeout(descartarAviso, AVISO_SALIDA_MS);
 }
 
-export function avisar(texto: string) {
+export function avisar(texto: string, { accion, duracion }: AvisoOpciones = {}) {
   limpiarTimers();
-  actual = { id: ++secuencia, texto, saliendo: false };
+  actual = { id: ++secuencia, texto, saliendo: false, accion };
   emit();
-  timerSalida = setTimeout(empezarSalida, AVISO_VISIBLE_MS);
+  timerSalida = setTimeout(empezarSalida, duracion ?? (accion ? AVISO_CON_ACCION_MS : AVISO_VISIBLE_MS));
 }
 
 export function descartarAviso() {
