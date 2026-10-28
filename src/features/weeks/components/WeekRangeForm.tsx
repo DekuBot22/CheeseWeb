@@ -2,9 +2,7 @@
 
 import { useRouter } from "next/navigation";
 import { useId, useState } from "react";
-import { addDays, daysBetween } from "@/domain/week-calendar";
-import { planWeekRange, type OpeningRef } from "@/domain/week-range";
-import { formatDay, formatDayShort, plural } from "@/lib/format";
+import { planWeekRange, rangeSummary, type OpeningRef } from "@/domain/week-range";
 import { Button } from "@/ui/Button";
 import { Callout } from "@/ui/Callout";
 import { Field, Input } from "@/ui/Field";
@@ -93,13 +91,6 @@ function useWeekRangeForm(props: FormProps) {
   };
 }
 
-// Resumen en vivo de la semana que se va a guardar.
-function summaryOf(from: string, until: string | null): string {
-  if (!until) return `Semana del ${formatDay(from)} en adelante · en curso.`;
-  const last = addDays(until, -1);
-  return `Semana del ${formatDay(from)} al ${formatDay(last)} · ${plural(daysBetween(from, last), "día")}. Lo del ${formatDayShort(until)} ya cuenta para la siguiente.`;
-}
-
 function OngoingCheckbox({ checked, disabled, onChange }: { checked: boolean; disabled: boolean; onChange: (e: React.ChangeEvent<HTMLInputElement>) => void }) {
   return (
     <label className={`flex items-start gap-2 text-sm text-tinta ${disabled ? "opacity-60" : ""}`}>
@@ -139,7 +130,7 @@ export function WeekRangeForm(props: FormProps) {
         </Field>
       )}
 
-      {f.plan?.ok && <Callout tone="info">{summaryOf(f.from, f.untilValue)}</Callout>}
+      {f.plan?.ok && <Callout tone="info">{rangeSummary(f.from, f.untilValue)}</Callout>}
       {f.plan?.ok && <EffectNotice params={{ action: "rango", from: f.from, until: f.untilValue ?? undefined, id: editing?.id }} />}
       {f.serverError && <Callout tone="debe">{f.serverError}</Callout>}
 

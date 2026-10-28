@@ -6,7 +6,8 @@
 //
 // Todo aquí es puro: devuelve los pasos a ejecutar (insertar / mover) o el error en español.
 
-import { formatDay } from "@/lib/format";
+import { formatDay, formatDayShort, plural } from "@/lib/format";
+import { addDays, buildCalendar, dayStart, daysBetween, weekOf } from "./week-calendar";
 
 export interface OpeningRef {
   id: string;
@@ -121,4 +122,21 @@ function planEditCurrent(self: OpeningRef, otherDates: string[], { from, until }
     after.push(until);
   }
   return { ok: true, steps, after: sorted(after) };
+}
+
+// Resumen en vivo de la semana que se va a guardar ("Semana del X al Y · N días…").
+export function rangeSummary(from: string, until: string | null): string {
+  if (!until) return `Semana del ${formatDay(from)} en adelante · en curso.`;
+  const last = addDays(until, -1);
+  return `Semana del ${formatDay(from)} al ${formatDay(last)} · ${plural(daysBetween(from, last), "día")}. Lo del ${formatDayShort(until)} ya cuenta para la siguiente.`;
+}
+
+// Días sueltos antes de la primera semana marcada: la semana automática (sábado a viernes) recortada
+// por esa apertura, si queda de menos de 7 días. null si no hay aperturas o la primera cae en sábado.
+export function strayDays(openings: string[], today: string): { from: string; to: string; days: number } | null {
+  const first = [...openings].sort()[0];
+  if (!first) return null;
+  const cal = buildCalendar(openings, new Date(`${today}T12:00:00-05:00`));
+  const previous = weekOf(cal, dayStart(addDays(first, -1)));
+  return previous.days < 7 ? { from: previous.from, to: previous.to, days: previous.days } : null;
 }

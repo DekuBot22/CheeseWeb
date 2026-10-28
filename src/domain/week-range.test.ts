@@ -1,7 +1,7 @@
 import { describe, expect, it } from "vitest";
 import { buildCalendar, dayStart, weekOf } from "./week-calendar";
 import { calendarChanges } from "./week-effect";
-import { planWeekRange, weekUntil, type OpeningRef, type WeekRangePlan } from "./week-range";
+import { planWeekRange, rangeSummary, strayDays, weekUntil, type OpeningRef, type WeekRangePlan } from "./week-range";
 
 const TODAY = "2026-10-27"; // martes
 const NOW = new Date(`${TODAY}T12:00:00-05:00`);
@@ -178,5 +178,28 @@ describe("el caso real del dueño (aperturas 18 y 27 oct)", () => {
     const second = okPlan(planWeekRange([ref("c", "2026-10-10"), ...real], { editingId: "b", from: "2026-10-24", until: null }, TODAY));
     expect(first.after).toEqual(["2026-10-10", "2026-10-18", "2026-10-27"]);
     expect(second.after).toEqual(["2026-10-10", "2026-10-18", "2026-10-24"]);
+  });
+});
+
+describe("rangeSummary", () => {
+  it("dice el rango y a qué semana pasa el día de llegada, o «en curso»", () => {
+    expect(rangeSummary("2026-10-18", "2026-10-24")).toBe("Semana del 18 oct 2026 al 23 oct 2026 · 6 días. Lo del 24 oct ya cuenta para la siguiente.");
+    expect(rangeSummary("2026-10-24", null)).toBe("Semana del 24 oct 2026 en adelante · en curso.");
+    expect(rangeSummary("2026-10-24", "2026-10-25")).toMatch(/· 1 día\./);
+  });
+});
+
+describe("strayDays", () => {
+  it("el caso real: con la primera apertura el 18 queda 1 día suelto (17–17)", () => {
+    expect(strayDays(["2026-10-18", "2026-10-27"], TODAY)).toEqual({ from: "2026-10-17", to: "2026-10-17", days: 1 });
+  });
+
+  it("si la primera apertura es sábado la semana anterior queda completa: no hay días sueltos", () => {
+    expect(strayDays(["2026-10-10", "2026-10-18", "2026-10-24"], TODAY)).toBeNull();
+  });
+
+  it("sin aperturas no hay nada suelto; abrir un lunes deja 2 días (sáb y dom)", () => {
+    expect(strayDays([], TODAY)).toBeNull();
+    expect(strayDays(["2026-10-12"], TODAY)).toEqual({ from: "2026-10-10", to: "2026-10-11", days: 2 });
   });
 });

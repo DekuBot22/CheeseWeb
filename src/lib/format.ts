@@ -77,6 +77,12 @@ export function formatDay(dateStr: string): string {
   return `${d} ${MESES[m - 1].slice(0, 3)} ${y}`;
 }
 
+// Mes de una fecha "AAAA-MM": "octubre 2026".
+export function formatMonth(month: string): string {
+  const [y, m] = month.split("-").map(Number);
+  return `${MESES[m - 1]} ${y}`;
+}
+
 // Para columnas `date` cuando el año sobra: "4 oct".
 export function formatDayShort(dateStr: string): string {
   const [, m, d] = dateStr.split("-").map(Number);
