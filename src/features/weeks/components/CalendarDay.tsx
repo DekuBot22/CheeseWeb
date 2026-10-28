@@ -27,7 +27,7 @@ function look(cell: DayCell): string {
   );
 }
 
-// Un día de la cuadrícula: botón de al menos 44 px con la banda de su semana y un punto si llegó el queso.
+// Un día de la cuadrícula: botón de al menos 44 px con la banda de su semana y un punto si llegó el queso y el número de ventas del día.
 export function CalendarDay({
   cell,
   label,
@@ -61,6 +61,11 @@ export function CalendarDay({
         )}
       >
         {cell.day}
+        {!!cell.sales && (
+          <span aria-hidden="true" className="num absolute top-0.5 left-1 text-[0.625rem]/3 font-medium text-tinta-3">
+            {cell.sales}
+          </span>
+        )}
         {cell.isStart && <span aria-hidden="true" className="absolute top-1 right-1 h-1.5 w-1.5 rounded-full bg-acento" />}
       </button>
     </td>

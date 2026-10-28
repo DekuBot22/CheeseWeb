@@ -25,6 +25,8 @@ export interface DayCell {
   isEnd: boolean;
   ongoing: boolean;
   inDraft: boolean;
+  // Pedidos hechos ese día (solo si hubo; lo anota `withSales`).
+  sales?: number;
 }
 
 export interface MonthWeek {

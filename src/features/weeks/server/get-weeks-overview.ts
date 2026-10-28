@@ -1,7 +1,9 @@
 import "server-only";
 import { activeOnly } from "@/domain/void";
 import { currentWeek, markedWeeks, nextWeek } from "@/domain/week-calendar";
+import { salesByDay } from "@/domain/week-activity";
 import { weekContext } from "@/domain/week-hint";
+import { listOrderMoments } from "@/features/orders/server/orders.repo";
 import type { WeekRow } from "../types";
 import { getWeekCalendar } from "./get-week-calendar";
 import { listWeekOpenings } from "./week-openings.repo";
@@ -10,7 +12,7 @@ export const WEEKS_SHOWN = 12;
 
 // Las semanas marcadas (la más nueva primero) con la apertura que las abrió, para la lista de Ajustes.
 export async function getWeeksOverview(now: Date = new Date()) {
-  const [cal, { openings, ready }] = await Promise.all([getWeekCalendar(now), listWeekOpenings()]);
+  const [cal, { openings, ready }, moments] = await Promise.all([getWeekCalendar(now), listWeekOpenings(), listOrderMoments()]);
   const active = activeOnly(openings);
   const current = currentWeek(cal);
   const rows: WeekRow[] = markedWeeks(cal, current, WEEKS_SHOWN)
@@ -21,5 +23,5 @@ export async function getWeeksOverview(now: Date = new Date()) {
       return { from: w.from, to: w.to, days: w.days, openingId: opening?.id ?? null, note: opening?.note ?? null, until: next?.from ?? null };
     });
   const refs = active.map((o) => ({ id: o.id, date: o.start_date }));
-  return { rows, openings: refs, ready, context: weekContext(cal, current) };
+  return { rows, openings: refs, ready, context: weekContext(cal, current), sales: salesByDay(moments) };
 }

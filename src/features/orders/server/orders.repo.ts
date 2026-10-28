@@ -91,6 +91,17 @@ export async function listOrdersForStats(start: Date, end: Date | null): Promise
   });
 }
 
+// Instante de cada pedido vigente (sin anular), para marcar los días con ventas en el calendario de semanas.
+export async function listOrderMoments(): Promise<string[]> {
+  const voidReady = await hasVoidColumns();
+  const rows = await fetchAll<{ created_at: string }>((from, to) => {
+    let query = db().from("orders").select("created_at");
+    if (voidReady) query = query.is("voided_at", null);
+    return query.order("created_at", { ascending: true }).range(from, to);
+  });
+  return rows.map((r) => r.created_at);
+}
+
 // Instante del pedido más antiguo (o null si no hay): tope hacia atrás del selector de semana.
 export async function getFirstOrderAt(): Promise<string | null> {
   const { data, error } = await db().from("orders").select("created_at").order("created_at", { ascending: true }).limit(1);

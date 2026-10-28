@@ -1,3 +1,4 @@
+import type { SalesByDay } from "@/domain/week-activity";
 import type { WeekContext } from "@/domain/week-hint";
 import type { OpeningRef } from "@/domain/week-range";
 import { formatDayShort, plural } from "@/lib/format";
@@ -15,11 +16,13 @@ export function WeeksCard({
   openings,
   context,
   ready,
+  sales,
 }: {
   rows: WeekRow[];
   openings: OpeningRef[];
   context: WeekContext;
   ready: boolean;
+  sales: SalesByDay;
 }) {
   return (
     <Card>
@@ -44,7 +47,7 @@ export function WeeksCard({
           </p>
         )}
         <WeeksViews
-          calendar={<WeekCalendar openings={openings} today={context.today} readOnly={!ready} />}
+          calendar={<WeekCalendar openings={openings} today={context.today} readOnly={!ready} sales={sales} />}
           list={
         <ul className="divide-y divide-linea-suave">
           {rows.map((w) => (

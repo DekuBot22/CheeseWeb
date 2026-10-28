@@ -19,7 +19,7 @@ export default async function AjustesPage() {
         initialCost={settings?.cost_per_kg ?? null}
         updatedAt={settings?.updated_at ?? null}
       />
-      <WeeksCard rows={weeks.rows} openings={weeks.openings} context={weeks.context} ready={weeks.ready} />
+      <WeeksCard rows={weeks.rows} openings={weeks.openings} context={weeks.context} ready={weeks.ready} sales={weeks.sales} />
       <BackupCard />
       <InstallCard />
     </div>

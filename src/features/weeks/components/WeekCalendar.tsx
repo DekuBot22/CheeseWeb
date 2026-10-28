@@ -1,6 +1,7 @@
 "use client";
 
 import { useId, useState } from "react";
+import { withSales, type SalesByDay } from "@/domain/week-activity";
 import { draftInput, startDraft, tapDay, type Draft } from "@/domain/week-draft";
 import { addMonths, canGoNext, monthGrid, monthOf } from "@/domain/week-month";
 import { planWeekRange, type OpeningRef } from "@/domain/week-range";
@@ -14,7 +15,17 @@ import { WeekLegend } from "./WeekLegend";
 // su semana (o crea una en un día sin semana); con una semana abierta, cada toque mueve el borde elegido
 // y las bandas muestran cómo quedaría. Nada se guarda hasta pulsar «Guardar semana».
 // `today` y las fechas llegan del servidor (nunca se usa el reloj del navegador: evita desajustes de zona horaria).
-export function WeekCalendar({ openings, today, readOnly }: { openings: OpeningRef[]; today: string; readOnly: boolean }) {
+export function WeekCalendar({
+  openings,
+  today,
+  readOnly,
+  sales,
+}: {
+  openings: OpeningRef[];
+  today: string;
+  readOnly: boolean;
+  sales: SalesByDay;
+}) {
   const labelId = useId();
   const gridId = useId();
   const [month, setMonth] = useState(monthOf(today));
@@ -23,7 +34,7 @@ export function WeekCalendar({ openings, today, readOnly }: { openings: OpeningR
 
   const plan = draft ? planWeekRange(openings, draftInput(draft), today) : null;
   const dates = plan?.ok ? plan.after : openings.map((o) => o.date);
-  const grid = monthGrid(month, dates, today, draft ? { from: draft.from, last: draft.last } : undefined);
+  const grid = withSales(monthGrid(month, dates, today, draft ? { from: draft.from, last: draft.last } : undefined), sales);
 
   const pick = (date: string) => setDraft(draft ? tapDay(draft, date, today) : startDraft(openings, date, today));
   const pickWeek = (from: string) => setDraft(startDraft(openings, from, today));
@@ -44,7 +55,7 @@ export function WeekCalendar({ openings, today, readOnly }: { openings: OpeningR
       <WeekLegend weeks={grid.weeks} selectedFrom={draft?.from ?? null} readOnly={readOnly} onPick={pickWeek} />
       {!draft && (
         <p className="text-[0.8125rem] text-tinta-2">
-          {openings.length === 0 ? "Toca el día en que llegó el queso." : "Toca un día para elegir su semana. El punto marca el día que llegó el queso."}
+          {openings.length === 0 ? "Toca el día en que llegó el queso." : "Toca un día para elegir su semana. El punto marca el día que llegó el queso y el número chico, las ventas del día."}
         </p>
       )}
       {draft && plan && <DraftPanel draft={draft} plan={plan} openings={openings} today={today} onChange={setDraft} onClose={close} />}
