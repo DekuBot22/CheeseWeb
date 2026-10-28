@@ -4,10 +4,12 @@ import Link from "next/link";
 import { usePathname } from "next/navigation";
 import { cx } from "@/lib/cx";
 import { LinkPending } from "@/ui/LinkPending";
+import { useWeekScope } from "./WeekScopeProvider";
 import { isActive, MAIN_NAV } from "../nav-items";
 
 export function BottomNav() {
   const pathname = usePathname();
+  const { withScope } = useWeekScope();
   return (
     <nav
       aria-label="Secciones del panel"
@@ -19,7 +21,7 @@ export function BottomNav() {
           return (
             <li key={href} className="min-w-0 flex-1">
               <Link
-                href={href}
+                href={withScope(href)}
                 aria-current={active ? "page" : undefined}
                 className={cx(
                   "presionable relative flex h-[3.25rem] flex-col items-center justify-center gap-[3px] rounded-sm text-xs font-medium",

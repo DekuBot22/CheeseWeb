@@ -11,6 +11,13 @@ export function listPurchases(): Promise<Purchase[]> {
   );
 }
 
+// Fecha de la compra más antigua (o null si no hay): tope hacia atrás del selector de semana.
+export async function getFirstPurchaseDate(): Promise<string | null> {
+  const { data, error } = await db().from("purchases").select("purchase_date").order("purchase_date", { ascending: true }).limit(1);
+  if (error) throw new AppError(error.message);
+  return data?.[0]?.purchase_date ?? null;
+}
+
 // Solo las columnas de la contabilidad, entre dos fechas AAAA-MM-DD (to = null → sin tope).
 export async function listPurchasesForStats(from: string, toDate: string | null): Promise<StatPurchase[]> {
   const voidReady = await hasVoidColumns();

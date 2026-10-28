@@ -4,10 +4,12 @@ import Link from "next/link";
 import { usePathname } from "next/navigation";
 import { cx } from "@/lib/cx";
 import { LinkPending } from "@/ui/LinkPending";
+import { useWeekScope } from "./WeekScopeProvider";
 import { isActive, SIDEBAR_GROUPS } from "../nav-items";
 
 export function SidebarNav() {
   const pathname = usePathname();
+  const { withScope } = useWeekScope();
   return (
     <nav aria-label="Secciones del panel" className="flex flex-col gap-6">
       {SIDEBAR_GROUPS.map(({ label, items }) => (
@@ -18,7 +20,7 @@ export function SidebarNav() {
             return (
               <Link
                 key={href}
-                href={href}
+                href={withScope(href)}
                 aria-current={active ? "page" : undefined}
                 className={cx(
                   "relative flex h-9 items-center gap-2.5 rounded-sm px-3 text-sm font-medium transition-colors duration-(--dur-rapida)",

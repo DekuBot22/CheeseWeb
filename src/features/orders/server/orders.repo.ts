@@ -89,6 +89,13 @@ export async function listOrdersForStats(start: Date, end: Date | null): Promise
   });
 }
 
+// Instante del pedido más antiguo (o null si no hay): tope hacia atrás del selector de semana.
+export async function getFirstOrderAt(): Promise<string | null> {
+  const { data, error } = await db().from("orders").select("created_at").order("created_at", { ascending: true }).limit(1);
+  if (error) throw new AppError(error.message);
+  return data?.[0]?.created_at ?? null;
+}
+
 // Pedidos completos de un rango (también los anulados), para el Excel.
 export function listOrdersInRange(start: Date, end: Date): Promise<Order[]> {
   return fetchAll<Order>((from, to) =>
