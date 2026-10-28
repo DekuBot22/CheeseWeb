@@ -14,7 +14,7 @@ function summary(p: EffectPreview): string {
 }
 
 // Vista previa de "desde / hasta": cómo quedan las semanas tocadas y qué se mueve entre ellas.
-function RangeNotice({ preview, moved }: { preview: EffectPreview; moved: string | null | undefined }) {
+function RangeNotice({ preview, moved, compact }: { preview: EffectPreview; moved: string | null | undefined; compact: boolean }) {
   return (
     <div className="flex flex-col gap-2">
       {moved ? (
@@ -22,7 +22,7 @@ function RangeNotice({ preview, moved }: { preview: EffectPreview; moved: string
       ) : (
         <Callout tone="info">No cambia ningún pedido ni compra de semana: las cifras quedan iguales.</Callout>
       )}
-      {!!preview.after?.length && (
+      {!compact && !!preview.after?.length && (
         <div className="text-[0.8125rem] text-tinta-2">
           <p className="font-medium text-tinta">Así quedan:</p>
           <ul className="mt-1 flex flex-col gap-0.5">
@@ -39,7 +39,7 @@ function RangeNotice({ preview, moved }: { preview: EffectPreview; moved: string
 }
 
 // Antes de confirmar: qué pedidos y compras cambian de semana (y por tanto la ganancia de ambas semanas).
-export function EffectNotice({ params }: { params: EffectParams | null }) {
+export function EffectNotice({ params, compact = false }: { params: EffectParams | null; compact?: boolean }) {
   const { preview, error, loading } = useOpeningEffect(params);
   if (!params) return null;
   if (error) return <Callout tone="debe">{error}</Callout>;
@@ -47,7 +47,7 @@ export function EffectNotice({ params }: { params: EffectParams | null }) {
 
   const { effect } = preview;
   const moved = effect && summary(preview);
-  if (preview.after) return <RangeNotice preview={preview} moved={moved} />;
+  if (preview.after) return <RangeNotice preview={preview} moved={moved} compact={compact} />;
   if (!effect || !moved) {
     return <Callout tone="info">No cambia ningún pedido ni compra de semana: las cifras quedan iguales.</Callout>;
   }

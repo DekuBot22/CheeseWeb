@@ -8,6 +8,7 @@ import { Callout } from "@/ui/Callout";
 import { Field, Input } from "@/ui/Field";
 import { avisar } from "@/ui/toast-store";
 import { EffectNotice } from "./EffectNotice";
+import { postWeekRange } from "./post-week-range";
 
 export interface EditingWeek {
   id: string;
@@ -20,21 +21,6 @@ interface FormProps {
   today: string;
   editing?: EditingWeek;
   onDone: () => void;
-}
-
-// Guarda la semana; devuelve el mensaje de error o "" si salió bien.
-async function postRange(body: object): Promise<string> {
-  try {
-    const res = await fetch("/api/admin/week-openings/range", {
-      method: "POST",
-      headers: { "Content-Type": "application/json" },
-      body: JSON.stringify(body),
-    });
-    const data = await res.json();
-    return res.ok ? "" : (data.error ?? "No se pudo guardar la semana");
-  } catch {
-    return "No se pudo conectar. Intenta de nuevo.";
-  }
 }
 
 // Valores derivados: si puede "seguir en curso" y el plan en vivo del dominio.
@@ -73,7 +59,7 @@ function useWeekRangeForm(props: FormProps) {
     if (!plan?.ok) return;
     setLoading(true);
     setServerError("");
-    const message = await postRange({ from, until: untilValue, id: editing?.id, note: note.trim() || undefined });
+    const message = await postWeekRange({ from, until: untilValue, id: editing?.id, note: note.trim() || undefined });
     setLoading(false);
     if (message) return setServerError(message);
     avisar("Semana guardada");
